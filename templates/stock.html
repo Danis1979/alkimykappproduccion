@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Stock a Producir</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Roboto', sans-serif;
+            background-color: #f0f2f5;
+            color: #1e1e1e;
+            margin: 40px;
+        }
+        .logo {
+            position: absolute;
+            top: 20px;
+            right: 40px;
+            width: 150px;
+        }
+        .menu-principal {
+            position: absolute;
+            top: 20px;
+            left: 40px;
+            background-color: #2196F3;
+            color: white;
+            padding: 10px 16px;
+            border-radius: 6px;
+            text-decoration: none;
+            font-weight: bold;
+        }
+        h1, h2 {
+            color: #1e1e1e;
+            text-align: center;
+        }
+        form {
+            max-width: 600px;
+            margin: 0 auto;
+            background-color: #ffffff;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            border: 1px solid #000;
+        }
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+        .grid label {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background-color: #f9f9f9;
+            padding: 10px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+        }
+        input[type=number] {
+            width: 80px;
+            padding: 6px;
+            border-radius: 4px;
+            border: 1px solid #aaa;
+        }
+        button {
+            padding: 12px 24px;
+            margin-right: 10px;
+            border: none;
+            border-radius: 6px;
+            background-color: #4caf50;
+            color: white;
+            font-weight: bold;
+            font-size: 1.1em;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        .limpiar {
+            background-color: #f44336;
+        }
+        .limpiar:hover {
+            background-color: #da190b;
+        }
+        .recuadro {
+            max-width: 600px;
+            margin: 30px auto;
+            background-color: #ffffff;
+            padding: 20px;
+            border: 1px solid #000;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        table {
+            width: 100%;
+            margin-top: 10px;
+            border-collapse: collapse;
+        }
+        th, td {
+            border: 1px solid #ccc;
+            padding: 10px;
+            text-align: center;
+        }
+        th {
+            background-color: #ddd;
+        }
+        .footer {
+            text-align: center;
+            margin-top: 50px;
+            font-size: 0.9em;
+            color: #444;
+        }
+    </style>
+    <script>
+        function limpiarCajas() {
+            document.querySelectorAll('input[type=number]').forEach(input => input.value = 0);
+        }
+    </script>
+</head>
+<body>
+    <img src="/static/logo.png" class="logo" alt="Logo Alkimyk">
+    <a href="/" class="menu-principal">🏠 Menú Principal</a>
+
+    <h1>¿Cuántas cajas queremos producir?</h1>
+    <form method="POST">
+        <div class="grid">
+            <label> Cajas Aceituna: <input type="number" name="aceituna" value="0"> </label>
+            <label> Cajas Caprese: <input type="number" name="caprese" value="0"> </label>
+            <label> Cajas Queso Azul: <input type="number" name="queso_azul" value="0"> </label>
+            <label> Cajas Cebolla: <input type="number" name="cebolla" value="0"> </label>
+            <label> Cajas Espinaca: <input type="number" name="espinaca" value="0"> </label>
+            <label> Cajas Calabaza: <input type="number" name="calabaza" value="0"> </label>
+            <label> Cajas Brócoli: <input type="number" name="brocoli" value="0"> </label>
+        </div>
+        <button type="submit">📦 Calcular Canastos</button>
+        <button type="button" class="limpiar" onclick="limpiarCajas()">❌ Limpiar todo</button>
+    </form>
+
+    {% if canastos %}
+    <div class="recuadro">
+        <h2>Canastos a producir por sabor</h2>
+        <table>
+            <tr><th>Sabor</th><th>Canastos</th></tr>
+            {% for sabor, cantidad in canastos.items() %}
+                <tr>
+                    <td>{{ sabor.replace('_', ' ').capitalize() }}</td>
+                    <td>{{ cantidad }}</td>
+                </tr>
+            {% endfor %}
+        </table>
+        <form action="/canastos" method="GET">
+            <button type="submit">📥 Copiar estos valores a la producción</button>
+        </form>
+    </div>
+    {% endif %}
+
+    <div class="footer">
+        © 2025 Alkimyk Food. Todos los derechos reservados.
+    </div>
+</body>
+</html>

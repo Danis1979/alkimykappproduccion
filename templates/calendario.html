@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Calendario de Producción</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Roboto', sans-serif;
+            background-color: #f0f2f5;
+            color: #1e1e1e;
+            margin: 40px;
+        }
+        .logo {
+            position: absolute;
+            top: 10px;
+            right: 40px;
+            width: 120px;
+        }
+        .menu-principal {
+            position: absolute;
+            top: 20px;
+            left: 40px;
+            background-color: #2196F3;
+            color: white;
+            padding: 10px 16px;
+            border-radius: 6px;
+            text-decoration: none;
+            font-weight: bold;
+        }
+        h1 {
+            text-align: center;
+            margin-top: 100px;
+            margin-bottom: 30px;
+        }
+        .calendario-container {
+            max-width: 700px;
+            margin: 0 auto;
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            border: 1px solid #000;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        th, td {
+            border: 1px solid #999;
+            padding: 10px 14px;
+            text-align: center;
+        }
+        th {
+            background-color: #e0e0e0;
+        }
+        tr:nth-child(even) td {
+            background-color: #f9f9f9;
+        }
+        .volver {
+            margin-top: 30px;
+            text-align: center;
+        }
+        .volver a {
+            background-color: #2196F3;
+            color: white;
+            padding: 10px 18px;
+            border-radius: 6px;
+            text-decoration: none;
+            font-weight: bold;
+        }
+        @media print {
+            .no-print, .menu-principal, .logo, .volver {
+                display: none !important;
+            }
+            body {
+                margin: 10mm;
+                background-color: white;
+            }
+            h1 {
+                margin-top: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <img src="/static/logo.png" class="logo" alt="Logo Alkimyk">
+    <a href="/" class="menu-principal">🏠 Menú Principal</a>
+
+    <h1>Calendario de Producción</h1>
+
+    <div class="calendario-container">
+        {% if calendario %}
+            <table>
+                <tr>
+                    <th>Día</th>
+                    <th>Fecha</th>
+                    <th>Canastos</th>
+                    <th>Sabores</th>
+                </tr>
+                {% for dia in calendario %}
+                    <tr>
+                        {% set dias_semana = {'Monday': 'Lunes', 'Tuesday': 'Martes', 'Wednesday': 'Miércoles', 'Thursday': 'Jueves', 'Friday': 'Viernes', 'Saturday': 'Sábado', 'Sunday': 'Domingo'} %}
+                        {% set fecha_dt = dia.fecha | replace('-', '/') %}
+                        <td>
+                          {% set partes = fecha_dt.split('/') %}
+                          {% set fecha_obj = partes[0]|int, partes[1]|int, partes[2]|int %}
+                          {% set dia_semana = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'][loop.index0 % 7] %}
+                          {{ dia_semana }}
+                        </td>
+                        <td>{{ dia.fecha }}</td>
+                        <td>{{ dia.canastos }}</td>
+                        <td>
+                            {% if dia.sabores %}
+                                {% for sabor, cantidad in dia.sabores.items() %}
+                                    {{ sabor.replace('_', ' ').capitalize() }}: {{ cantidad }}<br>
+                                {% endfor %}
+                            {% else %}
+                                -
+                            {% endif %}
+                        </td>
+                    </tr>
+                {% endfor %}
+            </table>
+        {% else %}
+            <p>No hay datos de calendario generados.</p>
+        {% endif %}
+    </div>
+
+    <div class="volver no-print">
+        <button onclick="window.print()" style="background-color:#2196F3;color:white;padding:10px 18px;border:none;border-radius:6px;font-weight:bold;cursor:pointer;">🖨️ Imprimir</button>
+    </div>
+
+    <div class="volver no-print">
+        <a href="/canastos">🔙 Volver</a>
+    </div>
+</body>
+</html>

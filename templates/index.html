@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Alkimyk Food</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Roboto', sans-serif;
+            background-color: #f0f2f5;
+            color: #1e1e1e;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+        .logo {
+            position: absolute;
+            top: 20px;
+            right: 40px;
+            width: 150px;
+        }
+        .container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 40px;
+        }
+        .recuadro-principal {
+            background-color: white;
+            border-radius: 12px;
+            padding: 30px 50px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+            text-align: center;
+            border: 2px solid #000;
+        }
+        h1 {
+            margin-bottom: 30px;
+        }
+        .botones {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+        }
+        .botones a {
+            background-color: #4caf50;
+            color: white;
+            padding: 14px 28px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: bold;
+            font-size: 1.1em;
+        }
+        .botones a:hover {
+            background-color: #45a049;
+        }
+        .carousel {
+            width: 100%;
+            background-color: #f0f2f5;
+            overflow: visible;
+            padding: 20px 0;
+            position: relative;
+        }
+        .carousel-track {
+            display: flex;
+            animation: scroll 30s linear infinite;
+            align-items: center;
+            gap: 16px;
+            padding: 0 20px;
+        }
+        .carousel-track:hover {
+            animation-play-state: paused;
+        }
+        .carousel-track img {
+            height: 160px;
+            border-radius: 10px;
+            transition: transform 0.5s ease, box-shadow 0.5s ease;
+            cursor: pointer;
+            position: relative;
+            z-index: 1;
+        }
+        .carousel-track img:hover {
+            transform: scale(2);
+            z-index: 10;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+        }
+        @keyframes scroll {
+            0% { transform: translateX(0); }
+            100% { transform: translateX(-50%); }
+        }
+        .footer {
+            text-align: center;
+            padding: 20px;
+            font-size: 0.9em;
+            color: #444;
+        }
+    </style>
+</head>
+<body>
+    <img src="/static/logo.png" alt="Logo Alkimyk" class="logo">
+    <div class="container">
+        <div class="recuadro-principal">
+            <h1>Producción Alkimyk Food</h1>
+            <div class="botones">
+                <a href="/stock">📦 Calcular desde Cajas</a>
+                <a href="/canastos">📋 Calcular desde Canastos</a>
+            </div>
+        </div>
+    </div>
+
+    <div class="carousel">
+        <div class="carousel-track">
+            <img src="/static/IMG_5103.PNG" alt="Foto 1">
+            <img src="/static/IMG_5104.PNG" alt="Foto 2">
+            <img src="/static/IMG_5105.PNG" alt="Foto 3">
+            <img src="/static/IMG_5106.PNG" alt="Foto 4">
+            <img src="/static/IMG_5107.PNG" alt="Foto 5">
+            <img src="/static/IMG_5108.PNG" alt="Foto 6">
+            <img src="/static/IMG_5109.PNG" alt="Foto 7">
+            <img src="/static/IMG_5110.PNG" alt="Foto 8">
+        </div>
+    </div>
+
+    <div class="footer">
+        © 2025 Alkimyk Food. Todos los derechos reservados.
+    </div>
+</body>
+</html>
