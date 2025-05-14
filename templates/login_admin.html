@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Login Administrador</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+    <div class="contenedor-principal">
+        <h2>Ingreso Administrador</h2>
+        {% with messages = get_flashed_messages(with_categories=true) %}
+          {% if messages %}
+            {% for category, message in messages %}
+              <div class="alert alert-{{ category }}">{{ message }}</div>
+            {% endfor %}
+          {% endif %}
+        {% endwith %}
+        <form method="POST">
+            <div class="campo-formulario">
+                <label for="email" class="label-formulario">Email:</label>
+                <input type="email" name="email" required class="input-formulario">
+            </div>
+            <div class="campo-formulario">
+                <label for="password" class="label-formulario">Contraseña:</label>
+                <input type="password" name="password" required class="input-formulario">
+            </div>
+            <button type="submit" class="boton-principal">Ingresar</button>
+        </form>
+    </div>
+</body>
+</html>

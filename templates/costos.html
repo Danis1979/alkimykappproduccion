@@ -1,0 +1,451 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Costos de Producción</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <style>
+        .contenedor-costos {
+            max-width: 900px;
+            margin: 40px auto;
+            background-color: #fff;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        th, td {
+            border: 1px solid #ddd;
+            padding: 12px;
+            text-align: left;
+        }
+
+        th {
+            background-color: #007bff;
+            color: white;
+        }
+
+        tr:nth-child(even) {
+            background-color: #f8f9fa;
+        }
+
+        .titulo-costos {
+            text-align: center;
+            margin-bottom: 20px;
+            font-size: 24px;
+            color: #333;
+        }
+
+        .volver {
+            display: inline-block;
+            margin-top: 20px;
+            background-color: #6c757d;
+            color: white;
+            padding: 10px 18px;
+            border-radius: 6px;
+            text-decoration: none;
+            font-weight: bold;
+        }
+
+        .volver:hover {
+            background-color: #5a6268;
+        }
+    </style>
+</head>
+<body>
+    <div class="contenedor-costos">
+        <h2 class="titulo-costos">Total de Ingredientes a Comprar</h2>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>Ingrediente</th>
+                    <th>Cantidad</th>
+                    <th>Unidad</th>
+                    <th>Precio Unitario<br>(por kg)</th>
+                    <th>Costo Total</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% set total_unidades = 0 %}
+                {% for nombre, cantidad in ingredientes.items() %}
+                    {% if nombre not in ['Packaging', 'Cajas'] %}
+                        {% set total_unidades = total_unidades + cantidad %}
+                    {% endif %}
+                    <tr>
+                        <td>{{ nombre }}</td>
+                        <td>
+                            {% if cantidad >= 1000 %}
+                                {{ (cantidad / 1000) | round(2) }}
+                            {% else %}
+                                {{ cantidad | round(2) }}
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if nombre in ['Soja', 'Harina'] or cantidad >= 1000 %}
+                                kg
+                            {% else %}
+                                g
+                            {% endif %}
+                        </td>
+                        <td><input id="ingrediente_{{ nombre | lower | replace(' ', '_') }}" type="text" step="0.01" placeholder="0.00" class="input-formulario" style="width: 180px;" min="0" max="10000000"></td>
+                        <td class="costo-total">$0.00</td>
+                    </tr>
+                {% endfor %}
+                {% set total_canastos = session.get('canastos', {}).values() | sum %}
+                {% set total_unidades = total_canastos * 18 %}
+                <tr>
+                    <td>Packaging</td>
+                    <td>{{ (total_unidades / 4) | round(0, 'ceil') }}</td>
+                    <td>un</td>
+                    <td><input id="precio_packaging" type="text" step="0.01" placeholder="0.00" class="input-formulario" style="width: 180px;" min="0" max="10000000"></td>
+                    <td class="costo-total">$0.00</td>
+                </tr>
+                <tr>
+                    <td>Cajas</td>
+                    <td>{{ (total_unidades / 60) | round(0, 'ceil') }}</td>
+                    <td>un</td>
+                    <td><input id="precio_cajas" type="text" step="0.01" placeholder="0.00" class="input-formulario" style="width: 180px;" min="0" max="10000000"></td>
+                    <td class="costo-total">$0.00</td>
+                </tr>
+            </tbody>
+        </table>
+
+<h3 style="margin-top: 40px;">Costos Fijos</h3>
+<table>
+    <thead>
+        <tr>
+            <th>Concepto</th>
+            <th>Monto ($)</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for fijo in ['Alquiler', 'Edenor', 'Aysa', 'Gas', 'Municipal', 'Sueldos', 'Cargas Sociales', 'IVA', 'Créditos', 'Flete', 'Varios'] %}
+        <tr>
+            <td>{{ fijo }}</td>
+            <td><input id="{{ fijo | lower | replace(' ', '_') }}" type="text" step="0.01" class="input-formulario" style="width: 180px;" min="0" max="10000000"></td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+<h3 style="margin-top: 30px;">Precio de Venta por Caja por Sabor</h3>
+<table>
+    <thead>
+        <tr>
+            <th>Sabor</th>
+            <th>Precio por Caja ($)</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td>Aceitunas</td>
+            <td><input id="precio_aceituna" type="text" step="0.01" class="input-formulario" style="width: 200px;" min="0" max="10000000"></td>
+        </tr>
+        <tr>
+            <td>Caprese</td>
+            <td><input id="precio_caprese" type="text" step="0.01" class="input-formulario" style="width: 200px;" min="0" max="10000000"></td>
+        </tr>
+        <tr>
+            <td>Queso Azul</td>
+            <td><input id="precio_queso_azul" type="text" step="0.01" class="input-formulario" style="width: 200px;" min="0" max="10000000"></td>
+        </tr>
+        <tr>
+            <td>Cebolla</td>
+            <td><input id="precio_cebolla" type="text" step="0.01" class="input-formulario" style="width: 200px;" min="0" max="10000000"></td>
+        </tr>
+        <tr>
+            <td>Espinaca</td>
+            <td><input id="precio_espinaca" type="text" step="0.01" class="input-formulario" style="width: 200px;" min="0" max="10000000"></td>
+        </tr>
+        <tr>
+            <td>Calabaza</td>
+            <td><input id="precio_calabaza" type="text" step="0.01" class="input-formulario" style="width: 200px;" min="0" max="10000000"></td>
+        </tr>
+        <tr>
+            <td>Brócoli</td>
+            <td><input id="precio_brocoli" type="text" step="0.01" class="input-formulario" style="width: 200px;" min="0" max="10000000"></td>
+        </tr>
+    </tbody>
+</table>
+
+<div style="margin-top: 30px;">
+    <button type="button" onclick="calcularRentabilidad()" class="boton-principal">Calcular Rentabilidad</button>
+</div>
+
+<div id="resultado" style="margin-top: 30px; font-size: 18px;"></div>
+<div id="semaforo" style="margin-top: 10px; width: 30px; height: 30px; border-radius: 50%;"></div>
+
+        <div style="margin-top: 20px;">
+            <button onclick="window.print()" class="boton-principal">🖨️ Imprimir</button>
+        </div>
+        <div style="margin-top: 20px;">
+            <button onclick="guardarPrecios()" class="boton-principal">💾 Guardar Cambios</button>
+        </div>
+        <button class="volver" onclick="confirmarYVolver()">Volver al menú</button>
+    </div>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    // Persistencia local de los precios ingresados con formato de miles al salir del campo
+    document.querySelectorAll('input[type="text"]').forEach(input => {
+        if (input.id) {
+            const saved = localStorage.getItem(input.id);
+            if (saved !== null) input.value = saved;
+
+            input.addEventListener('input', () => {
+                const clean = input.value.replace(/\./g, '').replace(',', '.');
+                if (!isNaN(clean)) {
+                    localStorage.setItem(input.id, clean);
+                }
+            });
+
+            input.addEventListener('focus', () => {
+                const numericValue = input.value.replace(/\./g, '').replace(',', '.');
+                input.value = numericValue;
+            });
+
+            // Formato visual con separador de miles al salir del campo (blur)
+            input.addEventListener('blur', () => {
+                const raw = input.value.replace(/\./g, '').replace(',', '.');
+                const value = parseFloat(raw);
+                if (!isNaN(value)) {
+                    input.value = value.toLocaleString('es-AR', { minimumFractionDigits: 0, maximumFractionDigits: 2 });
+                }
+            });
+        }
+    });
+
+    // Guardar ingredientes en objeto unificado normalizado
+    const inputsIngredientes = Array.from(document.querySelectorAll('input[id^="ingrediente_"]'));
+    let costosIngredientes = {};
+
+    inputsIngredientes.forEach(input => {
+        const clave = input.id.replace("ingrediente_", "");
+        const raw = input.value.replace(/\./g, '').replace(',', '.');
+        const valor = parseFloat(raw);
+        if (!isNaN(valor)) {
+            costosIngredientes[clave] = valor;
+        }
+    });
+
+    localStorage.setItem("ingredientes_costos", JSON.stringify(costosIngredientes));
+
+    const rows = document.querySelectorAll('table tbody tr');
+    rows.forEach(row => {
+        // Verificación para evitar errores en filas no válidas
+        if (!row || row.children.length < 3) return;
+        const precioInput = row.querySelector('input[type="text"]');
+        const cantidadText = row.children[1].innerText.replace(',', '.');
+        const costoTotalCell = row.querySelector('.costo-total');
+
+        precioInput.addEventListener('input', () => {
+            // Verificación para evitar errores en filas no válidas
+            if (!row || row.children.length < 3) return;
+            const precio = parseFloat(precioInput.value);
+            let cantidad = parseFloat(cantidadText);
+            // Convertir a kilos solo si la unidad es gramos ("g"), si ya está en kilos ("kg") dejar igual
+            let unidad = row.children[2].innerText.trim();
+            let cantidadConvertida = unidad === "g" ? cantidad / 1000 : cantidad;
+            if (!isNaN(precio) && !isNaN(cantidadConvertida)) {
+                const total = (precio * cantidadConvertida).toFixed(2);
+                costoTotalCell.textContent = `$${parseFloat(total).toLocaleString('es-AR')}`;
+            } else {
+                costoTotalCell.textContent = '$0.00';
+            }
+        });
+
+        // Al cargar la página, actualizar el costo total si hay valor guardado
+        const precio = parseFloat(precioInput.value);
+        let cantidad = parseFloat(cantidadText);
+        // Convertir a kilos solo si la unidad es gramos ("g"), si ya está en kilos ("kg") dejar igual
+        let unidad = row.children[2].innerText.trim();
+        let cantidadConvertida = unidad === "g" ? cantidad / 1000 : cantidad;
+        if (!isNaN(precio) && !isNaN(cantidadConvertida)) {
+            const total = (precio * cantidadConvertida).toFixed(2);
+            costoTotalCell.textContent = `$${parseFloat(total).toLocaleString('es-AR')}`;
+        } else {
+            costoTotalCell.textContent = '$0.00';
+        }
+    });
+});
+
+function calcularRentabilidad() {
+    console.log("✅ Función calcularRentabilidad() llamada");
+    const inputs = document.querySelectorAll('input[type="text"]');
+    let faltanCampos = false;
+    inputs.forEach(input => {
+        const esValido = input.value && !isNaN(parseFloat(input.value));
+        if (!esValido) {
+            input.style.border = '2px solid red';
+            if (!faltanCampos) input.focus();
+            faltanCampos = true;
+        } else {
+            input.style.border = ''; // limpiar borde si está bien
+        }
+    });
+
+    if (faltanCampos) {
+        alert("⚠️ Faltan completar algunos precios. Por favor, revisá los campos resaltados en rojo.");
+        return;
+    }
+    const rows = document.querySelectorAll('table tbody tr');
+    let costoVariable = 0;
+
+    rows.forEach(row => {
+        // Verificación para evitar errores en filas no válidas
+        if (!row || row.children.length < 3) return;
+        const precioInput = row.querySelector('input[type="text"]');
+        const precioId = precioInput.id;
+        let precio;
+        if (precioId.startsWith('ingrediente_')) {
+            precio = parseFloat(precioInput.value);
+        } else if (precioId === 'precio_packaging' || precioId === 'precio_cajas') {
+            precio = parseFloat(precioInput.value);
+        } else {
+            // Ignorar inputs de precio de venta por caja en cálculo variable
+            precio = NaN;
+        }
+        let cantidad = parseFloat(row.children[1].innerText.replace(',', '.'));
+        // Convertir a kilos solo si la unidad es gramos ("g"), si ya está en kilos ("kg") dejar igual
+        let unidad = row.children[2].innerText.trim();
+        let cantidadConvertida = unidad === "g" ? cantidad / 1000 : cantidad;
+        if (!isNaN(precio) && !isNaN(cantidadConvertida)) {
+            costoVariable += precio * cantidadConvertida;
+        }
+    });
+
+    const fijos = ['alquiler', 'edenor', 'aysa', 'gas', 'municipal', 'sueldos', 'cargas_sociales', 'iva', 'créditos', 'flete', 'varios']
+        .map(id => parseFloat(document.getElementById(id).value) || 0)
+        .reduce((a, b) => a + b, 0);
+
+    const totalUnidades = Array.from(document.querySelectorAll('table tbody tr'))
+        .map(row => parseFloat(row.children[1].innerText.replace(',', '.')))
+        .reduce((a, b) => a + (isNaN(b) ? 0 : b), 0);
+
+    const totalCajas = Math.ceil(totalUnidades / 60);
+    const costoFijoPorCaja = totalCajas > 0 ? fijos / totalCajas : 0;
+
+    const precioQueso = parseFloat(document.getElementById('precio_queso_azul').value) || 0;
+    const precioVeg = (
+        (parseFloat(document.getElementById('precio_aceituna').value) || 0) +
+        (parseFloat(document.getElementById('precio_caprese').value) || 0)
+    );
+    const precioVegana = (
+        (parseFloat(document.getElementById('precio_cebolla').value) || 0) +
+        (parseFloat(document.getElementById('precio_espinaca').value) || 0) +
+        (parseFloat(document.getElementById('precio_calabaza').value) || 0) +
+        (parseFloat(document.getElementById('precio_brocoli').value) || 0)
+    );
+
+    const precioVenta = precioQueso + precioVeg + precioVegana;
+    const costoTotal = costoVariable + fijos;
+    const rentabilidad = precioVenta - costoTotal;
+    const rentabilidadPct = (precioVenta > 0) ? ((rentabilidad / precioVenta) * 100).toFixed(2) : 0;
+
+    const resultadoDiv = document.getElementById('resultado');
+    /*
+    resultadoDiv.innerHTML = `
+        <p><strong>Costo variable total:</strong> $${costoVariable.toFixed(2)}</p>
+        <p><strong>Costo fijo total:</strong> $${fijos.toFixed(2)}</p>
+        <p><strong>Costo total:</strong> $${costoTotal.toFixed(2)}</p>
+        <p><strong>Rentabilidad absoluta:</strong> $${rentabilidad.toFixed(2)}</p>
+        <p><strong>Rentabilidad (%):</strong> ${rentabilidadPct}%</p>
+    `;
+
+    resultadoDiv.innerHTML += `
+        <hr>
+        <h4>Análisis por Tipo de Caja</h4>
+        <p><strong>Costo fijo por caja estimado:</strong> $${costoFijoPorCaja.toFixed(2)}</p>
+        <p><strong>Queso Azul:</strong> Precio $${precioQueso}, Rentabilidad $${(precioQueso - costoFijoPorCaja).toFixed(2)}</p>
+        <p><strong>Vegetarianas:</strong> Precio $${precioVeg}, Rentabilidad $${(precioVeg - costoFijoPorCaja).toFixed(2)}</p>
+        <p><strong>Veganas:</strong> Precio $${precioVegana}, Rentabilidad $${(precioVegana - costoFijoPorCaja).toFixed(2)}</p>
+    `;
+
+    const semaforo = document.getElementById('semaforo');
+    if (rentabilidadPct >= 30) {
+        semaforo.style.backgroundColor = 'green';
+    } else if (rentabilidadPct >= 10) {
+        semaforo.style.backgroundColor = 'orange';
+    } else {
+        semaforo.style.backgroundColor = 'red';
+    }
+    */
+    const cajasQueso = Math.ceil(totalCajas / 3);
+    const cajasVeg = Math.ceil(totalCajas / 3);
+    const cajasVegana = totalCajas - cajasQueso - cajasVeg;
+
+    const data = {
+        costoVariable: costoVariable.toFixed(2),
+        costosFijos: fijos.toFixed(2),
+        costoTotal: costoTotal.toFixed(2),
+        rentabilidad: rentabilidad.toFixed(2),
+        rentabilidadPct: rentabilidadPct,
+        costoFijoCaja: costoFijoPorCaja.toFixed(2),
+        precioQueso: precioQueso,
+        precioVeg: precioVeg,
+        precioVegana: precioVegana,
+        rentaQueso: (precioQueso - costoFijoPorCaja).toFixed(2),
+        rentaVeg: (precioVeg - costoFijoPorCaja).toFixed(2),
+        rentaVegana: (precioVegana - costoFijoPorCaja).toFixed(2),
+        cajasQueso: cajasQueso,
+        cajasVeg: cajasVeg,
+        cajasVegana: cajasVegana
+    };
+
+    localStorage.setItem('dashboard_rentabilidad', JSON.stringify(data));
+    alert("✅ Rentabilidad calculada. Mostrando resultados...");
+    window.location.href = "/dashboard_rentabilidad";
+}
+
+function guardarPrecios() {
+    const precioPack = document.getElementById("precio_packaging");
+    const precioCaja = document.getElementById("precio_cajas");
+    if (precioPack) localStorage.setItem("precio_pack", precioPack.value.replace(/\./g, '').replace(',', '.'));
+    if (precioCaja) localStorage.setItem("precio_caja", precioCaja.value.replace(/\./g, '').replace(',', '.'));
+    if (precioPack) document.cookie = `precio_pack=${precioPack.value.replace(/\./g, '').replace(',', '.')}`;
+    if (precioCaja) document.cookie = `precio_caja=${precioCaja.value.replace(/\./g, '').replace(',', '.')}`;
+
+    const sabores = ["aceituna", "caprese", "queso_azul", "cebolla", "espinaca", "calabaza", "brocoli"];
+    sabores.forEach(sabor => {
+        const input = document.getElementById(`precio_${sabor}`);
+        if (input) {
+            localStorage.setItem(`precio_${sabor}`, input.value.replace(/\./g, '').replace(',', '.'));
+        }
+    });
+
+    alert("✅ Cambios guardados correctamente.");
+}
+
+function confirmarYVolver() {
+    // Guardar precios de packaging
+    const precioPack = document.getElementById("precio_packaging");
+    const precioCaja = document.getElementById("precio_cajas");
+    if (precioPack) localStorage.setItem("precio_pack", precioPack.value.replace(/\./g, '').replace(',', '.'));
+    if (precioCaja) localStorage.setItem("precio_caja", precioCaja.value.replace(/\./g, '').replace(',', '.'));
+    // Guardar también como cookies para backend
+    if (precioPack) document.cookie = `precio_pack=${precioPack.value.replace(/\./g, '').replace(',', '.')}`;
+    if (precioCaja) document.cookie = `precio_caja=${precioCaja.value.replace(/\./g, '').replace(',', '.')}`;
+
+    // Guardar precios de venta por sabor
+    const sabores = ["aceituna", "caprese", "queso_azul", "cebolla", "espinaca", "calabaza", "brocoli"];
+    sabores.forEach(sabor => {
+        const input = document.getElementById(`precio_${sabor}`);
+        if (input) {
+            localStorage.setItem(`precio_${sabor}`, input.value.replace(/\./g, '').replace(',', '.'));
+        }
+    });
+
+    if (confirm("¿Querés guardar los precios y volver al menú principal?")) {
+        alert("✅ Precios guardados correctamente.");
+        window.location.href = "{{ url_for('home') }}";
+    }
+}
+</script>
+</body>
+</html>

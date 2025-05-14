@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Menú Administrador</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+    <div class="contenedor-principal">
+        <h2>Bienvenido, Administrador</h2>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+          {% if messages %}
+            {% for category, message in messages %}
+              <div class="alert alert-{{ category }}">{{ message }}</div>
+            {% endfor %}
+          {% endif %}
+        {% endwith %}
+
+        <div style="margin-top: 30px;">
+            <a href="{{ url_for('home') }}" class="boton-principal">🏠 Ir al Menú Principal</a>
+            <a href="{{ url_for('crear_usuario') }}" class="boton-principal">👤 Crear Nuevo Usuario</a>
+        </div>
+    </div>
+</body>
+</html>

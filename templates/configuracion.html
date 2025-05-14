@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Configuración</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        <div class="flash-messages">
+          {% for category, message in messages %}
+            <div class="alert alert-{{ category }}">{{ message }}</div>
+          {% endfor %}
+        </div>
+      {% endif %}
+    {% endwith %}
+
+    <div class="contenedor-principal" style="display: flex; justify-content: center; align-items: center; min-height: 100vh; flex-direction: column;">
+        <div class="formulario-container" style="width: 100%; max-width: 500px;">
+            <div class="formulario-general">
+                <h2 class="titulo-seccion">Configuración General</h2>
+                <form method="post" action="{{ url_for('configuracion') }}">
+                    <div class="campo-formulario">
+                        <label for="cupo_diario" class="label-formulario">Cupo máximo de producción por día:</label>
+                        <input type="number" id="cupo_diario" name="cupo_diario" value="{{ cupo_diario }}" min="1" required class="input-formulario">
+                    </div>
+                    <div class="campo-formulario">
+                        <p class="label-formulario">Días de producción:</p>
+                        {% for dia in ['lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado', 'domingo'] %}
+                        <div class="checkbox-item">
+                            <label class="label-formulario">
+                                <input type="checkbox" name="dias_habilitados" value="{{ dia }}" {% if dia in dias_produccion %}checked{% endif %}> {{ dia.capitalize() }}
+                            </label>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    <button class="boton-principal" type="submit">Guardar</button>
+                </form>
+            </div>
+            <div style="margin: 40px;">
+                <a href="/" class="boton-principal">🏠 Volver al Menú Principal</a>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

@@ -1,0 +1,618 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Dashboard de Rentabilidad</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        .contenedor-dashboard {
+            max-width: 1000px;
+            margin: 40px auto;
+            background-color: #fff;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .titulo-dashboard {
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 26px;
+            color: #333;
+        }
+
+        .dato {
+            font-size: 18px;
+            margin: 10px 0;
+        }
+
+        .grafico-container {
+            margin-top: 40px;
+        }
+
+        .botones {
+            margin-top: 40px;
+            text-align: center;
+        }
+
+        .botones a {
+            margin: 0 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="contenedor-dashboard">
+        <h2 class="titulo-dashboard">Resumen Financiero</h2>
+        <div id="datos-rentabilidad"></div>
+
+
+        <div style="margin-top: 40px;">
+            <h3 style="text-align:center;">Sugerencias de Mejora</h3>
+            <ul id="sugerencias" style="font-size: 16px; line-height: 1.6;"></ul>
+        </div>
+
+        <!-- Gráfico de rentabilidad por categoría eliminado -->
+
+        <div class="grafico-container">
+            <h3 style="text-align:center;">Distribución de Costos</h3>
+            <canvas id="graficoDistribucionCostos" style="max-height:300px;"></canvas>
+        </div>
+
+        <div class="botones">
+            <a href="{{ url_for('costos') }}" class="boton-principal">🔙 Volver a Costos</a>
+            <button onclick="descargarResumen()" class="boton-principal">💾 Guardar Resumen</button>
+            <button onclick="window.print()" class="boton-principal">🖨️ Imprimir</button>
+            <button onclick="calcularRentabilidad()" class="boton-principal">📈 Calcular Rentabilidad</button>
+        </div>
+    </div>
+
+<script>
+// Declarar precioPack y precioCaja fuera del event listener para que estén accesibles en todo el script
+let precioPack = parseFloat(localStorage.getItem("precio_pack") || 0);
+let precioCaja = parseFloat(localStorage.getItem("precio_caja") || 0);
+document.addEventListener('DOMContentLoaded', () => {
+    fetch('/resumen_datos')
+        .then(response => response.json())
+        .then(data => {
+            const contenedor = document.getElementById('datos-rentabilidad');
+            const totalCajas = data.total_cajas;
+
+            const packagingCantidad = totalCajas * 4;
+            const totalPackaging = packagingCantidad * precioPack;
+            const totalCajasCosto = totalCajas * precioCaja;
+
+            contenedor.innerHTML = `
+                <p class="dato"><strong>Canastos Producidos Totales:</strong> ${data.total_canastos}</p>
+                <p class="dato"><strong>Cajas Producidas Totales:</strong> ${totalCajas}</p>
+            `;
+
+            // Tabla de cajas por sabor individual
+            // (Eliminada tabla de cajas por categoría agrupada)
+
+            // Tabla de cajas por sabor individual
+            const sabores = ['aceituna', 'caprese', 'queso_azul', 'cebolla', 'espinaca', 'calabaza', 'brocoli'];
+            let cajasPorSabor = {};
+            sabores.forEach(sabor => {
+                const canastos = data.canastos[sabor] || 0;
+                const unidades = canastos * 18;
+                const packs = Math.floor(unidades / 4);
+                const cajas = Math.floor(packs / 15);
+                cajasPorSabor[sabor] = cajas;
+            });
+            window.cajasPorSabor = cajasPorSabor;
+
+            // Calcular costo variable por sabor
+            const recetas = data.detalles_por_sabor || {};
+            const ingredientesCostos = JSON.parse(localStorage.getItem('ingredientes_costos') || '{}');
+
+            let costoVariablePorSabor = {};
+            Object.entries(cajasPorSabor).forEach(([sabor, cajas]) => {
+                const receta = recetas[sabor] || {};
+                let total = 0;
+                Object.entries(receta).forEach(([ingrediente, cantidad]) => {
+                    const claveNormalizada = ingrediente.toLowerCase().replace(/\s+/g, '_');
+                    if (!ingredientesCostos.hasOwnProperty(claveNormalizada)) {
+                        console.warn(`Ingrediente sin precio: ${ingrediente} → Clave usada: ${claveNormalizada}`);
+                    }
+                    const precioUnitario = parseFloat(ingredientesCostos[claveNormalizada]) || 0;
+                    console.log(`Sabor: ${sabor} - Ingrediente: ${ingrediente} - Clave: ${claveNormalizada} - Precio: ${precioUnitario} - Cantidad: ${cantidad}`);
+                    // Conversión a kg solo si corresponde (Soja y Harina ya están en kg)
+                    let baseEnKg = ['soja', 'harina'];
+                    let cantidadKg = baseEnKg.includes(claveNormalizada) ? cantidad : cantidad / 1000;
+                    total += cantidadKg * precioUnitario;
+                });
+                costoVariablePorSabor[sabor] = cajas > 0 ? total / cajas : 0;
+            });
+
+            console.log("Costo variable por sabor:", costoVariablePorSabor);
+            window.costoVariablePorSabor = costoVariablePorSabor;
+            contenedor.innerHTML += `
+                <h3 style="margin-top: 30px; text-align:center;">Distribución de Cajas por Sabor</h3>
+                <table style="width:100%; border-collapse: collapse; margin-top: 10px;">
+                    <thead>
+                        <tr style="background-color: #f9f9f9;">
+                            <th style="padding:10px; border: 1px solid #ccc;">Sabor</th>
+                            <th style="padding:10px; border: 1px solid #ccc;">Cajas</th>
+                            <th style="padding:10px; border: 1px solid #ccc;">Costo Ingredientes</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${Object.entries(cajasPorSabor).map(([sabor, cantidad]) => {
+                            const receta = recetas[sabor] || {};
+                            let totalIngredientes = 0;
+                            Object.entries(receta).forEach(([ingrediente, cantIng]) => {
+                                const clave = ingrediente.toLowerCase().replace(/\s+/g, '_');
+                                const precio = parseFloat(ingredientesCostos[clave] || 0);
+                                let baseEnKg = ['soja', 'harina'];
+                                const cantidadKg = baseEnKg.includes(clave) ? cantIng : cantIng / 1000;
+                                totalIngredientes += cantidadKg * precio;
+                            });
+                            return `
+                            <tr>
+                                <td style="padding:10px; border: 1px solid #ccc;">${sabor.charAt(0).toUpperCase() + sabor.slice(1)}</td>
+                                <td style="padding:10px; border: 1px solid #ccc;">${cantidad}</td>
+                                <td style="padding:10px; border: 1px solid #ccc;">$${totalIngredientes.toLocaleString('es-AR', {minimumFractionDigits: 2})}</td>
+                            </tr>`;
+                        }).join('')}
+                    </tbody>
+                </table>
+            `;
+
+            // Costos fijos totales
+            const costosFijos = [
+                'alquiler', 'edenor', 'aysa', 'gas', 'municipal', 'sueldos',
+                'cargas_sociales', 'iva', 'créditos', 'flete', 'varios'
+            ];
+            let totalFijos = 0;
+            costosFijos.forEach(id => {
+                const val = parseFloat(localStorage.getItem(id) || 0);
+                if (!isNaN(val)) totalFijos += val;
+            });
+            document.getElementById("sugerencias").innerHTML += `<li><strong>Total Costos Fijos:</strong> $${totalFijos.toLocaleString('es-AR', {maximumFractionDigits: 2})}</li>`;
+            // Calcular total costos variables (ingredientes + packaging + cajas)
+            let totalIngredientesGlobal = 0;
+            Object.entries(recetas).forEach(([sabor, receta]) => {
+                Object.entries(receta).forEach(([ing, cantidad]) => {
+                    const clave = ing.toLowerCase().replace(/\s+/g, '_');
+                    const precio = parseFloat(ingredientesCostos[clave] || 0);
+                    let baseEnKg = ['soja', 'harina'];
+                    const cantidadKg = baseEnKg.includes(clave) ? cantidad : cantidad / 1000;
+                    totalIngredientesGlobal += cantidadKg * precio;
+                });
+            });
+            const totalPackagingYcajas = totalPackaging + totalCajasCosto;
+            const totalVariables = totalIngredientesGlobal + totalPackagingYcajas;
+            document.getElementById("sugerencias").innerHTML += `<li><strong>Total Costos Variables:</strong> $${totalVariables.toLocaleString('es-AR', {maximumFractionDigits: 2})}</li>`;
+
+            // Agregado cálculo del costo total por caja por sabor y rentabilidad
+            const totalCajasMes = Object.values(cajasPorSabor).reduce((a, b) => a + b, 0);
+            const costoFijoPorCaja = totalCajasMes > 0 ? totalFijos / totalCajasMes : 0;
+
+
+            let precioPorSabor = {
+                'aceituna': parseFloat(localStorage.getItem('precio_aceituna') || 0),
+                'caprese': parseFloat(localStorage.getItem('precio_caprese') || 0),
+                'queso_azul': parseFloat(localStorage.getItem('precio_queso_azul') || 0),
+                'cebolla': parseFloat(localStorage.getItem('precio_cebolla') || 0),
+                'espinaca': parseFloat(localStorage.getItem('precio_espinaca') || 0),
+                'calabaza': parseFloat(localStorage.getItem('precio_calabaza') || 0),
+                'brocoli': parseFloat(localStorage.getItem('precio_brocoli') || 0)
+            };
+
+            // Calcular total a facturar y total con IVA
+            let totalFacturar = 0;
+            Object.entries(cajasPorSabor).forEach(([sabor, cantidad]) => {
+                const precio = precioPorSabor[sabor] || 0;
+                totalFacturar += cantidad * precio;
+            });
+            const totalConIVA = totalFacturar * 1.21;
+
+            let tablaRentabilidad = `
+                <h3 style="margin-top: 30px; text-align:center;">Rentabilidad por Sabor</h3>
+                <table style="width:100%; border-collapse: collapse; margin-top: 10px;">
+                    <thead>
+                        <tr style="background-color: #f0f0f0;">
+                            <th style="padding:10px; border: 1px solid #ccc;">Sabor</th>
+                            <th style="padding:10px; border: 1px solid #ccc;">Precio de Venta por Caja</th>
+                            <th style="padding:10px; border: 1px solid #ccc;">Costo Variable por Caja</th>
+                            <th style="padding:10px; border: 1px solid #ccc;">Costo Fijo Asignado por Caja</th>
+                            <th style="padding:10px; border: 1px solid #ccc;">Costo de Packaging por Caja</th>
+                            <th style="padding:10px; border: 1px solid #ccc;">Costo Total</th>
+                            <th style="padding:10px; border: 1px solid #ccc;">Ganancia Neta por Caja ($)</th>
+                            <th style="padding:10px; border: 1px solid #ccc;">Rentabilidad (%)</th>
+                            <th style="padding:10px; border: 1px solid #ccc;">Indicador de Margen</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+            `;
+
+            // Acumulador para total de rentabilidad
+            let rentabilidadTotal = 0;
+
+            Object.entries(cajasPorSabor).forEach(([sabor, cantidad]) => {
+                // Asegurar que los valores de packaging estén actualizados desde localStorage
+                precioPack = parseFloat(localStorage.getItem("precio_pack") || 0);
+                precioCaja = parseFloat(localStorage.getItem("precio_caja") || 0);
+                // Cálculo de packaging unitario por caja (15 packs + 1 caja)
+                const packaging = (precioPack * 15) + precioCaja;
+                const costoVariable = costoVariablePorSabor[sabor] || 0;
+                const costoFijo = costoFijoPorCaja;
+                const costoTotal = costoVariable + costoFijo + packaging;
+                const precioVenta = precioPorSabor[sabor] || 0;
+                const utilidad = precioVenta - costoTotal;
+                const rentabilidadPct = precioVenta > 0 ? (utilidad / precioVenta) * 100 : 0;
+
+                // Sumar al total de rentabilidad (utilidad * cantidad de cajas)
+                rentabilidadTotal += utilidad * cantidad;
+
+                // Semáforo y sugerencias inteligentes
+                let color = '🟢';
+                let sugerencia = 'Rentabilidad adecuada';
+                if (rentabilidadPct < 15) {
+                    color = '🔴';
+                    sugerencia = 'Aumentar precio o reducir costos';
+                } else if (rentabilidadPct < 30) {
+                    color = '🟡';
+                    sugerencia = 'Optimizar packaging o insumos';
+                }
+
+                tablaRentabilidad += `
+                    <tr>
+                        <td style="padding:10px; border: 1px solid #ccc;">${sabor.charAt(0).toUpperCase() + sabor.slice(1)}</td>
+                        <td style="padding:10px; border: 1px solid #ccc;">$${precioVenta.toLocaleString('es-AR', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
+                        <td style="padding:10px; border: 1px solid #ccc;">$${costoVariable.toLocaleString('es-AR', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
+                        <td style="padding:10px; border: 1px solid #ccc;">$${costoFijo.toLocaleString('es-AR', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
+                        <td style="padding:10px; border: 1px solid #ccc;">$${packaging.toLocaleString('es-AR', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
+                        <td style="padding:10px; border: 1px solid #ccc;">$${costoTotal.toLocaleString('es-AR', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
+                        <td style="padding:10px; border: 1px solid #ccc;">$${utilidad.toLocaleString('es-AR', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
+                        <td style="padding:10px; border: 1px solid #ccc;">${rentabilidadPct.toFixed(1)}%</td>
+                        <td style="padding:10px; border: 1px solid #ccc; text-align: center;">${color}</td>
+                    </tr>
+                `;
+            });
+
+            tablaRentabilidad += `</tbody></table>`;
+            contenedor.innerHTML += tablaRentabilidad;
+
+            // Agregar Total a Facturar, Total con IVA y Ganancia Total | Rentabilidad: xx.x% 🟢
+            // justo después de la tabla de Cajas por Sabor
+            const cierreTablaCajas = contenedor.innerHTML.indexOf('</table>');
+            if (cierreTablaCajas !== -1) {
+                // Calcular porcentaje de rentabilidad total y semáforo
+                const porcentajeRentabilidadTotal = totalFacturar > 0 ? (rentabilidadTotal / totalFacturar) * 100 : 0;
+                let colorTotal = '🟢';
+                if (porcentajeRentabilidadTotal < 15) {
+                    colorTotal = '🔴';
+                } else if (porcentajeRentabilidadTotal < 30) {
+                    colorTotal = '🟡';
+                }
+                contenedor.innerHTML = contenedor.innerHTML.slice(0, cierreTablaCajas + 8) +
+                  `
+    <p class="dato"><strong>Total a Facturar:</strong> $${totalFacturar.toLocaleString('es-AR', {minimumFractionDigits: 2})}</p>
+    <p class="dato"><strong>Total con IVA (21%):</strong> $${totalConIVA.toLocaleString('es-AR', {minimumFractionDigits: 2})}</p>
+    <div style="border: 1px solid #ccc; padding: 10px; margin-top: 20px;">
+        <p class="dato">
+            <strong>Ganancia Total:</strong> 
+            $${rentabilidadTotal.toLocaleString('es-AR', { minimumFractionDigits: 2 })} 
+            | Rentabilidad: <strong>${porcentajeRentabilidadTotal.toFixed(1)}%</strong> ${colorTotal}
+        </p>
+    </div>
+                  ` +
+                  contenedor.innerHTML.slice(cierreTablaCajas + 8);
+            }
+
+            // Agregar Calculadora de Precio de Venta por Rentabilidad Deseada (bloque desplegable)
+            contenedor.innerHTML += `
+<div style="margin-top: 40px;">
+    <button style="width: 100%; padding: 10px; background-color: #17a2b8; color: white; border: none; text-align: left; font-size: 18px; cursor: pointer;" onclick="toggleCalculadora()">
+        📊 Calculadora de Precio de Venta por Rentabilidad Deseada
+    </button>
+    <div id="bloque-calculadora" style="display: none; border: 1px solid #ccc; border-top: none; padding: 10px;">
+        <table style="width:100%; border-collapse: collapse; margin-top: 10px;">
+            <thead>
+                <tr style="background-color: #f0f0f0;">
+                    <th style="padding:10px; border: 1px solid #ccc;">Sabor</th>
+                    <th style="padding:10px; border: 1px solid #ccc;">Costo Total Actual</th>
+                    <th style="padding:10px; border: 1px solid #ccc;">Rentabilidad Deseada (%)</th>
+                    <th style="padding:10px; border: 1px solid #ccc;">Aumento Necesario (%)</th>
+                    <th style="padding:10px; border: 1px solid #ccc; background-color: #d3d3d3; font-weight: bold;">Precio Actual x Caja</th>
+                    <th style="padding:10px; border: 1px solid #ccc; background-color: #d3d3d3; font-weight: bold;">Precio Actual x Pack</th>
+                    <th style="padding:10px; border: 1px solid #ccc;">Precio Sugerido x Caja</th>
+                    <th style="padding:10px; border: 1px solid #ccc;">Precio Sugerido x Pack</th>
+                </tr>
+            </thead>
+            <tbody>
+                ${Object.entries(cajasPorSabor).map(([sabor, cantidad]) => {
+                    const costoVariable = costoVariablePorSabor[sabor] || 0;
+                    const packaging = (precioPack * 15) + precioCaja;
+                    const costoFijo = costoFijoPorCaja;
+                    const costoTotal = costoVariable + costoFijo + packaging;
+                    return `
+                    <tr>
+                        <td style="padding:10px; border: 1px solid #ccc;">${sabor.charAt(0).toUpperCase() + sabor.slice(1)}</td>
+                        <td style="padding:10px; border: 1px solid #ccc;">$${costoTotal.toLocaleString('es-AR', { minimumFractionDigits: 2 })}</td>
+                        <td style="padding:10px; border: 1px solid #ccc;">
+                            <input type="number" min="0" id="rentabilidad_${sabor}" value="30" style="width: 80px;" oninput="calcularPrecioSugerido('${sabor}', ${costoTotal.toFixed(2)})">%
+                        </td>
+                        <td style="padding:10px; border: 1px solid #ccc;" id="aumento_necesario_${sabor}">-</td>
+                        <td style="padding:10px; border: 1px solid #ccc; background-color: #f0f0f0;">$${precioPorSabor[sabor].toLocaleString('es-AR', { minimumFractionDigits: 2 })}</td>
+                        <td style="padding:10px; border: 1px solid #ccc; background-color: #f0f0f0;">$${(precioPorSabor[sabor] / 15).toLocaleString('es-AR', { minimumFractionDigits: 2 })}</td>
+                        <td style="padding:10px; border: 1px solid #ccc;" id="precio_sugerido_caja_${sabor}">-</td>
+                        <td style="padding:10px; border: 1px solid #ccc;" id="precio_sugerido_pack_${sabor}">-</td>
+                    </tr>`;
+                }).join('')}
+            </tbody>
+        </table>
+    </div>
+</div>
+`;
+
+            // Agregar desglose detallado de ingredientes por sabor con bloques desplegables Y CANVAS para gráfico de torta
+            contenedor.innerHTML += `
+    <h3 style="margin-top: 40px; text-align:center;">Detalle de Ingredientes por Sabor</h3>
+    ${Object.entries(recetas).map(([sabor, receta], index) => {
+        if (!cajasPorSabor[sabor]) return '';
+        return `
+        <div style="margin-bottom: 20px;">
+            <button style="width: 100%; padding: 10px; background-color: #007bff; color: white; border: none; text-align: left; font-size: 18px; cursor: pointer;" onclick="toggleDetalle(${index})">
+                ${sabor.charAt(0).toUpperCase() + sabor.slice(1)}
+            </button>
+            <div id="detalle-${index}" style="display: none; border: 1px solid #ccc; border-top: none; padding: 10px;">
+                <table style="width:100%; border-collapse: collapse;">
+                    <thead>
+                        <tr style="background-color: #e9ecef;">
+                            <th style="padding:10px; border: 1px solid #ccc;">Ingrediente</th>
+                            <th style="padding:10px; border: 1px solid #ccc;">Cantidad</th>
+                            <th style="padding:10px; border: 1px solid #ccc;">Precio Unitario</th>
+                            <th style="padding:10px; border: 1px solid #ccc;">Costo Total</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${Object.entries(receta).map(([ing, cantidad]) => {
+                            const clave = ing.toLowerCase().replace(/\s+/g, '_');
+                            const precio = parseFloat(ingredientesCostos[clave] || 0);
+                            let baseEnKg = ['soja', 'harina'];
+                            let cantidadKg = baseEnKg.includes(clave) ? cantidad : cantidad / 1000;
+                            const costoTotal = cantidadKg * precio;
+                            return `
+                            <tr>
+                                <td style="padding:10px; border: 1px solid #ccc;">${ing}</td>
+                                <td style="padding:10px; border: 1px solid #ccc;">${cantidadKg.toFixed(2)} kg</td>
+                                <td style="padding:10px; border: 1px solid #ccc;">$${precio.toLocaleString('es-AR', { minimumFractionDigits: 2 })}</td>
+                                <td style="padding:10px; border: 1px solid #ccc;">$${costoTotal.toLocaleString('es-AR', { minimumFractionDigits: 2 })}</td>
+                            </tr>`;
+                        }).join('')}
+                    </tbody>
+                </table>
+                <canvas id="graficoSabor-${sabor}" style="max-height:300px; margin-top: 20px;"></canvas>
+            </div>
+        </div>
+        `;
+    }).join('')}
+`;
+
+            // Construir desglose detallado para gráfico principal
+            const labelsDesglose = [];
+            const dataDesglose = [];
+            const colores = [];
+
+            costosFijos.forEach((clave, i) => {
+                const val = parseFloat(localStorage.getItem(clave) || 0);
+                if (val > 0) {
+                    labelsDesglose.push(clave.replace('_', ' ').toUpperCase());
+                    dataDesglose.push(val);
+                    colores.push(`#${Math.floor(Math.random()*16777215).toString(16)}`);
+                }
+            });
+
+            if (totalPackaging > 0) {
+                labelsDesglose.push('Packaging');
+                dataDesglose.push(totalPackaging);
+                colores.push('#6f42c1');
+            }
+
+            if (totalCajasCosto > 0) {
+                labelsDesglose.push('Cajas');
+                dataDesglose.push(totalCajasCosto);
+                colores.push('#17a2b8');
+            }
+
+            // Desglose real por ingrediente
+            Object.entries(recetas).forEach(([sabor, receta]) => {
+                Object.entries(receta).forEach(([ing, cantidad]) => {
+                    const clave = ing.toLowerCase().replace(/\s+/g, '_');
+                    const precio = parseFloat(ingredientesCostos[clave] || 0);
+                    let baseEnKg = ['soja', 'harina'];
+                    const cantidadKg = baseEnKg.includes(clave) ? cantidad : cantidad / 1000;
+                    const costo = cantidadKg * precio;
+                    if (costo > 0) {
+                        const nombre = ing.charAt(0).toUpperCase() + ing.slice(1).toLowerCase();
+                        const index = labelsDesglose.indexOf(nombre);
+                        if (index !== -1) {
+                            dataDesglose[index] += costo;
+                        } else {
+                            labelsDesglose.push(nombre);
+                            dataDesglose.push(costo);
+                            colores.push(`#${Math.floor(Math.random()*16777215).toString(16)}`);
+                        }
+                    }
+                });
+            });
+
+            const datosDistribucion = labelsDesglose.map((label, index) => ({
+                label,
+                value: dataDesglose[index],
+                color: colores[index]
+            }));
+
+            datosDistribucion.sort((a, b) => b.value - a.value);
+
+            new Chart(document.getElementById("graficoDistribucionCostos"), {
+                type: 'bar',
+                data: {
+                    labels: datosDistribucion.map(d => d.label),
+                    datasets: [{
+                        label: 'Costo ($)',
+                        data: datosDistribucion.map(d => d.value),
+                        backgroundColor: datosDistribucion.map(d => d.color)
+                    }]
+                },
+                options: {
+                    indexAxis: 'x',
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: 'Distribución Detallada de Costos'
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    let total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                    let value = context.raw;
+                                    let percentage = ((value / total) * 100).toFixed(1);
+                                    return `${context.label}: ${percentage}%`;
+                                }
+                            }
+                        }
+                    },
+                    responsive: true,
+                    scales: {
+                        x: {
+                            beginAtZero: true,
+                            ticks: {
+                                callback: function(value, index) {
+                                    return index + 1;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+
+            // Gráficos de torta por sabor debajo de cada tabla de detalle
+            Object.entries(recetas).forEach(([sabor, receta], index) => {
+                if (!cajasPorSabor[sabor]) return;
+                const ingredientes = [];
+                const cantidades = [];
+                let sumaIngredientes = 0;
+                Object.entries(receta).forEach(([ing, cantidad]) => {
+                    const clave = ing.toLowerCase().replace(/\s+/g, '_');
+                    const precio = parseFloat(ingredientesCostos[clave] || 0);
+                    const baseEnKg = ['soja', 'harina'];
+                    const cantidadKg = baseEnKg.includes(clave) ? cantidad : cantidad / 1000;
+                    const total = cantidadKg * precio;
+                    sumaIngredientes += total;
+                    ingredientes.push(ing);
+                    cantidades.push(total);
+                });
+
+                const precioPack = parseFloat(localStorage.getItem("precio_pack") || 0);
+                const precioCaja = parseFloat(localStorage.getItem("precio_caja") || 0);
+                const cantidadCajasSabor = cajasPorSabor[sabor] || 0;
+                const packaging = cantidadCajasSabor * ((precioPack * 15) + precioCaja);
+                // Nuevo cálculo de costo fijo proporcional y exacto
+                const cajasTotales = Object.values(cajasPorSabor).reduce((a, b) => a + b, 0);
+                const costoFijoPorCaja = cajasTotales > 0 ? totalFijos / cajasTotales : 0;
+                const costoFijoSabor = cantidadCajasSabor * costoFijoPorCaja;
+
+                ingredientes.push("Packaging");
+                cantidades.push(packaging);
+
+                new Chart(document.getElementById(`graficoSabor-${sabor}`), {
+                    type: 'pie',
+                    data: {
+                        labels: ingredientes,
+                        datasets: [{
+                            data: cantidades,
+                            backgroundColor: [
+                                '#007bff', '#6610f2', '#6f42c1', '#e83e8c', '#fd7e14',
+                                '#ffc107', '#28a745', '#20c997', '#17a2b8', '#6c757d'
+                            ]
+                        }]
+                    },
+                    options: {
+                        plugins: {
+                            title: {
+                                display: true,
+                                text: `Distribución de Costos - ${sabor.charAt(0).toUpperCase() + sabor.slice(1)}`
+                            },
+                            tooltip: {
+                                callbacks: {
+                                    label: function(context) {
+                                        let total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                        let value = context.raw;
+                                        let percentage = ((value / total) * 100).toFixed(1);
+                                        return `${context.label}: ${percentage}%`;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
+            });
+        })
+        .catch(err => {
+            document.getElementById('datos-rentabilidad').innerHTML = `<p>Error al cargar datos del servidor.</p>`;
+            console.error(err);
+        });
+});
+// Calculadora de Precio Sugerido por Rentabilidad Deseada
+function calcularPrecioSugerido(sabor, costoTotal) {
+    const porcentaje = parseFloat(document.getElementById(`rentabilidad_${sabor}`).value || 0);
+    const precioSugerido = costoTotal / (1 - (porcentaje / 100));
+    const precioActual = parseFloat(localStorage.getItem(`precio_${sabor}`) || 0);
+    const aumento = precioActual > 0 ? ((precioSugerido - precioActual) / precioActual) * 100 : 0;
+
+    document.getElementById(`aumento_necesario_${sabor}`).innerText = aumento.toFixed(1) + "%";
+    document.getElementById(`precio_sugerido_caja_${sabor}`).innerText = "$" + precioSugerido.toLocaleString('es-AR', { minimumFractionDigits: 2 });
+    document.getElementById(`precio_sugerido_pack_${sabor}`).innerText = "$" + (precioSugerido / 15).toLocaleString('es-AR', { minimumFractionDigits: 2 });
+}
+
+// Bloque desplegable para Calculadora de Precio de Venta por Rentabilidad Deseada
+function toggleCalculadora() {
+    const div = document.getElementById('bloque-calculadora');
+    div.style.display = (div.style.display === "none") ? "block" : "none";
+}
+</script>
+<script>
+function toggleDetalle(index) {
+    const div = document.getElementById(`detalle-${index}`);
+    if (div.style.display === "none") {
+        div.style.display = "block";
+    } else {
+        div.style.display = "none";
+    }
+}
+</script>
+<script>
+function calcularRentabilidad() {
+    if (typeof mostrarResumen === 'function') {
+        mostrarResumen();
+    } else {
+        location.reload();
+    }
+}
+</script>
+<script>
+function descargarResumen() {
+    const data = localStorage.getItem('dashboard_rentabilidad');
+    if (!data) {
+        alert("No hay datos de rentabilidad para guardar.");
+        return;
+    }
+
+    const blob = new Blob([data], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "resumen_rentabilidad.json";
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+}
+</script>
+</body>
+</html>

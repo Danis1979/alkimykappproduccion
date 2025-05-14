@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Crear Usuario</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+    <div class="contenedor-principal">
+        <h2>Crear nuevo usuario</h2>
+        {% with messages = get_flashed_messages(with_categories=true) %}
+          {% if messages %}
+            {% for category, message in messages %}
+              <div class="alert alert-{{ category }}">{{ message }}</div>
+            {% endfor %}
+          {% endif %}
+        {% endwith %}
+        <form method="POST">
+            <div class="campo-formulario">
+                <label class="label-formulario">Nombre:</label>
+                <input type="text" name="nombre" required class="input-formulario">
+            </div>
+            <div class="campo-formulario">
+                <label class="label-formulario">Email:</label>
+                <input type="email" name="email" required class="input-formulario">
+            </div>
+            <div class="campo-formulario">
+                <label class="label-formulario">Contraseña:</label>
+                <input type="password" name="password" required class="input-formulario">
+            </div>
+            <div class="campo-formulario">
+                <label class="label-formulario">Rol:</label>
+                <select name="rol" class="input-formulario" required>
+                    <option value="produccion">Producción</option>
+                    <option value="ventas">Ventas</option>
+                    <option value="costos">Costos</option>
+                    <option value="admin">Administrador</option>
+                </select>
+            </div>
+            <button type="submit" class="boton-principal">Crear Usuario</button>
+        </form>
+    </div>
+</body>
+</html>

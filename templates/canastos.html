@@ -291,6 +291,8 @@
         <div><label>Límite diario de producción (canastos): <input type="number" id="cupo_diario" name="cupo_diario" value="{{ session.get('cupo_diario', 120) }}" required></label></div>
         <button type="submit">✅ Calcular</button>
         <button type="button" class="limpiar" onclick="limpiarFormulario()">❌ Limpiar todo</button>
+        <input type="hidden" name="incluir_sabado" value="{{ session.get('incluir_sabado', False)|int }}">
+        <input type="hidden" name="incluir_domingo" value="{{ session.get('incluir_domingo', False)|int }}">
     </form>
     <div id="spinner-container" class="spinner-container">
         <div class="spinner"></div>
@@ -301,6 +303,9 @@
     <div class="recuadro" style="margin-top: 20px;">
         <h2>Definir calendario de producción</h2>
         <form method="post" action="/calendario">
+            {% if session.get('dias_habilitados') %}
+                <p><strong>Días seleccionados para producción:</strong> {{ session.get('dias_habilitados') | join(', ') | title }}</p>
+            {% endif %}
             <label for="fecha_inicio">Fecha de inicio de producción:</label>
             <input type="date" id="fecha_inicio" name="fecha_inicio" required>
             <p style="margin-top: 10px;">
@@ -309,6 +314,11 @@
                 ((canastos.values() | sum - 1) // session.get('cupo_diario', 120) + 1)
               }} días de producción.
             </p>
+            {% for dia in ['lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado', 'domingo'] %}
+                {% if session.get('dias_habilitados') and dia in session.get('dias_habilitados') %}
+                    <input type="hidden" name="dias_habilitados" value="{{ dia }}">
+                {% endif %}
+            {% endfor %}
             <button type="submit" class="btn-print">📅 Generar Calendario</button>
         </form>
     </div>
@@ -389,6 +399,9 @@
                 <input type="hidden" name="calabaza" id="excel_calabaza">
                 <input type="hidden" name="brocoli" id="excel_brocoli">
                 <button type="submit">⬇️ Exportar a Excel</button>
+                {% if session.get('rol') == 'admin' %}
+                    <a href="{{ url_for('costos') }}" class="btn-print" style="margin-left: 10px;">💲 Ver Costos</a>
+                {% endif %}
             </form>
             <button class="no-print btn-print" onclick="imprimirBloque('bloque-totalizado')">🖨️ Imprimir</button>
         </div>

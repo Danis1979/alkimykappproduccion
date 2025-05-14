@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, send_file, session, redirect, url_for, jsonify
+from flask import Flask, render_template, request, send_file, session, redirect, url_for, jsonify, flash
 from io import BytesIO
 from openpyxl.styles import Font, Border, Side
 from openpyxl.utils import get_column_letter
@@ -35,7 +35,10 @@ CANASTOS_BASE = 94
 
 @app.route('/')
 def home():
-    return render_template('index.html')
+    if 'usuario' in session and session.get('rol') == 'admin':
+        return render_template('index.html')
+    else:
+        return redirect(url_for('login_admin'))
 
 @app.route('/canastos', methods=['GET', 'POST'])
 def canastos():
@@ -188,6 +191,9 @@ def canastos():
         total_canastos = sum(canastos.values()) if canastos else 0
         dias_produccion = (total_canastos + cupo_diario_default - 1) // cupo_diario_default if total_canastos > 0 else 0
 
+    # Obtener los días seleccionados de la configuración para mostrar en la plantilla
+    dias_seleccionados = session.get('dias_habilitados', ['lunes', 'martes', 'miércoles', 'jueves', 'viernes'])
+    mostrar_boton_costos = 'usuario' in session and session.get('rol') == 'admin' and bool(ingredientes)
     return render_template('canastos.html',
                            ingredientes=ingredientes,
                            mostrar=mostrar,
@@ -195,7 +201,9 @@ def canastos():
                            detalles_por_sabor=detalles_por_sabor,
                            total_cajas=total_cajas,
                            cupo_diario_default=cupo_diario_default,
-                           dias_produccion=dias_produccion)
+                           dias_produccion=dias_produccion,
+                           dias_seleccionados=dias_seleccionados,
+                           mostrar_boton_costos=mostrar_boton_costos)
 
 
 
@@ -230,49 +238,66 @@ def generar_calendario():
     dias = []
     producidos = 0
 
+    dias_habilitados = session.get('dias_habilitados', [])
+    dias_habilitados = [d.lower() for d in dias_habilitados]
+
+    dias_traducidos = {
+        'monday': 'lunes',
+        'tuesday': 'martes',
+        'wednesday': 'miércoles',
+        'thursday': 'jueves',
+        'friday': 'viernes',
+        'saturday': 'sábado',
+        'sunday': 'domingo'
+    }
     while producidos < total:
-        if fecha.weekday() < 5:  # Lunes a Viernes
-            restante = total - producidos
-            hoy = min(cupo_diario, restante)
-            sabores_distribuidos = {}
-            restantes = hoy
-            # Distribuir los canastos entre sabores
-            ranking_sabores = ['caprese', 'queso_azul', 'espinaca', 'aceituna', 'calabaza', 'brocoli', 'cebolla']
-            for sabor in canastos.keys():
-                # preserve existing order if not in ranking
-                if sabor not in ranking_sabores:
-                    ranking_sabores.append(sabor)
+        dia_semana_en = fecha.strftime('%A').lower()
+        dia_semana_es = dias_traducidos.get(dia_semana_en, '').lower()
+        if dia_semana_es not in dias_habilitados:
+            fecha += timedelta(days=1)
+            continue
+
+        restante = total - producidos
+        hoy = min(cupo_diario, restante)
+        sabores_distribuidos = {}
+        restantes = hoy
+        # Distribuir los canastos entre sabores
+        ranking_sabores = ['caprese', 'queso_azul', 'espinaca', 'aceituna', 'calabaza', 'brocoli', 'cebolla']
+        for sabor in canastos.keys():
+            # preserve existing order if not in ranking
+            if sabor not in ranking_sabores:
+                ranking_sabores.append(sabor)
+        for sabor in ranking_sabores:
+            cantidad = canastos.get(sabor, 0)
+            if cantidad <= 0:
+                continue
+            asignar = min(cantidad, restantes)
+            if asignar > 0:
+                sabores_distribuidos[sabor] = asignar
+                canastos[sabor] -= asignar
+                restantes -= asignar
+            if restantes == 0:
+                break
+
+        # Reiniciar hoy a 0 antes del bloque de asignación forzada
+        hoy = 0
+        # Asegura que haya al menos un sabor asignado si quedan canastos de algún sabor
+        if not sabores_distribuidos and any(c > 0 for c in canastos.values()):
             for sabor in ranking_sabores:
-                cantidad = canastos.get(sabor, 0)
-                if cantidad <= 0:
-                    continue
-                asignar = min(cantidad, restantes)
-                if asignar > 0:
-                    sabores_distribuidos[sabor] = asignar
-                    canastos[sabor] -= asignar
-                    restantes -= asignar
-                if restantes == 0:
+                if canastos.get(sabor, 0) > 0:
+                    sabores_distribuidos[sabor] = 1
+                    canastos[sabor] -= 1
+                    hoy = 1
                     break
 
-            # Reiniciar hoy a 0 antes del bloque de asignación forzada
-            hoy = 0
-            # Asegura que haya al menos un sabor asignado si quedan canastos de algún sabor
-            if not sabores_distribuidos and any(c > 0 for c in canastos.values()):
-                for sabor in ranking_sabores:
-                    if canastos.get(sabor, 0) > 0:
-                        sabores_distribuidos[sabor] = 1
-                        canastos[sabor] -= 1
-                        hoy = 1
-                        break
-
-            # Solo agregar el día si hay algún sabor distribuido
-            if sabores_distribuidos:
-                dias.append({
-                    "fecha": fecha.strftime('%Y-%m-%d'),
-                    "canastos": sum(sabores_distribuidos.values()),
-                    "sabores": sabores_distribuidos
-                })
-                producidos += sum(sabores_distribuidos.values())
+        # Solo agregar el día si hay algún sabor distribuido
+        if sabores_distribuidos:
+            dias.append({
+                "fecha": fecha.strftime('%Y-%m-%d'),
+                "canastos": sum(sabores_distribuidos.values()),
+                "sabores": sabores_distribuidos
+            })
+            producidos += sum(sabores_distribuidos.values())
         fecha += timedelta(days=1)
 
     return jsonify(dias)
@@ -312,10 +337,29 @@ def calendario():
         calendario = []
         canastos_restantes = total_canastos
         canastos_sabores = canastos.copy()
+        dias_habilitados = session.get('dias_habilitados')
+        if not dias_habilitados:
+            dias_habilitados = ['lunes', 'martes', 'miércoles', 'jueves', 'viernes']
+        else:
+            dias_habilitados = [d.lower() for d in dias_habilitados]
 
+        dias_traducidos = {
+            'monday': 'lunes',
+            'tuesday': 'martes',
+            'wednesday': 'miércoles',
+            'thursday': 'jueves',
+            'friday': 'viernes',
+            'saturday': 'sábado',
+            'sunday': 'domingo'
+        }
         while canastos_restantes > 0:
             sabores_distribuidos = {}
-            if fecha_actual.weekday() < 5:  # lunes a viernes
+            # Traducir nombre del día a español en minúscula
+            dia_semana_en = fecha_actual.strftime('%A').lower()
+            dia_semana_es = dias_traducidos.get(dia_semana_en, '').lower()
+
+            # Solo agregar días si están habilitados
+            if dia_semana_es in dias_habilitados:
                 restantes = min(canastos_restantes, canastos_por_dia)
                 ranking_sabores = ['caprese', 'queso_azul', 'espinaca', 'aceituna', 'calabaza', 'brocoli', 'cebolla']
                 for sabor in ranking_sabores:
@@ -340,12 +384,12 @@ def calendario():
                     produccion_real = sum(sabores_distribuidos.values())
                     calendario.append({
                         'fecha': fecha_actual.strftime('%Y-%m-%d'),
-                        'dia_semana': fecha_actual.strftime('%A'),
+                        'dia_semana': dia_semana_es,
                         'canastos': produccion_real,
                         'sabores': sabores_distribuidos
                     })
                     canastos_restantes -= produccion_real
-            # Avanzar la fecha solo si fue un día hábil
+            # Avanzar la fecha
             fecha_actual += datetime.timedelta(days=1)
 
         return render_template('calendario.html', calendario=calendario)
@@ -646,6 +690,354 @@ def exportar_pdf():
 
 def abrir_navegador():
     webbrowser.open("http://127.0.0.1:5000")
+
+
+# Configuración de cupo diario y días de producción
+@app.route('/configuracion', methods=['GET', 'POST'])
+def configuracion():
+    if request.method == 'POST':
+        cupo_diario = request.form.get('cupo_diario')
+        incluir_sabado = 'incluir_sabado' in request.form
+        incluir_domingo = 'incluir_domingo' in request.form
+
+        try:
+            session['cupo_diario'] = int(cupo_diario)
+        except:
+            session['cupo_diario'] = 110  # valor por defecto si hay error
+
+        session['incluir_sabado'] = incluir_sabado
+        session['incluir_domingo'] = incluir_domingo
+
+        # Capturar días de producción seleccionados por el usuario
+        dias_habilitados = request.form.getlist('dias_habilitados')
+        session['dias_habilitados'] = dias_habilitados if dias_habilitados else ['lunes', 'martes', 'miércoles', 'jueves', 'viernes']
+
+        flash("Configuración guardada correctamente.", "success")
+        return redirect(url_for('home'))
+
+    # valores actuales o por defecto
+    cupo_actual = session.get('cupo_diario', 110)
+    sabado = session.get('incluir_sabado', False)
+    domingo = session.get('incluir_domingo', False)
+    return render_template(
+        'configuracion.html',
+        cupo_diario=cupo_actual,
+        incluir_sabado=sabado,
+        incluir_domingo=domingo,
+        dias_habilitados=session.get('dias_habilitados', ['lunes', 'martes', 'miércoles', 'jueves', 'viernes'])
+    )
+
+
+
+# Ruta para login de administrador
+@app.route('/login_admin', methods=['GET', 'POST'])
+def login_admin():
+    import sqlite3
+    from werkzeug.security import check_password_hash
+    if request.method == 'POST':
+        email = request.form.get('email')
+        password = request.form.get('password')
+        conn = sqlite3.connect('basedatos.db')
+        c = conn.cursor()
+        c.execute("SELECT * FROM usuarios WHERE email = ?", (email,))
+        user = c.fetchone()
+        conn.close()
+        if user and check_password_hash(user[3], password):
+            session['usuario'] = user[1]
+            session['rol'] = user[4]
+            if user[4] == 'admin':
+                flash('Inicio de sesión como administrador', 'success')
+                return render_template('menu_admin.html')
+            else:
+                flash('Inicio de sesión exitoso', 'success')
+                return redirect(url_for('home'))
+        else:
+            flash('Credenciales inválidas o sin permiso', 'danger')
+    return render_template('login_admin.html')
+
+
+
+# Ruta para crear un nuevo usuario (solo admin)
+@app.route('/crear_usuario', methods=['GET', 'POST'])
+def crear_usuario():
+    if session.get('rol') != 'admin':
+        flash('Acceso restringido solo para administradores.', 'danger')
+        return redirect(url_for('home'))
+    
+    if request.method == 'POST':
+        nombre = request.form.get('nombre')
+        email = request.form.get('email')
+        password = request.form.get('password')
+        rol = request.form.get('rol')
+
+        from werkzeug.security import generate_password_hash
+        password_hash = generate_password_hash(password)
+
+        import sqlite3
+        conn = sqlite3.connect('basedatos.db')
+        c = conn.cursor()
+        try:
+            c.execute("INSERT INTO usuarios (nombre, email, password, rol) VALUES (?, ?, ?, ?)",
+                      (nombre, email, password_hash, rol))
+            conn.commit()
+            flash('Usuario creado correctamente.', 'success')
+        except sqlite3.IntegrityError:
+            flash('El email ya está registrado.', 'danger')
+        conn.close()
+
+    return render_template('crear_usuario.html')
+
+
+
+# Ruta para cerrar sesión
+@app.route('/logout')
+def logout():
+    session.clear()
+    flash('Sesión cerrada correctamente.', 'success')
+    return redirect(url_for('login_admin'))
+
+
+# Nueva ruta /costos
+@app.route('/costos')
+def costos():
+    canastos = session.get('canastos', {})
+    if not canastos:
+        flash("No hay datos de producción cargados.", "warning")
+        return redirect(url_for('canastos'))
+
+    total_canastos = sum(canastos.values())
+    total_ingredientes = {}
+
+    def add(dic, nombre, cantidad_g):
+        dic[nombre] = dic.get(nombre, 0) + cantidad_g
+
+    add(total_ingredientes, 'Soja', MASA_POR_94_CANASTOS['soja_kg'] * total_canastos / CANASTOS_BASE)
+    add(total_ingredientes, 'Harina', MASA_POR_94_CANASTOS['harina_kg'] * total_canastos / CANASTOS_BASE)
+    add(total_ingredientes, 'Chimichurri', MASA_POR_94_CANASTOS['chimichurri_g'] * total_canastos / CANASTOS_BASE)
+    add(total_ingredientes, 'Sal', MASA_POR_94_CANASTOS['sal_g'] * total_canastos / CANASTOS_BASE)
+
+    for sabor, cantidad in canastos.items():
+        if cantidad == 0:
+            continue
+        unidades = cantidad * UNIDADES_POR_CANASTO
+
+        if sabor == 'aceituna':
+            add(total_ingredientes, 'Muzzarella', unidades * 15)
+            add(total_ingredientes, 'Aceitunas', unidades * 20)
+        elif sabor == 'caprese':
+            tomate_total = unidades * 25
+            add(total_ingredientes, 'Muzzarella', unidades * 15)
+            add(total_ingredientes, 'Tomate', tomate_total)
+            add(total_ingredientes, 'Albahaca', unidades * 2)
+            add(total_ingredientes, 'Sal', (tomate_total / 1000) * 4)
+        elif sabor == 'queso_azul':
+            mezcla_total = unidades * 30
+            porc_queso = 2.3 / (18 + 2.3)
+            porc_muzza = 1 - porc_queso
+            add(total_ingredientes, 'Muzzarella', mezcla_total * porc_muzza)
+            add(total_ingredientes, 'Queso Azul', mezcla_total * porc_queso)
+        elif sabor == 'cebolla':
+            cebolla_cruda = (unidades * 40) / 0.8
+            add(total_ingredientes, 'Cebolla', cebolla_cruda)
+            add(total_ingredientes, 'Orégano', (cebolla_cruda / 1000) * 2)
+            add(total_ingredientes, 'Sal', (cebolla_cruda / 1000) * 5)
+        elif sabor == 'espinaca':
+            total_relleno = unidades * 40 / 0.9
+            espinaca = total_relleno * 0.5 / 0.9
+            cebolla = total_relleno * 0.25 / 0.8
+            morron = total_relleno * 0.25 / 0.8
+            add(total_ingredientes, 'Espinaca', espinaca)
+            add(total_ingredientes, 'Cebolla', cebolla)
+            add(total_ingredientes, 'Morrón', morron)
+            add(total_ingredientes, 'Nuez Moscada', total_relleno / 1000 * 1)
+            add(total_ingredientes, 'Pimienta Negra', total_relleno / 1000 * 1)
+            add(total_ingredientes, 'Sal', total_relleno / 1000 * 5)
+        elif sabor == 'calabaza':
+            total_relleno = unidades * 40 / 0.8
+            add(total_ingredientes, 'Calabaza', total_relleno)
+            add(total_ingredientes, 'Cúrcuma', total_relleno / 1000 * 5)
+            add(total_ingredientes, 'Sal', total_relleno / 1000 * 5)
+        elif sabor == 'brocoli':
+            total_relleno = unidades * 40
+            add(total_ingredientes, 'Brócoli', total_relleno * 0.6)
+            add(total_ingredientes, 'Cebolla', total_relleno * 0.4 / 0.8)
+            add(total_ingredientes, 'Chimichurri', total_relleno / 1000 * 5)
+            add(total_ingredientes, 'Sal', total_relleno / 1000 * 5)
+
+    return render_template('costos.html', ingredientes=total_ingredientes)
+
+@app.route('/dashboard_rentabilidad')
+def dashboard_rentabilidad():
+    from flask import jsonify
+    canastos = session.get('canastos', {})
+    detalles_por_sabor = {}
+    for sabor, cantidad in canastos.items():
+        if cantidad == 0:
+            continue
+        unidades = cantidad * UNIDADES_POR_CANASTO
+        temp = {}
+        # Agregar ingredientes base (masa) a cada sabor
+        receta_masa_por_canasto = {
+            'Soja': (MASA_POR_94_CANASTOS['soja_kg'] * 1000) / CANASTOS_BASE,
+            'Harina': (MASA_POR_94_CANASTOS['harina_kg'] * 1000) / CANASTOS_BASE,
+            'Chimichurri': MASA_POR_94_CANASTOS['chimichurri_g'] / CANASTOS_BASE,
+            'Sal': MASA_POR_94_CANASTOS['sal_g'] / CANASTOS_BASE
+        }
+        for ingrediente_base, cantidad_por_canasto in receta_masa_por_canasto.items():
+            temp[ingrediente_base] = temp.get(ingrediente_base, 0) + (cantidad_por_canasto * cantidad)
+        if sabor == 'aceituna':
+            temp['Muzzarella'] = unidades * 15
+            temp['Aceitunas'] = unidades * 20
+        elif sabor == 'caprese':
+            tomate_total = unidades * 25
+            temp['Muzzarella'] = unidades * 15
+            temp['Tomate'] = tomate_total
+            temp['Albahaca'] = unidades * 2
+            temp['Sal'] = temp.get('Sal', 0) + (tomate_total / 1000) * 4
+        elif sabor == 'queso_azul':
+            mezcla_total = unidades * 30
+            porc_queso = 2.3 / (18 + 2.3)
+            porc_muzza = 1 - porc_queso
+            temp['Muzzarella'] = mezcla_total * porc_muzza
+            temp['Queso Azul'] = mezcla_total * porc_queso
+        elif sabor == 'cebolla':
+            cebolla_cruda = (unidades * 40) / 0.8
+            temp['Cebolla'] = cebolla_cruda
+            temp['Orégano'] = (cebolla_cruda / 1000) * 2
+            temp['Sal'] = temp.get('Sal', 0) + (cebolla_cruda / 1000) * 5
+        elif sabor == 'espinaca':
+            total_relleno = unidades * 40 / 0.9
+            espinaca = total_relleno * 0.5 / 0.9
+            cebolla = total_relleno * 0.25 / 0.8
+            morron = total_relleno * 0.25 / 0.8
+            temp['Espinaca'] = espinaca
+            temp['Cebolla'] = cebolla
+            temp['Morrón'] = morron
+            temp['Nuez Moscada'] = total_relleno / 1000 * 1
+            temp['Pimienta Negra'] = total_relleno / 1000 * 1
+            temp['Sal'] = temp.get('Sal', 0) + total_relleno / 1000 * 5
+        elif sabor == 'calabaza':
+            total_relleno = unidades * 40 / 0.8
+            temp['Calabaza'] = total_relleno
+            temp['Cúrcuma'] = total_relleno / 1000 * 5
+            temp['Sal'] = temp.get('Sal', 0) + total_relleno / 1000 * 5
+        elif sabor == 'brocoli':
+            total_relleno = unidades * 40
+            temp['Brócoli'] = total_relleno * 0.6
+            temp['Cebolla'] = total_relleno * 0.4 / 0.8
+            temp['Chimichurri'] = total_relleno / 1000 * 5
+            temp['Sal'] = temp.get('Sal', 0) + total_relleno / 1000 * 5
+        detalles_por_sabor[sabor] = temp
+        print(f"Receta para {sabor}: {temp}")
+
+    # Calcular packaging por sabor
+    total_packaging_por_sabor = {}
+    for sabor, cantidad_canastos in canastos.items():
+        if cantidad_canastos == 0:
+            continue
+        total_unidades = cantidad_canastos * UNIDADES_POR_CANASTO
+        total_packs = total_unidades / 4
+        total_cajas = total_packs / 15
+        try:
+            precio_pack = float(request.cookies.get("precio_pack", "0").replace(".", "").replace(",", "."))
+            precio_caja = float(request.cookies.get("precio_caja", "0").replace(".", "").replace(",", "."))
+        except:
+            precio_pack = 0
+            precio_caja = 0
+        costo_packaging = total_packs * precio_pack + total_cajas * precio_caja
+        total_packaging_por_sabor[sabor] = costo_packaging
+
+    # Agregar variable index=True al contexto antes del render_template
+    index = True
+    return render_template('dashboard_rentabilidad.html', detalles_por_sabor=detalles_por_sabor, total_packaging_por_sabor=total_packaging_por_sabor, index=True)
+
+@app.route('/resumen_datos')
+def resumen_datos():
+    canastos = session.get('canastos', {})
+    total_canastos = sum(canastos.values())
+    total_cajas = round((total_canastos * UNIDADES_POR_CANASTO) / (15 * 4))
+    total_ingredientes = {}
+
+    def add(dic, nombre, cantidad_g):
+        dic[nombre] = dic.get(nombre, 0) + cantidad_g
+
+    add(total_ingredientes, 'Soja', MASA_POR_94_CANASTOS['soja_kg'] * total_canastos / CANASTOS_BASE)
+    add(total_ingredientes, 'Harina', MASA_POR_94_CANASTOS['harina_kg'] * total_canastos / CANASTOS_BASE)
+    add(total_ingredientes, 'Chimichurri', MASA_POR_94_CANASTOS['chimichurri_g'] * total_canastos / CANASTOS_BASE)
+    add(total_ingredientes, 'Sal', MASA_POR_94_CANASTOS['sal_g'] * total_canastos / CANASTOS_BASE)
+
+    detalles_por_sabor = {}
+    for sabor, cantidad in canastos.items():
+        if cantidad == 0:
+            continue
+        unidades = cantidad * UNIDADES_POR_CANASTO
+        temp = {}
+        if sabor == 'aceituna':
+            temp['Muzzarella'] = unidades * 15
+            temp['Aceitunas'] = unidades * 20
+        elif sabor == 'caprese':
+            tomate_total = unidades * 25
+            temp['Muzzarella'] = unidades * 15
+            temp['Tomate'] = tomate_total
+            temp['Albahaca'] = unidades * 2
+            temp['Sal'] = (tomate_total / 1000) * 4
+        elif sabor == 'queso_azul':
+            mezcla_total = unidades * 30
+            porc_queso = 2.3 / (18 + 2.3)
+            porc_muzza = 1 - porc_queso
+            temp['Muzzarella'] = mezcla_total * porc_muzza
+            temp['Queso Azul'] = mezcla_total * porc_queso
+        elif sabor == 'cebolla':
+            cebolla_cruda = (unidades * 40) / 0.8
+            temp['Cebolla'] = cebolla_cruda
+            temp['Orégano'] = (cebolla_cruda / 1000) * 2
+            temp['Sal'] = (cebolla_cruda / 1000) * 5
+        elif sabor == 'espinaca':
+            total_relleno = unidades * 40 / 0.9
+            espinaca = total_relleno * 0.5 / 0.9
+            cebolla = total_relleno * 0.25 / 0.8
+            morron = total_relleno * 0.25 / 0.8
+            temp['Espinaca'] = espinaca
+            temp['Cebolla'] = cebolla
+            temp['Morrón'] = morron
+            temp['Nuez Moscada'] = total_relleno / 1000 * 1
+            temp['Pimienta Negra'] = total_relleno / 1000 * 1
+            temp['Sal'] = total_relleno / 1000 * 5
+        elif sabor == 'calabaza':
+            total_relleno = unidades * 40 / 0.8
+            temp['Calabaza'] = total_relleno
+            temp['Cúrcuma'] = total_relleno / 1000 * 5
+            temp['Sal'] = total_relleno / 1000 * 5
+        elif sabor == 'brocoli':
+            total_relleno = unidades * 40
+            temp['Brócoli'] = total_relleno * 0.6
+            temp['Cebolla'] = total_relleno * 0.4 / 0.8
+            temp['Chimichurri'] = total_relleno / 1000 * 5
+            temp['Sal'] = total_relleno / 1000 * 5
+        detalles_por_sabor[sabor] = temp
+        for k, v in temp.items():
+            add(total_ingredientes, k, v)
+
+    # Agregar masa base (soja, harina, chimichurri, sal) a detalles_por_sabor para cada sabor
+    receta_masa_por_canasto = {
+        'Soja': MASA_POR_94_CANASTOS['soja_kg'] / CANASTOS_BASE,
+        'Harina': MASA_POR_94_CANASTOS['harina_kg'] / CANASTOS_BASE,
+        'Chimichurri': MASA_POR_94_CANASTOS['chimichurri_g'] / CANASTOS_BASE,
+        'Sal': MASA_POR_94_CANASTOS['sal_g'] / CANASTOS_BASE
+    }
+    for sabor, cantidad_canastos in canastos.items():
+        if sabor not in detalles_por_sabor:
+            detalles_por_sabor[sabor] = {}
+        for ingrediente, cantidad_por_canasto in receta_masa_por_canasto.items():
+            detalles_por_sabor[sabor][ingrediente] = detalles_por_sabor[sabor].get(ingrediente, 0) + (cantidad_por_canasto * cantidad_canastos)
+
+    return jsonify({
+        'canastos': canastos,
+        'total_canastos': total_canastos,
+        'total_cajas': total_cajas,
+        'ingredientes_totales': total_ingredientes,
+        'detalles_por_sabor': detalles_por_sabor
+    })
 
 if __name__ == '__main__':
     threading.Timer(1.25, abrir_navegador).start()
