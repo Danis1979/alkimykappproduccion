@@ -2,6 +2,7 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Costos de Producción</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
     <style>
@@ -76,6 +77,41 @@
         }
         .btn-mac-style:active {
             transform: scale(0.97);
+        }
+
+        @media (max-width: 600px) {
+            .contenedor-costos {
+                padding: 20px;
+                margin: 20px 10px;
+            }
+
+            table {
+                font-size: 14px;
+            }
+
+            th, td {
+                padding: 8px;
+            }
+
+            .input-formulario {
+                width: 100% !important;
+            }
+
+            .btn-mac-style {
+                width: 100%;
+                text-align: center;
+            }
+
+            .volver {
+                width: 100%;
+                text-align: center;
+                margin-top: 16px;
+            }
+
+            h2, h3 {
+                font-size: 1.3em;
+                text-align: center;
+            }
         }
     </style>
 </head>

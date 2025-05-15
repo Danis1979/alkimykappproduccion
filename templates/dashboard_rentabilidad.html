@@ -2,6 +2,7 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard de Rentabilidad</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -60,6 +61,38 @@
         }
         .btn-mac-style:active {
             transform: scale(0.97);
+        }
+
+        @media (max-width: 600px) {
+            .contenedor-dashboard {
+                padding: 20px;
+                margin: 20px 10px;
+            }
+
+            .titulo-dashboard {
+                font-size: 1.6em;
+            }
+
+            .dato {
+                font-size: 16px;
+            }
+
+            table {
+                font-size: 14px;
+            }
+
+            th, td {
+                padding: 8px;
+            }
+
+            .btn-mac-style {
+                width: 100%;
+                text-align: center;
+            }
+
+            .grafico-container {
+                overflow-x: auto;
+            }
         }
     </style>
 </head>

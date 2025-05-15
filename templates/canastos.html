@@ -2,6 +2,7 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Producción Alkimyk</title>
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
     <style>
@@ -218,6 +219,39 @@
         .btn-mac-style:active {
             transform: scale(0.97);
         }
+    @media (max-width: 600px) {
+        body {
+            margin: 10px;
+        }
+        form div {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+        label {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+        input[type=number] {
+            width: 100%;
+        }
+        .btn-mac-style {
+            width: 100%;
+            margin-bottom: 10px;
+        }
+        .recuadro, form {
+            padding: 16px;
+            margin: 10px auto;
+            width: 95%;
+        }
+        .logo {
+            width: 120px;
+            top: 10px;
+            right: 10px;
+        }
+        h1 {
+            font-size: 1.4em;
+        }
+    }
     </style>
     <script>
         function mostrarTotalizado() {

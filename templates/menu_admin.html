@@ -2,6 +2,7 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Menú Administrador</title>
 </head>
     <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
@@ -47,6 +48,23 @@
         }
         .btn-mac-style:active {
             transform: scale(0.97);
+        }
+        @media (max-width: 600px) {
+            .contenedor-principal {
+                width: 90%;
+                padding: 20px;
+                margin: 30px auto;
+            }
+
+            h2 {
+                font-size: 1.5em;
+            }
+
+            .btn-mac-style {
+                width: 100%;
+                font-size: 1em;
+                padding: 14px;
+            }
         }
     </style>
 </head>

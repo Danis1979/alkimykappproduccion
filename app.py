@@ -746,8 +746,9 @@ def login_admin():
             session['usuario'] = user[1]
             session['rol'] = user[4]
             if user[4] == 'admin':
+                session['post_login_redirect'] = '/'
                 flash('Inicio de sesión como administrador', 'success')
-                return render_template('menu_admin.html')
+                return redirect('/splash')
             else:
                 flash('Inicio de sesión exitoso', 'success')
                 return redirect(url_for('home'))
@@ -1038,6 +1039,12 @@ def resumen_datos():
         'ingredientes_totales': total_ingredientes,
         'detalles_por_sabor': detalles_por_sabor
     })
+
+
+# Ruta para /splash
+@app.route('/splash')
+def splash():
+    return render_template('splash.html')
 
 if __name__ == '__main__':
     threading.Timer(1.25, abrir_navegador).start()

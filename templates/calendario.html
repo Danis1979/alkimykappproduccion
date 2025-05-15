@@ -2,6 +2,7 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Calendario de Producción</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
     <style>
@@ -62,6 +63,32 @@
         }
         .btn-mac-style:active {
             transform: scale(0.97);
+        }
+        @media (max-width: 600px) {
+            .tabla-calendario.mejorada th,
+            .tabla-calendario.mejorada td {
+                font-size: 14px;
+                padding: 8px;
+            }
+
+            .contenedor-principal {
+                padding: 20px;
+            }
+
+            h1 {
+                font-size: 1.4em;
+                text-align: center;
+            }
+
+            .botones-acciones {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .btn-mac-style {
+                width: 100%;
+                text-align: center;
+            }
         }
     </style>
 </head>

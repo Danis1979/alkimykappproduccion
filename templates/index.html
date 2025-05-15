@@ -2,6 +2,7 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Alkimyk Food</title>
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
     <style>
@@ -105,6 +106,45 @@
             padding: 20px;
             font-size: 0.9em;
             color: #444;
+        }
+        @media (max-width: 600px) {
+            .container {
+                padding: 20px;
+            }
+
+            .recuadro-principal {
+                padding: 20px;
+                margin: 0 10px;
+            }
+
+            h1 {
+                font-size: 1.5em;
+            }
+
+            .botones {
+                flex-direction: column;
+                gap: 12px;
+            }
+
+            .btn-mac-style {
+                width: 100%;
+                text-align: center;
+            }
+
+            .carousel-track img {
+                height: 120px;
+            }
+
+            .logo {
+                width: 100px;
+                top: 10px;
+                right: 20px;
+            }
+
+            .footer {
+                font-size: 0.8em;
+                padding: 10px;
+            }
         }
     </style>
 </head>

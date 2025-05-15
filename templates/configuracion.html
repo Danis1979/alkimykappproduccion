@@ -2,8 +2,40 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Configuración</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <style>
+    @media (max-width: 600px) {
+        .formulario-container {
+            width: 90% !important;
+            padding: 0 10px;
+        }
+
+        .campo-formulario {
+            margin-bottom: 20px;
+        }
+
+        .input-formulario {
+            width: 100%;
+        }
+
+        .boton-principal {
+            width: 100%;
+            padding: 12px;
+            font-size: 1em;
+        }
+
+        .checkbox-item {
+            margin-bottom: 10px;
+        }
+
+        .titulo-seccion {
+            font-size: 1.4em;
+            text-align: center;
+        }
+    }
+    </style>
 </head>
 <body>
     {% with messages = get_flashed_messages(with_categories=true) %}
