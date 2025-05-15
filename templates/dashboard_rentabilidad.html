@@ -287,6 +287,23 @@ document.addEventListener('DOMContentLoaded', () => {
                 } else if (porcentajeRentabilidadTotal < 30) {
                     colorTotal = '🟡';
                 }
+
+                // Calcular Punto de Equilibrio General
+                let margenTotal = 0;
+                let saboresValidos = 0;
+                Object.entries(cajasPorSabor).forEach(([sabor, cantidad]) => {
+                    const precio = precioPorSabor[sabor] || 0;
+                    const variable = costoVariablePorSabor[sabor] || 0;
+                    const packaging = (precioPack * 15) + precioCaja;
+                    const margen = precio - variable - packaging - costoFijoPorCaja;
+                    if (margen > 0) {
+                        margenTotal += margen;
+                        saboresValidos++;
+                    }
+                });
+                const margenPromedio = saboresValidos > 0 ? margenTotal / saboresValidos : 0;
+                const puntoEquilibrio = margenPromedio > 0 ? Math.ceil(totalFijos / margenPromedio) : 0;
+
                 contenedor.innerHTML = contenedor.innerHTML.slice(0, cierreTablaCajas + 8) +
                   `
     <p class="dato"><strong>Total a Facturar:</strong> $${totalFacturar.toLocaleString('es-AR', {minimumFractionDigits: 2})}</p>
@@ -297,6 +314,9 @@ document.addEventListener('DOMContentLoaded', () => {
             $${rentabilidadTotal.toLocaleString('es-AR', { minimumFractionDigits: 2 })} 
             | Rentabilidad: <strong>${porcentajeRentabilidadTotal.toFixed(1)}%</strong> ${colorTotal}
         </p>
+    </div>
+    <div style="padding: 12px; background-color: #e9f7ef; border: 1px solid #28a745; border-radius: 8px; margin-top: 15px;">
+        <strong>📊 Punto de Equilibrio:</strong> ${puntoEquilibrio.toLocaleString('es-AR')} cajas
     </div>
                   ` +
                   contenedor.innerHTML.slice(cierreTablaCajas + 8);
