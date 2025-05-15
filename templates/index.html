@@ -146,14 +146,53 @@
                 padding: 10px;
             }
         }
+        .top-bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            padding: 10px 20px;
+            position: relative;
+            z-index: 10;
+        }
+        .logo-top {
+            width: 120px;
+            height: auto;
+        }
+        .top-buttons {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+        @media (max-width: 600px) {
+            .top-bar {
+                flex-direction: column;
+                align-items: center;
+            }
+            .logo-top {
+                margin-bottom: 10px;
+                width: 100px;
+            }
+            .top-buttons {
+                width: 100%;
+                flex-direction: column;
+                align-items: center;
+            }
+            .btn-mac-style {
+                width: 90%;
+                margin-bottom: 8px;
+            }
+        }
     </style>
 </head>
 <body>
-    <div style="position: absolute; top: 20px; left: 40px; display: flex; gap: 20px;">
-        <a href="/configuracion" class="btn-mac-style">⚙️ Configuración</a>
-        <a href="/logout" class="btn-mac-style" title="Cerrar sesión">🔓 Log out</a>
+    <div class="top-bar">
+        <img src="/static/logo.png" alt="Logo Alkimyk" class="logo-top">
+        <div class="top-buttons">
+            <a href="/configuracion" class="btn-mac-style">⚙️ Configuración</a>
+            <a href="/logout" class="btn-mac-style" title="Cerrar sesión">🔓 Log out</a>
+        </div>
     </div>
-    <img src="/static/logo.png" alt="Logo Alkimyk" class="logo">
     <div class="container">
         <div class="recuadro-principal">
             <h1>Producción Alkimyk Food</h1>

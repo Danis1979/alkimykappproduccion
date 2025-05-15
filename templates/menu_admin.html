@@ -66,9 +66,49 @@
                 padding: 14px;
             }
         }
+        .top-bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            padding: 10px 20px;
+        }
+        .logo-top {
+            width: 120px;
+            height: auto;
+        }
+        .top-buttons {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+        @media (max-width: 600px) {
+            .top-bar {
+                flex-direction: column;
+                align-items: center;
+            }
+            .logo-top {
+                margin-bottom: 10px;
+                width: 100px;
+            }
+            .top-buttons {
+                width: 100%;
+                flex-direction: column;
+                align-items: center;
+            }
+            .btn-mac-style {
+                width: 90%;
+                margin-bottom: 8px;
+            }
+        }
     </style>
-</head>
 <body>
+    <div class="top-bar">
+        <img src="{{ url_for('static', filename='logo.png') }}" alt="Logo Alkimyk" class="logo-top">
+        <div class="top-buttons">
+            <a href="/" class="btn-mac-style">🏠 Menú Principal</a>
+        </div>
+    </div>
     <div class="contenedor-principal">
         <h2>Bienvenido, Administrador</h2>
 

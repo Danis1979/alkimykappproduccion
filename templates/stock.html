@@ -180,6 +180,41 @@
                 padding: 10px;
             }
         }
+        .top-bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            padding: 10px 20px;
+        }
+        .logo-top {
+            width: 120px;
+            height: auto;
+        }
+        .top-buttons {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+        @media (max-width: 600px) {
+            .top-bar {
+                flex-direction: column;
+                align-items: center;
+            }
+            .logo-top {
+                margin-bottom: 10px;
+                width: 100px;
+            }
+            .top-buttons {
+                width: 100%;
+                flex-direction: column;
+                align-items: center;
+            }
+            .btn-mac-style {
+                width: 90%;
+                margin-bottom: 8px;
+            }
+        }
     </style>
     <script>
         function limpiarCajas() {
@@ -188,8 +223,12 @@
     </script>
 </head>
 <body>
-    <img src="/static/logo.png" class="logo" alt="Logo Alkimyk">
-    <a href="/" class="btn-mac-style" style="position: absolute; top: 20px; left: 40px;">🏠 Menú Principal</a>
+    <div class="top-bar">
+        <img src="/static/logo.png" alt="Logo Alkimyk" class="logo-top">
+        <div class="top-buttons">
+            <a href="/" class="btn-mac-style">🏠 Menú Principal</a>
+        </div>
+    </div>
 
     <h1>¿Cuántas cajas queremos producir?</h1>
     <form method="POST">
