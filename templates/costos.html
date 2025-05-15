@@ -56,6 +56,27 @@
         .volver:hover {
             background-color: #5a6268;
         }
+
+        .btn-mac-style {
+            background: linear-gradient(to bottom, #f9f9f9, #e0e0e0);
+            border: 1px solid #ccc;
+            border-radius: 12px;
+            padding: 10px 20px;
+            font-size: 0.95em;
+            color: #333;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.08);
+        }
+        .btn-mac-style:hover {
+            background: linear-gradient(to bottom, #ffffff, #d4d4d4);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            transform: translateY(-1px);
+        }
+        .btn-mac-style:active {
+            transform: scale(0.97);
+        }
     </style>
 </head>
 <body>
@@ -188,11 +209,11 @@
             </table>
         </div>
 
-        <div style="margin-top: 30px; display: flex; flex-wrap: wrap; gap: 16px; align-items: center;">
-            <button type="button" onclick="calcularRentabilidad()" class="boton-principal">📊 Calcular Rentabilidad</button>
-            <button onclick="window.print()" class="boton-principal">🖨️ Imprimir</button>
-            <button onclick="guardarPrecios()" class="boton-principal">💾 Guardar Cambios</button>
-            <button class="volver" onclick="confirmarYVolver()" style="margin-top: 0; margin-left: auto;">Volver al menú</button>
+        <div style="margin-top: 30px; display: flex; flex-wrap: wrap; gap: 16px; align-items: center; justify-content: center;">
+            <button type="button" onclick="calcularRentabilidad()" class="btn-mac-style">📊 Calcular Rentabilidad</button>
+            <button onclick="window.print()" class="btn-mac-style">🖨️ Imprimir</button>
+            <button onclick="guardarPrecios()" class="btn-mac-style">💾 Guardar Cambios</button>
+            <button class="btn-mac-style" onclick="confirmarYVolver()">↩️ Volver al menú</button>
         </div>
 
         <div id="resultado" style="margin-top: 30px; font-size: 18px;"></div>

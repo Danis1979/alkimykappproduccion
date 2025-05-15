@@ -3,10 +3,67 @@
 <head>
     <meta charset="UTF-8">
     <title>Login Administrador</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <style>
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background: linear-gradient(to bottom, #ffffff, #f0f0f0);
+            margin: 0;
+            padding: 0;
+        }
+        .contenedor-login {
+            background-color: #fff;
+            max-width: 400px;
+            margin: 20px auto;
+            padding: 30px 40px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+        h2 {
+            margin-bottom: 25px;
+            color: #333;
+        }
+        .campo-formulario {
+            margin-bottom: 20px;
+            text-align: left;
+        }
+        .label-formulario {
+            display: block;
+            margin-bottom: 6px;
+            font-weight: 500;
+        }
+        .input-formulario {
+            width: 100%;
+            padding: 10px;
+            border-radius: 8px;
+            border: 1px solid #ccc;
+            font-size: 14px;
+        }
+        .btn-mac-style {
+            background: linear-gradient(to bottom, #f9f9f9, #e0e0e0);
+            border: 1px solid #ccc;
+            border-radius: 12px;
+            padding: 10px 20px;
+            font-size: 0.95em;
+            color: #333;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.08);
+        }
+        .btn-mac-style:hover {
+            background: linear-gradient(to bottom, #ffffff, #d4d4d4);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            transform: translateY(-1px);
+        }
+        .btn-mac-style:active {
+            transform: scale(0.97);
+        }
+    </style>
 </head>
 <body>
-    <div class="contenedor-principal">
+    <img src="{{ url_for('static', filename='logo.png') }}" alt="Logo Alkimyk" style="width: 130px; display: block; margin: 40px auto 10px auto;">
+    <div class="contenedor-login">
         <h2>Ingreso Administrador</h2>
         {% with messages = get_flashed_messages(with_categories=true) %}
           {% if messages %}
@@ -24,7 +81,7 @@
                 <label for="password" class="label-formulario">Contraseña:</label>
                 <input type="password" name="password" required class="input-formulario">
             </div>
-            <button type="submit" class="boton-principal">Ingresar</button>
+            <button type="submit" class="btn-mac-style">🔐 Ingresar</button>
         </form>
     </div>
 </body>

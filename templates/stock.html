@@ -85,6 +85,26 @@
         .limpiar:hover {
             background-color: #da190b;
         }
+        .btn-mac-style {
+            background: linear-gradient(to bottom, #f9f9f9, #e0e0e0);
+            border: 1px solid #ccc;
+            border-radius: 12px;
+            padding: 10px 20px;
+            font-size: 0.95em;
+            color: #333;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.08);
+        }
+        .btn-mac-style:hover {
+            background: linear-gradient(to bottom, #ffffff, #d4d4d4);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            transform: translateY(-1px);
+        }
+        .btn-mac-style:active {
+            transform: scale(0.97);
+        }
         .recuadro {
             max-width: 600px;
             margin: 30px auto;
@@ -122,7 +142,7 @@
 </head>
 <body>
     <img src="/static/logo.png" class="logo" alt="Logo Alkimyk">
-    <a href="/" class="menu-principal">🏠 Menú Principal</a>
+    <a href="/" class="btn-mac-style" style="position: absolute; top: 20px; left: 40px;">🏠 Menú Principal</a>
 
     <h1>¿Cuántas cajas queremos producir?</h1>
     <form method="POST">
@@ -135,8 +155,8 @@
             <label> Cajas Calabaza: <input type="number" name="calabaza" value="0"> </label>
             <label> Cajas Brócoli: <input type="number" name="brocoli" value="0"> </label>
         </div>
-        <button type="submit">📦 Calcular Canastos</button>
-        <button type="button" class="limpiar" onclick="limpiarCajas()">❌ Limpiar todo</button>
+        <button type="submit" class="btn-mac-style">📦 Calcular Canastos</button>
+        <button type="button" class="btn-mac-style limpiar" onclick="limpiarCajas()">❌ Limpiar todo</button>
     </form>
 
     {% if canastos %}
@@ -152,7 +172,7 @@
             {% endfor %}
         </table>
         <form action="/canastos" method="GET">
-            <button type="submit">📥 Copiar estos valores a la producción</button>
+            <button type="submit" class="btn-mac-style">📥 Copiar estos valores a la producción</button>
         </form>
     </div>
     {% endif %}

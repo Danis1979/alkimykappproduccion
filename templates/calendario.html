@@ -41,22 +41,27 @@
             text-align: center;
         }
 
-        .botones-acciones a, .botones-acciones button {
-            display: inline-block;
-            margin: 0 15px;
-            padding: 12px 20px;
-            font-size: 15px;
-            border: none;
-            border-radius: 5px;
-            background-color: #007bff;
-            color: white;
-            text-decoration: none;
+        .btn-mac-style {
+            background: linear-gradient(to bottom, #f9f9f9, #e0e0e0);
+            border: 1px solid #ccc;
+            border-radius: 12px;
+            padding: 10px 20px;
+            font-size: 0.95em;
+            color: #333;
+            font-weight: 500;
             cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.08);
+            text-decoration: none;
+            display: inline-block;
         }
-
-        .botones-acciones button:hover,
-        .botones-acciones a:hover {
-            background-color: #0056b3;
+        .btn-mac-style:hover {
+            background: linear-gradient(to bottom, #ffffff, #d4d4d4);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            transform: translateY(-1px);
+        }
+        .btn-mac-style:active {
+            transform: scale(0.97);
         }
     </style>
 </head>
@@ -105,9 +110,9 @@
                 {% endfor %}
             </tbody>
         </table>
-        <div class="botones-acciones">
-            <a href="/" class="boton-principal">🏠 Volver al Menú Principal</a>
-            <button onclick="window.print()">🖨️ Imprimir Calendario</button>
+        <div class="botones-acciones" style="margin-top: 30px; display: flex; flex-wrap: wrap; gap: 16px; justify-content: center;">
+            <a href="/" class="btn-mac-style">🏠 Volver al Menú Principal</a>
+            <button onclick="window.print()" class="btn-mac-style">🖨️ Imprimir Calendario</button>
         </div>
     </div>
 </body>

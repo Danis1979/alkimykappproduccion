@@ -3,7 +3,52 @@
 <head>
     <meta charset="UTF-8">
     <title>Menú Administrador</title>
+</head>
     <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <style>
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background: linear-gradient(to bottom, #ffffff, #f0f0f0);
+            margin: 0;
+            padding: 0;
+        }
+        .contenedor-principal {
+            background-color: #fff;
+            max-width: 500px;
+            margin: 50px auto;
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+        h2 {
+            margin-bottom: 25px;
+            color: #333;
+        }
+        .btn-mac-style {
+            background: linear-gradient(to bottom, #f9f9f9, #e0e0e0);
+            border: 1px solid #ccc;
+            border-radius: 12px;
+            padding: 12px 24px;
+            font-size: 1em;
+            color: #333;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.08);
+            text-decoration: none;
+            display: inline-block;
+            margin: 10px;
+        }
+        .btn-mac-style:hover {
+            background: linear-gradient(to bottom, #ffffff, #d4d4d4);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            transform: translateY(-1px);
+        }
+        .btn-mac-style:active {
+            transform: scale(0.97);
+        }
+    </style>
 </head>
 <body>
     <div class="contenedor-principal">
@@ -18,8 +63,8 @@
         {% endwith %}
 
         <div style="margin-top: 30px;">
-            <a href="{{ url_for('home') }}" class="boton-principal">🏠 Ir al Menú Principal</a>
-            <a href="{{ url_for('crear_usuario') }}" class="boton-principal">👤 Crear Nuevo Usuario</a>
+            <a href="{{ url_for('home') }}" class="btn-mac-style">🏠 Ir al Menú Principal</a>
+            <a href="{{ url_for('crear_usuario') }}" class="btn-mac-style">👤 Crear Nuevo Usuario</a>
         </div>
     </div>
 </body>

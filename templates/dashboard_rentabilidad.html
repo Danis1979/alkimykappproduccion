@@ -33,11 +33,33 @@
 
         .botones {
             margin-top: 40px;
-            text-align: center;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 16px;
+            justify-content: center;
         }
 
-        .botones a {
-            margin: 0 10px;
+        .btn-mac-style {
+            background: linear-gradient(to bottom, #f9f9f9, #e0e0e0);
+            border: 1px solid #ccc;
+            border-radius: 12px;
+            padding: 10px 20px;
+            font-size: 0.95em;
+            color: #333;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.08);
+            text-decoration: none;
+            display: inline-block;
+        }
+        .btn-mac-style:hover {
+            background: linear-gradient(to bottom, #ffffff, #d4d4d4);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            transform: translateY(-1px);
+        }
+        .btn-mac-style:active {
+            transform: scale(0.97);
         }
     </style>
 </head>
@@ -59,11 +81,11 @@
             <canvas id="graficoDistribucionCostos" style="max-height:300px;"></canvas>
         </div>
 
-        <div class="botones">
-            <a href="{{ url_for('costos') }}" class="boton-principal">🔙 Volver a Costos</a>
-            <button onclick="descargarResumen()" class="boton-principal">💾 Guardar Resumen</button>
-            <button onclick="window.print()" class="boton-principal">🖨️ Imprimir</button>
-            <button onclick="calcularRentabilidad()" class="boton-principal">📈 Calcular Rentabilidad</button>
+        <div class="botones" style="margin-top: 40px; display: flex; flex-wrap: wrap; gap: 16px; justify-content: center;">
+            <a href="{{ url_for('costos') }}" class="btn-mac-style">🔙 Volver a Costos</a>
+            <button onclick="descargarResumen()" class="btn-mac-style">💾 Guardar Resumen</button>
+            <button onclick="window.print()" class="btn-mac-style">🖨️ Imprimir</button>
+            <button onclick="calcularRentabilidad()" class="btn-mac-style">📈 Calcular Rentabilidad</button>
         </div>
     </div>
 

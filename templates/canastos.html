@@ -197,6 +197,27 @@
         .btn-print:hover {
             background-color: #1976D2;
         }
+        /* Botones estilo Mac modernos para exportar, imprimir y ver costos */
+        .btn-mac-style {
+            background: linear-gradient(to bottom, #f9f9f9, #e0e0e0);
+            border: 1px solid #ccc;
+            border-radius: 12px;
+            padding: 10px 20px;
+            font-size: 0.95em;
+            color: #333;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.08);
+        }
+        .btn-mac-style:hover {
+            background: linear-gradient(to bottom, #ffffff, #d4d4d4);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            transform: translateY(-1px);
+        }
+        .btn-mac-style:active {
+            transform: scale(0.97);
+        }
     </style>
     <script>
         function mostrarTotalizado() {
@@ -277,7 +298,7 @@
 </head>
 <body>
     <img src="/static/logo.png" class="logo" alt="Logo Alkimyk">
-    <a href="/" class="menu-principal">🏠 Menú Principal</a>
+    <a href="/" class="btn-mac-style" style="position: absolute; top: 20px; left: 40px;">🏠 Menú Principal</a>
 
     <h1 style="margin-bottom: 30px;">¿Qué tenemos que producir?</h1>
     <form method="post" action="/canastos" onsubmit="return validarFormulario();" style="max-width: 600px; margin: 0 auto; background-color: #ffffff; padding: 20px; border-radius: 10px; box-shadow: 0 0 10px rgba(0,0,0,0.1); color: #000; border: 1px solid #000; text-align: justify;">
@@ -289,8 +310,8 @@
         <div><label>Canastos Calabaza: <input type="number" id="calabaza" name="calabaza" value="{{ canastos.get('calabaza', 0) }}" required></label></div>
         <div><label>Canastos Brócoli: <input type="number" id="brocoli" name="brocoli" value="{{ canastos.get('brocoli', 0) }}" required></label></div>
         <div><label>Límite diario de producción (canastos): <input type="number" id="cupo_diario" name="cupo_diario" value="{{ session.get('cupo_diario', 120) }}" required></label></div>
-        <button type="submit">✅ Calcular</button>
-        <button type="button" class="limpiar" onclick="limpiarFormulario()">❌ Limpiar todo</button>
+        <button type="submit" class="btn-mac-style">✅ Calcular</button>
+        <button type="button" class="btn-mac-style limpiar" onclick="limpiarFormulario()">❌ Limpiar todo</button>
         <input type="hidden" name="incluir_sabado" value="{{ session.get('incluir_sabado', False)|int }}">
         <input type="hidden" name="incluir_domingo" value="{{ session.get('incluir_domingo', False)|int }}">
     </form>
@@ -319,7 +340,7 @@
                     <input type="hidden" name="dias_habilitados" value="{{ dia }}">
                 {% endif %}
             {% endfor %}
-            <button type="submit" class="btn-print">📅 Generar Calendario</button>
+            <button type="submit" class="btn-mac-style">📅 Generar Calendario</button>
         </form>
     </div>
     {% endif %}
@@ -329,7 +350,7 @@
     {% if mostrar %}
     <div id="bloque-por-sabor" class="recuadro printable">
         <h2>Ingredientes por sabor</h2>
-        <button class="no-print btn-print" onclick="imprimirBloque('bloque-por-sabor')">🖨️ Imprimir</button>
+        <button class="no-print btn-mac-style" onclick="imprimirBloque('bloque-por-sabor')">🖨️ Imprimir</button>
         {% for sabor, ingredientes_sabor in detalles_por_sabor.items() %}
             {% if canastos[sabor] > 0 %}
                 {% set cajas = (canastos[sabor] * 18) // 60 %}
@@ -358,7 +379,7 @@
 
     {% if mostrar %}
     <div class="separador">
-        <button id="boton-total" onclick="mostrarTotalizado(); return false;">📋 Mostrar totalizado de compras</button>
+        <button id="boton-total" class="btn-mac-style" onclick="mostrarTotalizado(); return false;">📋 Mostrar totalizado de compras</button>
 
         <div id="bloque-totalizado" class="recuadro printable" style="display: none;">
             {% set total_cajas = ((canastos.values() | sum) * 18) // 60 %}
@@ -390,20 +411,24 @@
                 {% endfor %}
             </table>
 
-            <form method="post" action="/exportar" onsubmit="return copiarCanastos()">
-                <input type="hidden" name="aceituna" id="excel_aceituna">
-                <input type="hidden" name="caprese" id="excel_caprese">
-                <input type="hidden" name="queso_azul" id="excel_queso_azul">
-                <input type="hidden" name="cebolla" id="excel_cebolla">
-                <input type="hidden" name="espinaca" id="excel_espinaca">
-                <input type="hidden" name="calabaza" id="excel_calabaza">
-                <input type="hidden" name="brocoli" id="excel_brocoli">
-                <button type="submit">⬇️ Exportar a Excel</button>
+            <div style="display: flex; flex-wrap: wrap; gap: 16px; margin-top: 30px; align-items: center; justify-content: center;">
+                <form method="post" action="/exportar" onsubmit="return copiarCanastos()" style="display: inline;">
+                    <input type="hidden" name="aceituna" id="excel_aceituna">
+                    <input type="hidden" name="caprese" id="excel_caprese">
+                    <input type="hidden" name="queso_azul" id="excel_queso_azul">
+                    <input type="hidden" name="cebolla" id="excel_cebolla">
+                    <input type="hidden" name="espinaca" id="excel_espinaca">
+                    <input type="hidden" name="calabaza" id="excel_calabaza">
+                    <input type="hidden" name="brocoli" id="excel_brocoli">
+                    <button type="submit" class="btn-mac-style">⬇️ Exportar a Excel</button>
+                </form>
+
+                <button class="btn-mac-style no-print" onclick="imprimirBloque('bloque-totalizado')">🖨️ Imprimir</button>
+
                 {% if session.get('rol') == 'admin' %}
-                    <a href="{{ url_for('costos') }}" class="btn-print" style="margin-left: 10px;">💲 Ver Costos</a>
+                    <a href="{{ url_for('costos') }}" class="btn-mac-style">💲 Ver Costos</a>
                 {% endif %}
-            </form>
-            <button class="no-print btn-print" onclick="imprimirBloque('bloque-totalizado')">🖨️ Imprimir</button>
+            </div>
         </div>
     </div>
     {% endif %}
