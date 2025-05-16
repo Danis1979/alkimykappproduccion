@@ -161,6 +161,12 @@
             <button onclick="descargarResumen()" class="btn-mac-style">💾 Guardar Resumen</button>
             <button onclick="window.print()" class="btn-mac-style">🖨️ Imprimir</button>
             <button onclick="calcularRentabilidad()" class="btn-mac-style">📈 Calcular Rentabilidad</button>
+            <button onclick="guardarMesEnHistorico()" class="btn-mac-style">💾 Guardar Mes en Histórico</button>
+        </div>
+        <!-- Comparativa de Rentabilidad Histórica -->
+        <div id="historico-rentabilidad" style="margin-top: 60px;">
+            <h3 style="text-align: center;">📊 Comparativa de Rentabilidad Histórica</h3>
+            <canvas id="graficoHistorico" style="max-height: 400px; margin-top: 20px;"></canvas>
         </div>
     </div>
 
@@ -391,40 +397,39 @@ document.addEventListener('DOMContentLoaded', () => {
                     colorTotal = '🟡';
                 }
 
-                // Calcular Punto de Equilibrio General
-                let margenTotal = 0;
-                let totalMargen = 0;
-                let totalCajasUtilizadas = 0;
+                // Nuevo cálculo del margen de contribución promedio real por caja y punto de equilibrio
+                const costoFijoPorCaja = totalCajasMes > 0 ? totalFijos / totalCajasMes : 0;
+                let sumaMargenContribucion = 0;
 
                 Object.entries(cajasPorSabor).forEach(([sabor, cantidad]) => {
-                    const precio = precioPorSabor[sabor] || 0;
-                    const variable = costoVariablePorSabor[sabor] || 0;
+                    const precioVenta = precioPorSabor[sabor] || 0;
+                    const costoVariable = costoVariablePorSabor[sabor] || 0;
                     const packaging = (precioPack * 15) + precioCaja;
-                    const costoTotal = variable + packaging + costoFijoPorCaja;
-                    const margen = precio - costoTotal;
-                    if (margen > 0 && cantidad > 0) {
-                        totalMargen += margen * cantidad;
-                        totalCajasUtilizadas += cantidad;
-                    }
+                    const costoTotal = costoVariable + packaging;
+                    const margenContribucionUnitario = precioVenta - costoTotal;
+                    sumaMargenContribucion += margenContribucionUnitario * cantidad;
                 });
 
-                const margenPromedio = totalCajasUtilizadas > 0 ? totalMargen / totalCajasUtilizadas : 0;
+                const margenPromedio = totalCajasMes > 0 ? sumaMargenContribucion / totalCajasMes : 0;
                 const puntoEquilibrio = margenPromedio > 0 ? Math.ceil(totalFijos / margenPromedio) : 0;
+                const puntoEquilibrioDinero = puntoEquilibrio * (totalFacturar / totalCajasMes);
 
                 contenedor.innerHTML = contenedor.innerHTML.slice(0, cierreTablaCajas + 8) +
                   `
-    <p class="dato"><strong>Total a Facturar:</strong> $${totalFacturar.toLocaleString('es-AR', {minimumFractionDigits: 2})}</p>
-    <p class="dato"><strong>Total con IVA (21%):</strong> $${totalConIVA.toLocaleString('es-AR', {minimumFractionDigits: 2})}</p>
-    <div style="border: 1px solid #ccc; padding: 10px; margin-top: 20px;">
-        <p class="dato">
-            <strong>Ganancia Total:</strong> 
-            $${rentabilidadTotal.toLocaleString('es-AR', { minimumFractionDigits: 2 })} 
-            | Rentabilidad: <strong>${porcentajeRentabilidadTotal.toFixed(1)}%</strong> ${colorTotal}
-        </p>
-    </div>
-    <div style="padding: 12px; background-color: #e9f7ef; border: 1px solid #28a745; border-radius: 8px; margin-top: 15px;">
-        <strong>📊 Punto de Equilibrio:</strong> ${puntoEquilibrio.toLocaleString('es-AR')} cajas
-    </div>
+<p class="dato"><strong>Total a Facturar:</strong> $${totalFacturar.toLocaleString('es-AR', {minimumFractionDigits: 2})}</p>
+<p class="dato"><strong>Total con IVA (21%):</strong> $${totalConIVA.toLocaleString('es-AR', {minimumFractionDigits: 2})}</p>
+<div style="border: 1px solid #ccc; padding: 10px; margin-top: 20px;">
+    <p class="dato">
+        <strong>Ganancia Total:</strong> 
+        $${rentabilidadTotal.toLocaleString('es-AR', { minimumFractionDigits: 2 })} 
+        | Rentabilidad: <strong>${porcentajeRentabilidadTotal.toFixed(1)}%</strong> ${colorTotal}
+    </p>
+</div>
+<div style="padding: 12px; background-color: #e9f7ef; border: 1px solid #28a745; border-radius: 8px; margin-top: 15px;">
+    <strong>📊 Punto de Equilibrio:</strong> ${puntoEquilibrio.toLocaleString('es-AR')} cajas
+    <br><strong>💵 Equivale a:</strong> $${puntoEquilibrioDinero.toLocaleString('es-AR', {minimumFractionDigits: 2})}
+    <br><span style="font-size: 13px; color: #555;">(Se calcula como Costos Fijos Totales ÷ Margen de Contribución Promedio por Caja)</span>
+</div>
                   ` +
                   contenedor.innerHTML.slice(cierreTablaCajas + 8);
             }
@@ -550,7 +555,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 Object.entries(receta).forEach(([ing, cantidad]) => {
                     const clave = ing.toLowerCase().replace(/\s+/g, '_');
                     const precio = parseFloat(ingredientesCostos[clave] || 0);
-                    let baseEnKg = ['soja', 'harina', 'pan_rallado'];
+                    let baseEnKg = ['soja', 'harina'];
                     const cantidadKg = baseEnKg.includes(clave) ? cantidad : cantidad / 1000;
                     const costo = cantidadKg * precio;
                     if (costo > 0) {
@@ -684,6 +689,51 @@ document.addEventListener('DOMContentLoaded', () => {
             console.error(err);
         });
 });
+// Comparativa de Rentabilidad Histórica
+const historico = JSON.parse(localStorage.getItem('resumen_historico') || '[]');
+if (historico.length > 0) {
+    historico.sort((a, b) => a.fecha.localeCompare(b.fecha));
+    const labelsHistorico = historico.map(r => r.fecha);
+    const rentabilidadHistorico = historico.map(r => r.porcentajeRentabilidadTotal || 0);
+
+    new Chart(document.getElementById("graficoHistorico"), {
+        type: 'line',
+        data: {
+            labels: labelsHistorico,
+            datasets: [{
+                label: 'Rentabilidad (%)',
+                data: rentabilidadHistorico,
+                fill: false,
+                borderColor: '#007bff',
+                tension: 0.1
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                title: {
+                    display: true,
+                    text: 'Evolución de la Rentabilidad Mensual'
+                },
+                tooltip: {
+                    callbacks: {
+                        label: context => context.raw.toFixed(1) + "%"
+                    }
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    title: {
+                        display: true,
+                        text: '% Rentabilidad'
+                    }
+                }
+            }
+        }
+    });
+}
+
 // Calculadora de Precio Sugerido por Rentabilidad Deseada
 function calcularPrecioSugerido(sabor, costoTotal) {
     const porcentaje = parseFloat(document.getElementById(`rentabilidad_${sabor}`).value || 0);
@@ -700,6 +750,33 @@ function calcularPrecioSugerido(sabor, costoTotal) {
 function toggleCalculadora() {
     const div = document.getElementById('bloque-calculadora');
     div.style.display = (div.style.display === "none") ? "block" : "none";
+}
+// Guardar resumen mensual en histórico (localStorage)
+</script>
+<script>
+function guardarMesEnHistorico() {
+    const mesActual = new Date().toISOString().slice(0, 7); // formato "2025-05"
+    const resumen = {
+        fecha: mesActual,
+        cajasPorSabor: window.cajasPorSabor,
+        rentabilidadTotal: window.rentabilidadTotal,
+        totalFacturar: window.totalFacturar,
+        porcentajeRentabilidadTotal: window.porcentajeRentabilidadTotal
+    };
+
+    let historico = JSON.parse(localStorage.getItem('resumen_historico') || '[]');
+    const yaExiste = historico.some(r => r.fecha === mesActual);
+
+    if (yaExiste) {
+        if (!confirm("Ya existe un resumen guardado para este mes. ¿Deseás sobrescribirlo?")) {
+            return;
+        }
+        historico = historico.filter(r => r.fecha !== mesActual);
+    }
+
+    historico.push(resumen);
+    localStorage.setItem('resumen_historico', JSON.stringify(historico));
+    alert("✅ Resumen mensual guardado correctamente.");
 }
 </script>
 <script>
