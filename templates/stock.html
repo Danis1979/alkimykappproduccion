@@ -240,12 +240,19 @@
             <label> Cajas Espinaca: <input type="number" name="espinaca" value="0"> </label>
             <label> Cajas Calabaza: <input type="number" name="calabaza" value="0"> </label>
             <label> Cajas Brócoli: <input type="number" name="brocoli" value="0"> </label>
+            <label> Cajas Original: <input type="number" name="original" value="0"> </label>
         </div>
         <button type="submit" class="btn-mac-style">📦 Calcular Canastos</button>
         <button type="button" class="btn-mac-style limpiar" onclick="limpiarCajas()">❌ Limpiar todo</button>
     </form>
 
     {% if canastos %}
+    {# Ajuste para convertir cajas originales a canastos usando el factor 3.375 #}
+    {% set canastos = canastos.copy() %}
+    {% if canastos.original is defined and canastos.original < 1 %}
+        {% set original_cajas = canastos.original %}
+        {% set _ = canastos.update({'original': (original_cajas * 27 / 8) | round(2) }) %}
+    {% endif %}
     <div class="recuadro">
         <h2>Canastos a producir por sabor</h2>
         <table>

@@ -219,6 +219,20 @@
         .btn-mac-style:active {
             transform: scale(0.97);
         }
+        /* Logo top */
+        .logo-top {
+            width: 120px;
+            height: auto;
+            max-width: 100%;
+        }
+        /* Top bar flex layout */
+        .top-bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            padding: 10px 20px;
+        }
     @media (max-width: 600px) {
         body {
             margin: 10px;
@@ -251,6 +265,11 @@
         h1 {
             font-size: 1.4em;
         }
+        .logo-top {
+            margin-bottom: 10px;
+            width: 100px;
+            height: auto;
+        }
     }
     </style>
     <script>
@@ -266,6 +285,7 @@
             document.getElementById('espinaca').value = '0';
             document.getElementById('calabaza').value = '0';
             document.getElementById('brocoli').value = '0';
+            document.getElementById('original').value = '0';
             // El cupo diario NO se borra
             const bloques = ['bloque-por-sabor', 'bloque-totalizado', 'bloque-calendario'];
             bloques.forEach(id => {
@@ -289,6 +309,7 @@
             document.getElementById('excel_espinaca').value = document.querySelector('input[name="espinaca"]').value;
             document.getElementById('excel_calabaza').value = document.querySelector('input[name="calabaza"]').value;
             document.getElementById('excel_brocoli').value = document.querySelector('input[name="brocoli"]').value;
+            document.getElementById('excel_original').value = document.querySelector('input[name="original"]').value;
             return true;
         }
         function mostrarCarga() {
@@ -331,8 +352,12 @@
     </script>
 </head>
 <body>
-    <img src="/static/logo.png" class="logo" alt="Logo Alkimyk">
-    <a href="/" class="btn-mac-style" style="position: absolute; top: 20px; left: 40px;">🏠 Menú Principal</a>
+   <div class="top-bar">
+    <div class="top-buttons">
+        <a href="/" class="btn-mac-style">🏠 Menú Principal</a>
+    </div>
+    <img src="/static/logo.png" alt="Logo Alkimyk" class="logo-top">
+</div>
 
     <h1 style="margin-bottom: 30px;">¿Qué tenemos que producir?</h1>
     <form method="post" action="/canastos" onsubmit="return validarFormulario();" style="max-width: 600px; margin: 0 auto; background-color: #ffffff; padding: 20px; border-radius: 10px; box-shadow: 0 0 10px rgba(0,0,0,0.1); color: #000; border: 1px solid #000; text-align: justify;">
@@ -343,6 +368,7 @@
         <div><label>Canastos Espinaca: <input type="number" id="espinaca" name="espinaca" value="{{ canastos.get('espinaca', 0) }}" required></label></div>
         <div><label>Canastos Calabaza: <input type="number" id="calabaza" name="calabaza" value="{{ canastos.get('calabaza', 0) }}" required></label></div>
         <div><label>Canastos Brócoli: <input type="number" id="brocoli" name="brocoli" value="{{ canastos.get('brocoli', 0) }}" required></label></div>
+        <div><label>Canastos Original: <input type="number" id="original" name="original" value="{{ canastos.get('original', 0) }}" required></label></div>
         <div><label>Límite diario de producción (canastos): <input type="number" id="cupo_diario" name="cupo_diario" value="{{ session.get('cupo_diario', 120) }}" required></label></div>
         <button type="submit" class="btn-mac-style">✅ Calcular</button>
         <button type="button" class="btn-mac-style limpiar" onclick="limpiarFormulario()">❌ Limpiar todo</button>
@@ -355,6 +381,10 @@
     </div>
 
     {% if mostrar %}
+    {% set canastos = canastos.copy() %}
+    {% if canastos.original is defined and canastos.original < 1 %}
+        {% set _ = canastos.update({'original': (canastos.original * 27 / 8) | round(2) }) %}
+    {% endif %}
     <div class="recuadro" style="margin-top: 20px;">
         <h2>Definir calendario de producción</h2>
         <form method="post" action="/calendario">
@@ -387,7 +417,11 @@
         <button class="no-print btn-mac-style" onclick="imprimirBloque('bloque-por-sabor')">🖨️ Imprimir</button>
         {% for sabor, ingredientes_sabor in detalles_por_sabor.items() %}
             {% if canastos[sabor] > 0 %}
-                {% set cajas = (canastos[sabor] * 18) // 60 %}
+                {% if sabor == 'original' %}
+                    {% set cajas = (canastos[sabor] * 32) // (4 * 27) %}
+                {% else %}
+                    {% set cajas = (canastos[sabor] * 18) // 60 %}
+                {% endif %}
                 <div class="titulo-sabor">
                     <h3>{{ sabor.replace('_', ' ').capitalize() }} ({{ canastos[sabor] }} Canastos - {{ cajas }} Cajas)</h3>
                 </div>
@@ -397,7 +431,9 @@
                         <tr>
                             <td>{{ ingr }}</td>
                             <td>
-                                {% if cant >= 1000 %}
+                                {% if ingr in ['Soja', 'Harina'] %}
+                                    {{ cant | round(2) }} kg
+                                {% elif cant >= 1000 %}
                                     {{ (cant / 1000) | round(2) }} kg
                                 {% else %}
                                     {{ cant | round(2) }} g
@@ -416,7 +452,11 @@
         <button id="boton-total" class="btn-mac-style" onclick="mostrarTotalizado(); return false;">📋 Mostrar totalizado de compras</button>
 
         <div id="bloque-totalizado" class="recuadro printable" style="display: none;">
-            {% set total_cajas = ((canastos.values() | sum) * 18) // 60 %}
+            {% set unidades_originales = (canastos.original * 32) if canastos.original is defined else 0 %}
+            {% set unidades_rellenas = (
+                (canastos.aceituna + canastos.caprese + canastos.queso_azul + canastos.cebolla +
+                 canastos.espinaca + canastos.calabaza + canastos.brocoli) * 18) %}
+            {% set total_cajas = ((unidades_originales + unidades_rellenas) // 60) %}
             <h2>Total de ingredientes para comprar y elaborar {{ canastos.values() | sum }} canastos ({{ total_cajas }} Cajas)</h2>
             <table>
                 <tr><th>Ingrediente</th><th>Cantidad</th><th>Unidad</th></tr>
@@ -424,8 +464,8 @@
                     <tr>
                         <td>{{ ingrediente }}</td>
                         <td>
-                            {% if ingrediente == 'Soja' or ingrediente == 'Harina' %}
-                                {{ (cantidad / 1) | round(2) }}
+                            {% if ingrediente in ['Soja', 'Harina'] %}
+                                {{ cantidad | round(2) }}
                             {% elif cantidad >= 1000 %}
                                 {{ (cantidad / 1000) | round(2) }}
                             {% else %}
@@ -433,7 +473,7 @@
                             {% endif %}
                         </td>
                         <td>
-                            {% if ingrediente == 'Soja' or ingrediente == 'Harina' %}
+                            {% if ingrediente in ['Soja', 'Harina'] %}
                                 kg
                             {% elif cantidad >= 1000 %}
                                 kg
@@ -454,6 +494,7 @@
                     <input type="hidden" name="espinaca" id="excel_espinaca">
                     <input type="hidden" name="calabaza" id="excel_calabaza">
                     <input type="hidden" name="brocoli" id="excel_brocoli">
+                    <input type="hidden" name="original" id="excel_original">
                     <button type="submit" class="btn-mac-style">⬇️ Exportar a Excel</button>
                 </form>
 

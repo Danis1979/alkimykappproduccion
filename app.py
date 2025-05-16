@@ -9,6 +9,16 @@ import webbrowser
 import threading
 from datetime import datetime, timedelta
 
+
+# Definición de constantes globales para masas base por 94 canastos
+MASA_POR_94_CANASTOS = {
+    'soja_kg': 50,
+    'harina_kg': 39,
+    'chimichurri_g': 800,
+    'sal_g': 500
+}
+CANASTOS_BASE = 94
+
 app = Flask(__name__)
 app.secret_key = 'alkimyk_clave_segura'
 
@@ -25,13 +35,20 @@ def to_datetime_filter(value, format='%Y-%m-%d'):
     return datetime.strptime(value, format)
 
 UNIDADES_POR_CANASTO = 18
-MASA_POR_94_CANASTOS = {
+MASA_BASE_POR_100_CANASTOS = {
     'soja_kg': 50,
-    'harina_kg': 39,
+    'chimichurri_g': 600,
+    'sal_g': 500
+}
+MASA_BASE_CANASTOS = 100
+
+MASA_ORIGINALES_POR_85_CANASTOS = {
+    'soja_kg': 75,
+    'harina_kg': 30,
     'chimichurri_g': 800,
     'sal_g': 500
 }
-CANASTOS_BASE = 94
+MASA_ORIGINALES_CANASTOS = 85
 
 @app.route('/')
 def home():
@@ -98,28 +115,56 @@ def canastos():
         session['canastos'] = canastos
         total_canastos = sum(canastos.values())
 
-        total_ingredientes = {}
-        soja = MASA_POR_94_CANASTOS['soja_kg'] * total_canastos / CANASTOS_BASE
-        harina = MASA_POR_94_CANASTOS['harina_kg'] * total_canastos / CANASTOS_BASE
-        chimichurri = MASA_POR_94_CANASTOS['chimichurri_g'] * total_canastos / CANASTOS_BASE
-        sal_masa = MASA_POR_94_CANASTOS['sal_g'] * total_canastos / CANASTOS_BASE
+        # Definir unidades por canasto para original
+        UNIDADES_POR_CANASTO_ORIGINAL = 32
 
-        total_ingredientes['Soja'] = soja
-        total_ingredientes['Harina'] = harina
-        total_ingredientes['Chimichurri'] = chimichurri
-        total_ingredientes['Sal'] = sal_masa
+        total_ingredientes = {}
+        # Para sabores que NO sean 'original'
+        non_original_canastos = sum(c for s, c in canastos.items() if s != 'original')
+        def add(dic, nombre, cantidad_g):
+            dic[nombre] = dic.get(nombre, 0) + cantidad_g
+        if non_original_canastos > 0:
+            soja_no_original = MASA_BASE_POR_100_CANASTOS['soja_kg'] * non_original_canastos / MASA_BASE_CANASTOS
+            chimi_no_original = MASA_BASE_POR_100_CANASTOS['chimichurri_g'] * non_original_canastos / MASA_BASE_CANASTOS
+            sal_no_original = MASA_BASE_POR_100_CANASTOS['sal_g'] * non_original_canastos / MASA_BASE_CANASTOS
+
+            add(total_ingredientes, 'Soja', soja_no_original)
+            add(total_ingredientes, 'Chimichurri', chimi_no_original)
+            add(total_ingredientes, 'Sal', sal_no_original)
+
+        # Agregar receta de Original si existe
+        if 'original' in canastos and canastos['original'] > 0:
+            cantidad = canastos['original']
+            receta_originales = {
+                'Soja': 75,
+                'Harina': 30,
+                'Sal': 0.5,
+                'Chimichurri': 0.8
+            }
+            detalles_por_sabor['original'] = {}
+            for ingrediente, total_base in receta_originales.items():
+                cantidad_ingrediente = (total_base / 85) * cantidad
+                if ingrediente in ['Soja', 'Harina']:
+                    cantidad_final = round(cantidad_ingrediente, 2)
+                    detalles_por_sabor['original'][ingrediente] = cantidad_final
+                    # Sumar SIEMPRE en kg para Soja y Harina
+                    total_ingredientes[ingrediente] = total_ingredientes.get(ingrediente, 0) + cantidad_ingrediente
+                else:
+                    cantidad_final = round(cantidad_ingrediente * 1000, 2) if cantidad_ingrediente < 1 else round(cantidad_ingrediente, 2)
+                    detalles_por_sabor['original'][ingrediente] = cantidad_final
+                    # Sumar en g para los demás
+                    total_ingredientes[ingrediente] = total_ingredientes.get(ingrediente, 0) + cantidad_final
 
         for sabor, cantidad in canastos.items():
             if cantidad == 0:
                 continue
+            # No duplicar la lógica para original, ya está arriba
+            if sabor == 'original':
+                continue
             unidades = cantidad * UNIDADES_POR_CANASTO
             detalles_por_sabor[sabor] = {}
-
-            def add(dic, nombre, cantidad_g):
-                dic[nombre] = dic.get(nombre, 0) + cantidad_g
-
             temp = detalles_por_sabor[sabor]
-
+            # Masa base NO se agrega al desglose por sabor (solo ingredientes específicos del relleno)
             if sabor == 'aceituna':
                 add(temp, 'Muzzarella', unidades * 15)
                 add(temp, 'Aceitunas', unidades * 20)
@@ -162,12 +207,19 @@ def canastos():
                 add(temp, 'Cebolla', total_relleno * 0.4 / 0.8)
                 add(temp, 'Chimichurri', total_relleno / 1000 * 5)
                 add(temp, 'Sal', total_relleno / 1000 * 5)
-
             for k, v in temp.items():
                 total_ingredientes[k] = total_ingredientes.get(k, 0) + v
 
         ingredientes = total_ingredientes
-        total_cajas = round((total_canastos * UNIDADES_POR_CANASTO) / (15 * 4))
+        # Nuevo cálculo de total_cajas para 'original'
+        total_cajas = 0
+        for sabor, cantidad in canastos.items():
+            unidades_por_canasto = 32 if sabor == 'original' else UNIDADES_POR_CANASTO
+            total_unidades = cantidad * unidades_por_canasto
+            if sabor == 'original':
+                total_cajas += round(total_unidades / 108)
+            else:
+                total_cajas += round(total_unidades / (15 * 4))
 
         # Obtener el valor por defecto del límite diario de producción
         cupo_diario = request.form.get('cupo_diario')
@@ -181,7 +233,15 @@ def canastos():
         dias_produccion = (total_canastos + cupo_diario_default - 1) // cupo_diario_default
     else:
         # Si es GET o no se envió POST, preparar valores por defecto
-        total_cajas = round((sum(canastos.values()) * UNIDADES_POR_CANASTO) / (15 * 4)) if canastos else 0
+        total_cajas = 0
+        if canastos:
+            for sabor, cantidad in canastos.items():
+                unidades_por_canasto = 32 if sabor == 'original' else UNIDADES_POR_CANASTO
+                total_unidades = cantidad * unidades_por_canasto
+                if sabor == 'original':
+                    total_cajas += round(total_unidades / 108)
+                else:
+                    total_cajas += round(total_unidades / (15 * 4))
         cupo_diario = request.form.get('cupo_diario')
         if cupo_diario and cupo_diario.isdigit():
             session['cupo_diario'] = int(cupo_diario)
@@ -403,7 +463,7 @@ def stock():
     if request.method == 'POST':
         errores = []
         cajas = {}
-        for sabor in ['aceituna', 'caprese', 'queso_azul', 'cebolla', 'espinaca', 'calabaza', 'brocoli']:
+        for sabor in ['aceituna', 'caprese', 'queso_azul', 'cebolla', 'espinaca', 'calabaza', 'brocoli', 'original']:
             valor = request.form.get(sabor, '').strip()
             if not valor:
                 errores.append(f"El campo {sabor.capitalize()} no puede estar vacío.")
@@ -414,8 +474,13 @@ def stock():
         if errores:
             return render_template('stock.html', cajas=request.form, errores=errores)
         for sabor, cant_cajas in cajas.items():
-            total_unidades = cant_cajas * 15 * 4
-            canastos[sabor] = round(total_unidades / 18)
+            cant_cajas = int(cant_cajas) if cant_cajas else 0
+            if sabor == 'original':
+                total_unidades = cant_cajas * 27 * 4  # 27 packs por caja, 4 unidades por pack
+                canastos[sabor] = round(total_unidades / 32)
+            else:
+                total_unidades = cant_cajas * 15 * 4  # 15 packs por caja para otros sabores
+                canastos[sabor] = round(total_unidades / 18)
         session['canastos'] = canastos
         return redirect(url_for('canastos'))
     return render_template('stock.html', cajas=cajas, canastos=canastos)
@@ -429,68 +494,92 @@ def exportar_excel():
     detalles_por_sabor = {}
     ingredientes_totales = {}
     total_canastos = sum(canastos.values())
-    total_cajas = round((total_canastos * UNIDADES_POR_CANASTO) / (15 * 4))
-    soja = MASA_POR_94_CANASTOS['soja_kg'] * total_canastos / CANASTOS_BASE
-    harina = MASA_POR_94_CANASTOS['harina_kg'] * total_canastos / CANASTOS_BASE
-    chimichurri = MASA_POR_94_CANASTOS['chimichurri_g'] * total_canastos / CANASTOS_BASE
-    sal_masa = MASA_POR_94_CANASTOS['sal_g'] * total_canastos / CANASTOS_BASE
-
-    ingredientes_totales['Soja'] = soja
-    ingredientes_totales['Harina'] = harina
-    ingredientes_totales['Chimichurri'] = chimichurri
-    ingredientes_totales['Sal'] = sal_masa
+    # Cálculo especial de cajas considerando "original" con 32 unidades por canasto y 108 unidades por caja
+    total_cajas = 0
+    for sabor, cantidad in canastos.items():
+        unidades_por_canasto = 32 if sabor == 'original' else UNIDADES_POR_CANASTO
+        total_unidades = cantidad * unidades_por_canasto
+        if sabor == 'original':
+            total_cajas += round(total_unidades / 108)
+        else:
+            total_cajas += round(total_unidades / (15 * 4))
+    # Masa base para no-original
+    non_original_canastos = sum(c for s, c in canastos.items() if s != 'original')
+    if non_original_canastos > 0:
+        ingredientes_totales['Soja'] = MASA_BASE_POR_100_CANASTOS['soja_kg'] * non_original_canastos / MASA_BASE_CANASTOS
+        ingredientes_totales['Chimichurri'] = MASA_BASE_POR_100_CANASTOS['chimichurri_g'] * non_original_canastos / MASA_BASE_CANASTOS
+        ingredientes_totales['Sal'] = MASA_BASE_POR_100_CANASTOS['sal_g'] * non_original_canastos / MASA_BASE_CANASTOS
 
     for sabor, cantidad in canastos.items():
         if cantidad == 0:
             continue
-        unidades = cantidad * UNIDADES_POR_CANASTO
+        unidades = cantidad * (32 if sabor == 'original' else UNIDADES_POR_CANASTO)
         temp = {}
-        if sabor == 'aceituna':
-            temp['Muzzarella'] = unidades * 15
-            temp['Aceitunas'] = unidades * 20
-        elif sabor == 'caprese':
-            tomate_total = unidades * 25
-            temp['Muzzarella'] = unidades * 15
-            temp['Tomate'] = tomate_total
-            temp['Albahaca'] = unidades * 2
-            temp['Sal'] = (tomate_total / 1000) * 4
-        elif sabor == 'queso_azul':
-            mezcla_total = unidades * 30
-            porc_queso = 2.3 / (18 + 2.3)
-            porc_muzza = 1 - porc_queso
-            temp['Muzzarella'] = mezcla_total * porc_muzza
-            temp['Queso Azul'] = mezcla_total * porc_queso
-        elif sabor == 'cebolla':
-            cebolla_cruda = (unidades * 40) / 0.8
-            temp['Cebolla'] = cebolla_cruda
-            temp['Orégano'] = (cebolla_cruda / 1000) * 2
-            temp['Sal'] = (cebolla_cruda / 1000) * 5
-        elif sabor == 'espinaca':
-            total_relleno = unidades * 40 / 0.9
-            espinaca = total_relleno * 0.5 / 0.9
-            cebolla = total_relleno * 0.25 / 0.8
-            morron = total_relleno * 0.25 / 0.8
-            temp['Espinaca'] = espinaca
-            temp['Cebolla'] = cebolla
-            temp['Morrón'] = morron
-            temp['Nuez Moscada'] = total_relleno / 1000 * 1
-            temp['Pimienta Negra'] = total_relleno / 1000 * 1
-            temp['Sal'] = total_relleno / 1000 * 5
-        elif sabor == 'calabaza':
-            total_relleno = unidades * 40 / 0.8
-            temp['Calabaza'] = total_relleno
-            temp['Cúrcuma'] = total_relleno / 1000 * 5
-            temp['Sal'] = total_relleno / 1000 * 5
-        elif sabor == 'brocoli':
-            total_relleno = unidades * 40
-            temp['Brócoli'] = total_relleno * 0.6
-            temp['Cebolla'] = total_relleno * 0.4 / 0.8
-            temp['Chimichurri'] = total_relleno / 1000 * 5
-            temp['Sal'] = total_relleno / 1000 * 5
-
+        if sabor == 'original':
+            receta_originales = {
+                'Soja': 75,
+                'Harina': 30,
+                'Sal': 0.5,
+                'Chimichurri': 0.8
+            }
+            for ingrediente, total_base in receta_originales.items():
+                cantidad_ingrediente = (total_base / 85) * cantidad
+                if ingrediente in ['Soja', 'Harina']:
+                    cantidad_final = round(cantidad_ingrediente, 2)
+                else:
+                    cantidad_final = round(cantidad_ingrediente * 1000, 2) if cantidad_ingrediente < 1 else round(cantidad_ingrediente, 2)
+                temp[ingrediente] = cantidad_final
+                ingredientes_totales[ingrediente] = ingredientes_totales.get(ingrediente, 0) + cantidad_final
+        else:
+            # Masa base por sabor
+            temp['Soja'] = MASA_BASE_POR_100_CANASTOS['soja_kg'] * cantidad / MASA_BASE_CANASTOS
+            temp['Chimichurri'] = MASA_BASE_POR_100_CANASTOS['chimichurri_g'] * cantidad / MASA_BASE_CANASTOS
+            temp['Sal'] = MASA_BASE_POR_100_CANASTOS['sal_g'] * cantidad / MASA_BASE_CANASTOS
+            if sabor == 'aceituna':
+                temp['Muzzarella'] = unidades * 15
+                temp['Aceitunas'] = unidades * 20
+            elif sabor == 'caprese':
+                tomate_total = unidades * 25
+                temp['Muzzarella'] = unidades * 15
+                temp['Tomate'] = tomate_total
+                temp['Albahaca'] = unidades * 2
+                temp['Sal'] = temp.get('Sal', 0) + (tomate_total / 1000) * 4
+            elif sabor == 'queso_azul':
+                mezcla_total = unidades * 30
+                porc_queso = 2.3 / (18 + 2.3)
+                porc_muzza = 1 - porc_queso
+                temp['Muzzarella'] = mezcla_total * porc_muzza
+                temp['Queso Azul'] = mezcla_total * porc_queso
+            elif sabor == 'cebolla':
+                cebolla_cruda = (unidades * 40) / 0.8
+                temp['Cebolla'] = cebolla_cruda
+                temp['Orégano'] = (cebolla_cruda / 1000) * 2
+                temp['Sal'] = temp.get('Sal', 0) + (cebolla_cruda / 1000) * 5
+            elif sabor == 'espinaca':
+                total_relleno = unidades * 40 / 0.9
+                espinaca = total_relleno * 0.5 / 0.9
+                cebolla = total_relleno * 0.25 / 0.8
+                morron = total_relleno * 0.25 / 0.8
+                temp['Espinaca'] = espinaca
+                temp['Cebolla'] = cebolla
+                temp['Morrón'] = morron
+                temp['Nuez Moscada'] = total_relleno / 1000 * 1
+                temp['Pimienta Negra'] = total_relleno / 1000 * 1
+                temp['Sal'] = temp.get('Sal', 0) + total_relleno / 1000 * 5
+            elif sabor == 'calabaza':
+                total_relleno = unidades * 40 / 0.8
+                temp['Calabaza'] = total_relleno
+                temp['Cúrcuma'] = total_relleno / 1000 * 5
+                temp['Sal'] = temp.get('Sal', 0) + total_relleno / 1000 * 5
+            elif sabor == 'brocoli':
+                total_relleno = unidades * 40
+                temp['Brócoli'] = total_relleno * 0.6
+                temp['Cebolla'] = total_relleno * 0.4 / 0.8
+                temp['Chimichurri'] = total_relleno / 1000 * 5
+                temp['Sal'] = temp.get('Sal', 0) + total_relleno / 1000 * 5
+            for k, v in temp.items():
+                ingredientes_totales[k] = ingredientes_totales.get(k, 0) + v
         detalles_por_sabor[sabor] = temp
-        for k, v in temp.items():
-            ingredientes_totales[k] = ingredientes_totales.get(k, 0) + v
 
     output = BytesIO()
     wb = Workbook()
@@ -506,7 +595,11 @@ def exportar_excel():
         if row > 1:
             row += 2
         cantidad_canastos = canastos[sabor]
-        cantidad_cajas = round((cantidad_canastos * UNIDADES_POR_CANASTO) / (15 * 4))
+        # Usar 32 unidades para 'original', si corresponde, y 108 unidades por caja
+        if sabor == 'original':
+            cantidad_cajas = round((cantidad_canastos * 32) / 108)
+        else:
+            cantidad_cajas = round((cantidad_canastos * UNIDADES_POR_CANASTO) / (15 * 4))
         ws1.cell(row=row, column=1, value=f"{sabor.replace('_', ' ').capitalize()} ({cantidad_canastos} canastos, {cantidad_cajas} cajas)").font = Font(size=19, bold=True)
         row += 1
         ws1.cell(row=row, column=1, value="Ingrediente").font = font
@@ -569,59 +662,84 @@ def exportar_pdf():
     detalles_por_sabor = {}
     total_ingredientes = {}
     total_canastos = sum(canastos.values())
-    total_cajas = round((total_canastos * UNIDADES_POR_CANASTO) / (15 * 4))
+    # Cálculo especial de cajas considerando "original" con 32 unidades por canasto y 108 unidades por caja
+    total_cajas = 0
+    for sabor, cantidad in canastos.items():
+        unidades = cantidad * (32 if sabor == 'original' else UNIDADES_POR_CANASTO)
+        if sabor == 'original':
+            total_cajas += round(unidades / 108)
+        else:
+            total_cajas += round(unidades / (15 * 4))
 
     for sabor, cantidad in canastos.items():
         if cantidad == 0:
             continue
-        unidades = cantidad * UNIDADES_POR_CANASTO
+        unidades = cantidad * (32 if sabor == 'original' else UNIDADES_POR_CANASTO)
         temp = {}
-        if sabor == 'aceituna':
-            temp['Muzzarella'] = unidades * 15
-            temp['Aceitunas'] = unidades * 20
-        elif sabor == 'caprese':
-            tomate_total = unidades * 25
-            temp['Muzzarella'] = unidades * 15
-            temp['Tomate'] = tomate_total
-            temp['Albahaca'] = unidades * 2
-            temp['Sal'] = (tomate_total / 1000) * 4
-        elif sabor == 'queso_azul':
-            mezcla_total = unidades * 30
-            porc_queso = 2.3 / (18 + 2.3)
-            porc_muzza = 1 - porc_queso
-            temp['Muzzarella'] = mezcla_total * porc_muzza
-            temp['Queso Azul'] = mezcla_total * porc_queso
-        elif sabor == 'cebolla':
-            cebolla_cruda = (unidades * 40) / 0.8
-            temp['Cebolla'] = cebolla_cruda
-            temp['Orégano'] = (cebolla_cruda / 1000) * 2
-            temp['Sal'] = (cebolla_cruda / 1000) * 5
-        elif sabor == 'espinaca':
-            total_relleno = unidades * 40 / 0.9
-            espinaca = total_relleno * 0.5 / 0.9
-            cebolla = total_relleno * 0.25 / 0.8
-            morron = total_relleno * 0.25 / 0.8
-            temp['Espinaca'] = espinaca
-            temp['Cebolla'] = cebolla
-            temp['Morrón'] = morron
-            temp['Nuez Moscada'] = total_relleno / 1000 * 1
-            temp['Pimienta Negra'] = total_relleno / 1000 * 1
-            temp['Sal'] = total_relleno / 1000 * 5
-        elif sabor == 'calabaza':
-            total_relleno = unidades * 40 / 0.8
-            temp['Calabaza'] = total_relleno
-            temp['Cúrcuma'] = total_relleno / 1000 * 5
-            temp['Sal'] = total_relleno / 1000 * 5
-        elif sabor == 'brocoli':
-            total_relleno = unidades * 40
-            temp['Brócoli'] = total_relleno * 0.6
-            temp['Cebolla'] = total_relleno * 0.4 / 0.8
-            temp['Chimichurri'] = total_relleno / 1000 * 5
-            temp['Sal'] = total_relleno / 1000 * 5
-
+        if sabor == 'original':
+            receta_originales = {
+                'Soja': 75,
+                'Harina': 30,
+                'Sal': 0.5,
+                'Chimichurri': 0.8
+            }
+            for ingrediente, total_base in receta_originales.items():
+                cantidad_ingrediente = (total_base / 85) * cantidad
+                if ingrediente in ['Soja', 'Harina']:
+                    cantidad_final = round(cantidad_ingrediente, 2)
+                else:
+                    cantidad_final = round(cantidad_ingrediente * 1000, 2) if cantidad_ingrediente < 1 else round(cantidad_ingrediente, 2)
+                temp[ingrediente] = cantidad_final
+                total_ingredientes[ingrediente] = total_ingredientes.get(ingrediente, 0) + cantidad_final
+        else:
+            temp['Soja'] = MASA_BASE_POR_100_CANASTOS['soja_kg'] * cantidad / MASA_BASE_CANASTOS
+            temp['Chimichurri'] = MASA_BASE_POR_100_CANASTOS['chimichurri_g'] * cantidad / MASA_BASE_CANASTOS
+            temp['Sal'] = MASA_BASE_POR_100_CANASTOS['sal_g'] * cantidad / MASA_BASE_CANASTOS
+            if sabor == 'aceituna':
+                temp['Muzzarella'] = unidades * 15
+                temp['Aceitunas'] = unidades * 20
+            elif sabor == 'caprese':
+                tomate_total = unidades * 25
+                temp['Muzzarella'] = unidades * 15
+                temp['Tomate'] = tomate_total
+                temp['Albahaca'] = unidades * 2
+                temp['Sal'] = temp.get('Sal', 0) + (tomate_total / 1000) * 4
+            elif sabor == 'queso_azul':
+                mezcla_total = unidades * 30
+                porc_queso = 2.3 / (18 + 2.3)
+                porc_muzza = 1 - porc_queso
+                temp['Muzzarella'] = mezcla_total * porc_muzza
+                temp['Queso Azul'] = mezcla_total * porc_queso
+            elif sabor == 'cebolla':
+                cebolla_cruda = (unidades * 40) / 0.8
+                temp['Cebolla'] = cebolla_cruda
+                temp['Orégano'] = (cebolla_cruda / 1000) * 2
+                temp['Sal'] = temp.get('Sal', 0) + (cebolla_cruda / 1000) * 5
+            elif sabor == 'espinaca':
+                total_relleno = unidades * 40 / 0.9
+                espinaca = total_relleno * 0.5 / 0.9
+                cebolla = total_relleno * 0.25 / 0.8
+                morron = total_relleno * 0.25 / 0.8
+                temp['Espinaca'] = espinaca
+                temp['Cebolla'] = cebolla
+                temp['Morrón'] = morron
+                temp['Nuez Moscada'] = total_relleno / 1000 * 1
+                temp['Pimienta Negra'] = total_relleno / 1000 * 1
+                temp['Sal'] = temp.get('Sal', 0) + total_relleno / 1000 * 5
+            elif sabor == 'calabaza':
+                total_relleno = unidades * 40 / 0.8
+                temp['Calabaza'] = total_relleno
+                temp['Cúrcuma'] = total_relleno / 1000 * 5
+                temp['Sal'] = temp.get('Sal', 0) + total_relleno / 1000 * 5
+            elif sabor == 'brocoli':
+                total_relleno = unidades * 40
+                temp['Brócoli'] = total_relleno * 0.6
+                temp['Cebolla'] = total_relleno * 0.4 / 0.8
+                temp['Chimichurri'] = total_relleno / 1000 * 5
+                temp['Sal'] = temp.get('Sal', 0) + total_relleno / 1000 * 5
+            for k, v in temp.items():
+                total_ingredientes[k] = total_ingredientes.get(k, 0) + v
         detalles_por_sabor[sabor] = temp
-        for k, v in temp.items():
-            total_ingredientes[k] = total_ingredientes.get(k, 0) + v
 
     output = BytesIO()
     pdf_output = output
@@ -645,7 +763,11 @@ def exportar_pdf():
         y = height - 50
         for sabor, ingredientes in detalles_por_sabor.items():
             cantidad_canastos = canastos[sabor]
-            cantidad_cajas = round((cantidad_canastos * UNIDADES_POR_CANASTO) / (15 * 4))
+            # Cálculo de cajas por sabor, especial para 'original'
+            if sabor == 'original':
+                cantidad_cajas = round((cantidad_canastos * 32) / 108)
+            else:
+                cantidad_cajas = round((cantidad_canastos * UNIDADES_POR_CANASTO) / (15 * 4))
             c.drawString(30, y, f"{sabor.replace('_', ' ').capitalize()} ({cantidad_canastos} canastos, {cantidad_cajas} cajas)")
             y -= 20
             for ingr, cant in ingredientes.items():
@@ -812,16 +934,35 @@ def costos():
     def add(dic, nombre, cantidad_g):
         dic[nombre] = dic.get(nombre, 0) + cantidad_g
 
-    add(total_ingredientes, 'Soja', MASA_POR_94_CANASTOS['soja_kg'] * total_canastos / CANASTOS_BASE)
-    add(total_ingredientes, 'Harina', MASA_POR_94_CANASTOS['harina_kg'] * total_canastos / CANASTOS_BASE)
-    add(total_ingredientes, 'Chimichurri', MASA_POR_94_CANASTOS['chimichurri_g'] * total_canastos / CANASTOS_BASE)
-    add(total_ingredientes, 'Sal', MASA_POR_94_CANASTOS['sal_g'] * total_canastos / CANASTOS_BASE)
+    # Solo para sabores que NO sean 'original'
+    non_original_canastos = sum(c for s, c in canastos.items() if s != 'original')
+    if non_original_canastos > 0:
+        add(total_ingredientes, 'Soja', MASA_BASE_POR_100_CANASTOS['soja_kg'] * non_original_canastos / MASA_BASE_CANASTOS)
+        add(total_ingredientes, 'Chimichurri', MASA_BASE_POR_100_CANASTOS['chimichurri_g'] * non_original_canastos / MASA_BASE_CANASTOS)
+        add(total_ingredientes, 'Sal', MASA_BASE_POR_100_CANASTOS['sal_g'] * non_original_canastos / MASA_BASE_CANASTOS)
 
     for sabor, cantidad in canastos.items():
         if cantidad == 0:
             continue
+        if sabor == 'original':
+            receta_originales = {
+                'Soja': 75,
+                'Harina': 30,
+                'Sal': 0.5,
+                'Chimichurri': 0.8
+            }
+            for ingrediente, total_base in receta_originales.items():
+                cantidad_ingrediente = (total_base / 85) * cantidad
+                if ingrediente in ['Soja', 'Harina']:
+                    cantidad_final = round(cantidad_ingrediente, 2)
+                else:
+                    cantidad_final = round(cantidad_ingrediente * 1000, 2) if cantidad_ingrediente < 1 else round(cantidad_ingrediente, 2)
+                add(total_ingredientes, ingrediente, cantidad_final)
+            continue
         unidades = cantidad * UNIDADES_POR_CANASTO
-
+        add(total_ingredientes, 'Soja', MASA_BASE_POR_100_CANASTOS['soja_kg'] * cantidad / MASA_BASE_CANASTOS)
+        add(total_ingredientes, 'Chimichurri', MASA_BASE_POR_100_CANASTOS['chimichurri_g'] * cantidad / MASA_BASE_CANASTOS)
+        add(total_ingredientes, 'Sal', MASA_BASE_POR_100_CANASTOS['sal_g'] * cantidad / MASA_BASE_CANASTOS)
         if sabor == 'aceituna':
             add(total_ingredientes, 'Muzzarella', unidades * 15)
             add(total_ingredientes, 'Aceitunas', unidades * 20)
@@ -875,59 +1016,68 @@ def dashboard_rentabilidad():
     for sabor, cantidad in canastos.items():
         if cantidad == 0:
             continue
-        unidades = cantidad * UNIDADES_POR_CANASTO
         temp = {}
-        # Agregar ingredientes base (masa) a cada sabor
-        receta_masa_por_canasto = {
-            'Soja': (MASA_POR_94_CANASTOS['soja_kg'] * 1000) / CANASTOS_BASE,
-            'Harina': (MASA_POR_94_CANASTOS['harina_kg'] * 1000) / CANASTOS_BASE,
-            'Chimichurri': MASA_POR_94_CANASTOS['chimichurri_g'] / CANASTOS_BASE,
-            'Sal': MASA_POR_94_CANASTOS['sal_g'] / CANASTOS_BASE
-        }
-        for ingrediente_base, cantidad_por_canasto in receta_masa_por_canasto.items():
-            temp[ingrediente_base] = temp.get(ingrediente_base, 0) + (cantidad_por_canasto * cantidad)
-        if sabor == 'aceituna':
-            temp['Muzzarella'] = unidades * 15
-            temp['Aceitunas'] = unidades * 20
-        elif sabor == 'caprese':
-            tomate_total = unidades * 25
-            temp['Muzzarella'] = unidades * 15
-            temp['Tomate'] = tomate_total
-            temp['Albahaca'] = unidades * 2
-            temp['Sal'] = temp.get('Sal', 0) + (tomate_total / 1000) * 4
-        elif sabor == 'queso_azul':
-            mezcla_total = unidades * 30
-            porc_queso = 2.3 / (18 + 2.3)
-            porc_muzza = 1 - porc_queso
-            temp['Muzzarella'] = mezcla_total * porc_muzza
-            temp['Queso Azul'] = mezcla_total * porc_queso
-        elif sabor == 'cebolla':
-            cebolla_cruda = (unidades * 40) / 0.8
-            temp['Cebolla'] = cebolla_cruda
-            temp['Orégano'] = (cebolla_cruda / 1000) * 2
-            temp['Sal'] = temp.get('Sal', 0) + (cebolla_cruda / 1000) * 5
-        elif sabor == 'espinaca':
-            total_relleno = unidades * 40 / 0.9
-            espinaca = total_relleno * 0.5 / 0.9
-            cebolla = total_relleno * 0.25 / 0.8
-            morron = total_relleno * 0.25 / 0.8
-            temp['Espinaca'] = espinaca
-            temp['Cebolla'] = cebolla
-            temp['Morrón'] = morron
-            temp['Nuez Moscada'] = total_relleno / 1000 * 1
-            temp['Pimienta Negra'] = total_relleno / 1000 * 1
-            temp['Sal'] = temp.get('Sal', 0) + total_relleno / 1000 * 5
-        elif sabor == 'calabaza':
-            total_relleno = unidades * 40 / 0.8
-            temp['Calabaza'] = total_relleno
-            temp['Cúrcuma'] = total_relleno / 1000 * 5
-            temp['Sal'] = temp.get('Sal', 0) + total_relleno / 1000 * 5
-        elif sabor == 'brocoli':
-            total_relleno = unidades * 40
-            temp['Brócoli'] = total_relleno * 0.6
-            temp['Cebolla'] = total_relleno * 0.4 / 0.8
-            temp['Chimichurri'] = total_relleno / 1000 * 5
-            temp['Sal'] = temp.get('Sal', 0) + total_relleno / 1000 * 5
+        if sabor == 'original':
+            receta_originales = {
+                'Soja': 75,
+                'Harina': 30,
+                'Sal': 0.5,
+                'Chimichurri': 0.8
+            }
+            for ingrediente, total_base in receta_originales.items():
+                cantidad_ingrediente = (total_base / 85) * cantidad
+                if ingrediente in ['Soja', 'Harina']:
+                    cantidad_final = round(cantidad_ingrediente, 2)
+                else:
+                    cantidad_final = round(cantidad_ingrediente * 1000, 2) if cantidad_ingrediente < 1 else round(cantidad_ingrediente, 2)
+                temp[ingrediente] = cantidad_final
+        else:
+            unidades = cantidad * UNIDADES_POR_CANASTO
+            temp['Soja'] = MASA_BASE_POR_100_CANASTOS['soja_kg'] * cantidad / MASA_BASE_CANASTOS
+            temp['Chimichurri'] = MASA_BASE_POR_100_CANASTOS['chimichurri_g'] * cantidad / MASA_BASE_CANASTOS
+            temp['Sal'] = MASA_BASE_POR_100_CANASTOS['sal_g'] * cantidad / MASA_BASE_CANASTOS
+            if sabor == 'aceituna':
+                temp['Muzzarella'] = unidades * 15
+                temp['Aceitunas'] = unidades * 20
+            elif sabor == 'caprese':
+                tomate_total = unidades * 25
+                temp['Muzzarella'] = unidades * 15
+                temp['Tomate'] = tomate_total
+                temp['Albahaca'] = unidades * 2
+                temp['Sal'] = temp.get('Sal', 0) + (tomate_total / 1000) * 4
+            elif sabor == 'queso_azul':
+                mezcla_total = unidades * 30
+                porc_queso = 2.3 / (18 + 2.3)
+                porc_muzza = 1 - porc_queso
+                temp['Muzzarella'] = mezcla_total * porc_muzza
+                temp['Queso Azul'] = mezcla_total * porc_queso
+            elif sabor == 'cebolla':
+                cebolla_cruda = (unidades * 40) / 0.8
+                temp['Cebolla'] = cebolla_cruda
+                temp['Orégano'] = (cebolla_cruda / 1000) * 2
+                temp['Sal'] = temp.get('Sal', 0) + (cebolla_cruda / 1000) * 5
+            elif sabor == 'espinaca':
+                total_relleno = unidades * 40 / 0.9
+                espinaca = total_relleno * 0.5 / 0.9
+                cebolla = total_relleno * 0.25 / 0.8
+                morron = total_relleno * 0.25 / 0.8
+                temp['Espinaca'] = espinaca
+                temp['Cebolla'] = cebolla
+                temp['Morrón'] = morron
+                temp['Nuez Moscada'] = total_relleno / 1000 * 1
+                temp['Pimienta Negra'] = total_relleno / 1000 * 1
+                temp['Sal'] = temp.get('Sal', 0) + total_relleno / 1000 * 5
+            elif sabor == 'calabaza':
+                total_relleno = unidades * 40 / 0.8
+                temp['Calabaza'] = total_relleno
+                temp['Cúrcuma'] = total_relleno / 1000 * 5
+                temp['Sal'] = temp.get('Sal', 0) + total_relleno / 1000 * 5
+            elif sabor == 'brocoli':
+                total_relleno = unidades * 40
+                temp['Brócoli'] = total_relleno * 0.6
+                temp['Cebolla'] = total_relleno * 0.4 / 0.8
+                temp['Chimichurri'] = total_relleno / 1000 * 5
+                temp['Sal'] = temp.get('Sal', 0) + total_relleno / 1000 * 5
         detalles_por_sabor[sabor] = temp
         print(f"Receta para {sabor}: {temp}")
 

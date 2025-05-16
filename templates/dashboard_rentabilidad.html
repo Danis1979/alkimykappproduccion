@@ -188,11 +188,11 @@ document.addEventListener('DOMContentLoaded', () => {
             // (Eliminada tabla de cajas por categoría agrupada)
 
             // Tabla de cajas por sabor individual
-            const sabores = ['aceituna', 'caprese', 'queso_azul', 'cebolla', 'espinaca', 'calabaza', 'brocoli'];
+            const sabores = ['aceituna', 'caprese', 'queso_azul', 'cebolla', 'espinaca', 'calabaza', 'brocoli', 'original'];
             let cajasPorSabor = {};
             sabores.forEach(sabor => {
                 const canastos = data.canastos[sabor] || 0;
-                const unidades = canastos * 18;
+                const unidades = sabor === 'original' ? canastos * 32 : canastos * 18;
                 const packs = Math.floor(unidades / 4);
                 const cajas = Math.floor(packs / 15);
                 cajasPorSabor[sabor] = cajas;
@@ -294,7 +294,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 'cebolla': parseFloat(localStorage.getItem('precio_cebolla') || 0),
                 'espinaca': parseFloat(localStorage.getItem('precio_espinaca') || 0),
                 'calabaza': parseFloat(localStorage.getItem('precio_calabaza') || 0),
-                'brocoli': parseFloat(localStorage.getItem('precio_brocoli') || 0)
+                'brocoli': parseFloat(localStorage.getItem('precio_brocoli') || 0),
+                'original': parseFloat(localStorage.getItem('precio_original') || 0)
             };
 
             // Calcular total a facturar y total con IVA

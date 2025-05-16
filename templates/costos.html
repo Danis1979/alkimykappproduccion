@@ -241,6 +241,10 @@
                         <td>Brócoli</td>
                         <td><input id="precio_brocoli" type="text" step="0.01" class="input-formulario" style="width: 200px;" min="0" max="10000000"></td>
                     </tr>
+                    <tr>
+                        <td>Original</td>
+                        <td><input id="precio_original" type="text" step="0.01" class="input-formulario" style="width: 200px;" min="0" max="10000000"></td>
+                    </tr>
                 </tbody>
             </table>
         </div>
@@ -488,7 +492,7 @@ function guardarPrecios() {
     if (precioPack) document.cookie = `precio_pack=${precioPack.value.replace(/\./g, '').replace(',', '.')}`;
     if (precioCaja) document.cookie = `precio_caja=${precioCaja.value.replace(/\./g, '').replace(',', '.')}`;
 
-    const sabores = ["aceituna", "caprese", "queso_azul", "cebolla", "espinaca", "calabaza", "brocoli"];
+    const sabores = ["aceituna", "caprese", "queso_azul", "cebolla", "espinaca", "calabaza", "brocoli", "original"];
     sabores.forEach(sabor => {
         const input = document.getElementById(`precio_${sabor}`);
         if (input) {
@@ -510,7 +514,7 @@ function confirmarYVolver() {
     if (precioCaja) document.cookie = `precio_caja=${precioCaja.value.replace(/\./g, '').replace(',', '.')}`;
 
     // Guardar precios de venta por sabor
-    const sabores = ["aceituna", "caprese", "queso_azul", "cebolla", "espinaca", "calabaza", "brocoli"];
+    const sabores = ["aceituna", "caprese", "queso_azul", "cebolla", "espinaca", "calabaza", "brocoli", "original"];
     sabores.forEach(sabor => {
         const input = document.getElementById(`precio_${sabor}`);
         if (input) {
