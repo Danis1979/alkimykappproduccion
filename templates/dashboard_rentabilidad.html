@@ -193,8 +193,13 @@ document.addEventListener('DOMContentLoaded', () => {
             sabores.forEach(sabor => {
                 const canastos = data.canastos[sabor] || 0;
                 const unidades = sabor === 'original' ? canastos * 32 : canastos * 18;
-                const packs = Math.floor(unidades / 4);
-                const cajas = Math.floor(packs / 15);
+                let cajas;
+                if (sabor === 'original') {
+                    cajas = Math.floor(unidades / 108);
+                } else {
+                    const packs = Math.floor(unidades / 4);
+                    cajas = Math.floor(packs / 15);
+                }
                 cajasPorSabor[sabor] = cajas;
             });
             window.cajasPorSabor = cajasPorSabor;
@@ -241,8 +246,8 @@ document.addEventListener('DOMContentLoaded', () => {
                             Object.entries(receta).forEach(([ingrediente, cantIng]) => {
                                 const clave = ingrediente.toLowerCase().replace(/\s+/g, '_');
                                 const precio = parseFloat(ingredientesCostos[clave] || 0);
-                                let baseEnKg = ['soja', 'harina'];
-                                const cantidadKg = baseEnKg.includes(clave) ? cantIng : cantIng / 1000;
+                            let baseEnKg = ['soja', 'harina'];
+                            const cantidadKg = baseEnKg.includes(clave) ? cantIng : cantIng / 1000;
                                 totalIngredientes += cantidadKg * precio;
                             });
                             return `
@@ -388,18 +393,22 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 // Calcular Punto de Equilibrio General
                 let margenTotal = 0;
-                let saboresValidos = 0;
+                let totalMargen = 0;
+                let totalCajasUtilizadas = 0;
+
                 Object.entries(cajasPorSabor).forEach(([sabor, cantidad]) => {
                     const precio = precioPorSabor[sabor] || 0;
                     const variable = costoVariablePorSabor[sabor] || 0;
                     const packaging = (precioPack * 15) + precioCaja;
-                    const margen = precio - variable - packaging - costoFijoPorCaja;
-                    if (margen > 0) {
-                        margenTotal += margen;
-                        saboresValidos++;
+                    const costoTotal = variable + packaging + costoFijoPorCaja;
+                    const margen = precio - costoTotal;
+                    if (margen > 0 && cantidad > 0) {
+                        totalMargen += margen * cantidad;
+                        totalCajasUtilizadas += cantidad;
                     }
                 });
-                const margenPromedio = saboresValidos > 0 ? margenTotal / saboresValidos : 0;
+
+                const margenPromedio = totalCajasUtilizadas > 0 ? totalMargen / totalCajasUtilizadas : 0;
                 const puntoEquilibrio = margenPromedio > 0 ? Math.ceil(totalFijos / margenPromedio) : 0;
 
                 contenedor.innerHTML = contenedor.innerHTML.slice(0, cierreTablaCajas + 8) +
@@ -541,7 +550,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 Object.entries(receta).forEach(([ing, cantidad]) => {
                     const clave = ing.toLowerCase().replace(/\s+/g, '_');
                     const precio = parseFloat(ingredientesCostos[clave] || 0);
-                    let baseEnKg = ['soja', 'harina'];
+                    let baseEnKg = ['soja', 'harina', 'pan_rallado'];
                     const cantidadKg = baseEnKg.includes(clave) ? cantidad : cantidad / 1000;
                     const costo = cantidadKg * precio;
                     if (costo > 0) {

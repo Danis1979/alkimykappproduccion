@@ -251,6 +251,17 @@ def canastos():
         total_canastos = sum(canastos.values()) if canastos else 0
         dias_produccion = (total_canastos + cupo_diario_default - 1) // cupo_diario_default if total_canastos > 0 else 0
 
+    # Agregar pan rallado (10 g por unidad)
+    for sabor, cantidad in canastos.items():
+        if cantidad == 0:
+            continue
+        unidades_por_canasto = 32 if sabor == 'original' else UNIDADES_POR_CANASTO
+        total_unidades = cantidad * unidades_por_canasto
+        gramos_pan_rallado = total_unidades * 10  # 10 gramos por unidad
+        detalles_por_sabor.setdefault(sabor, {})
+        detalles_por_sabor[sabor]['Pan Rallado'] = gramos_pan_rallado
+        ingredientes['Pan Rallado'] = ingredientes.get('Pan Rallado', 0) + gramos_pan_rallado
+
     # Obtener los días seleccionados de la configuración para mostrar en la plantilla
     dias_seleccionados = session.get('dias_habilitados', ['lunes', 'martes', 'miércoles', 'jueves', 'viernes'])
     mostrar_boton_costos = 'usuario' in session and session.get('rol') == 'admin' and bool(ingredientes)
@@ -581,6 +592,17 @@ def exportar_excel():
                 ingredientes_totales[k] = ingredientes_totales.get(k, 0) + v
         detalles_por_sabor[sabor] = temp
 
+    # Agregar pan rallado (10 g por unidad)
+    for sabor, cantidad in canastos.items():
+        if cantidad == 0:
+            continue
+        unidades_por_canasto = 32 if sabor == 'original' else UNIDADES_POR_CANASTO
+        total_unidades = cantidad * unidades_por_canasto
+        gramos_pan_rallado = total_unidades * 10  # 10 gramos por unidad
+        detalles_por_sabor.setdefault(sabor, {})
+        detalles_por_sabor[sabor]['Pan Rallado'] = gramos_pan_rallado
+        ingredientes_totales['Pan Rallado'] = ingredientes_totales.get('Pan Rallado', 0) + gramos_pan_rallado
+
     output = BytesIO()
     wb = Workbook()
 
@@ -740,6 +762,17 @@ def exportar_pdf():
             for k, v in temp.items():
                 total_ingredientes[k] = total_ingredientes.get(k, 0) + v
         detalles_por_sabor[sabor] = temp
+
+    # Agregar pan rallado (10 g por unidad)
+    for sabor, cantidad in canastos.items():
+        if cantidad == 0:
+            continue
+        unidades_por_canasto = 32 if sabor == 'original' else UNIDADES_POR_CANASTO
+        total_unidades = cantidad * unidades_por_canasto
+        gramos_pan_rallado = total_unidades * 10  # 10 gramos por unidad
+        detalles_por_sabor.setdefault(sabor, {})
+        detalles_por_sabor[sabor]['Pan Rallado'] = gramos_pan_rallado
+        total_ingredientes['Pan Rallado'] = total_ingredientes.get('Pan Rallado', 0) + gramos_pan_rallado
 
     output = BytesIO()
     pdf_output = output
@@ -958,6 +991,7 @@ def costos():
                 else:
                     cantidad_final = round(cantidad_ingrediente * 1000, 2) if cantidad_ingrediente < 1 else round(cantidad_ingrediente, 2)
                 add(total_ingredientes, ingrediente, cantidad_final)
+            # continuar, pero pan rallado se suma abajo
             continue
         unidades = cantidad * UNIDADES_POR_CANASTO
         add(total_ingredientes, 'Soja', MASA_BASE_POR_100_CANASTOS['soja_kg'] * cantidad / MASA_BASE_CANASTOS)
@@ -1005,6 +1039,15 @@ def costos():
             add(total_ingredientes, 'Cebolla', total_relleno * 0.4 / 0.8)
             add(total_ingredientes, 'Chimichurri', total_relleno / 1000 * 5)
             add(total_ingredientes, 'Sal', total_relleno / 1000 * 5)
+
+    # Agregar pan rallado (10 g por unidad)
+    for sabor, cantidad in canastos.items():
+        if cantidad == 0:
+            continue
+        unidades_por_canasto = 32 if sabor == 'original' else UNIDADES_POR_CANASTO
+        total_unidades = cantidad * unidades_por_canasto
+        gramos_pan_rallado = total_unidades * 10
+        total_ingredientes['Pan Rallado'] = total_ingredientes.get('Pan Rallado', 0) + gramos_pan_rallado
 
     return render_template('costos.html', ingredientes=total_ingredientes)
 
@@ -1081,21 +1124,37 @@ def dashboard_rentabilidad():
         detalles_por_sabor[sabor] = temp
         print(f"Receta para {sabor}: {temp}")
 
+    # Agregar pan rallado (10 g por unidad)
+    for sabor, cantidad in canastos.items():
+        if cantidad == 0:
+            continue
+        unidades_por_canasto = 32 if sabor == 'original' else UNIDADES_POR_CANASTO
+        total_unidades = cantidad * unidades_por_canasto
+        gramos_pan_rallado = total_unidades * 10
+        detalles_por_sabor.setdefault(sabor, {})
+        detalles_por_sabor[sabor]['Pan Rallado'] = gramos_pan_rallado
+
     # Calcular packaging por sabor
     total_packaging_por_sabor = {}
     for sabor, cantidad_canastos in canastos.items():
         if cantidad_canastos == 0:
             continue
-        total_unidades = cantidad_canastos * UNIDADES_POR_CANASTO
-        total_packs = total_unidades / 4
-        total_cajas = total_packs / 15
+        # Cálculo correcto de total_unidades según sabor
+        if sabor == 'original':
+            total_unidades = cantidad_canastos * 32
+            total_packs = total_unidades / 4
+            cantidad_cajas = total_unidades / 108
+        else:
+            total_unidades = cantidad_canastos * UNIDADES_POR_CANASTO
+            total_packs = total_unidades / 4
+            cantidad_cajas = round(total_packs / 15)
         try:
             precio_pack = float(request.cookies.get("precio_pack", "0").replace(".", "").replace(",", "."))
             precio_caja = float(request.cookies.get("precio_caja", "0").replace(".", "").replace(",", "."))
         except:
             precio_pack = 0
             precio_caja = 0
-        costo_packaging = total_packs * precio_pack + total_cajas * precio_caja
+        costo_packaging = total_packs * precio_pack + cantidad_cajas * precio_caja
         total_packaging_por_sabor[sabor] = costo_packaging
 
     # Agregar variable index=True al contexto antes del render_template
@@ -1168,6 +1227,17 @@ def resumen_datos():
         detalles_por_sabor[sabor] = temp
         for k, v in temp.items():
             add(total_ingredientes, k, v)
+
+    # Agregar pan rallado (10 g por unidad)
+    for sabor, cantidad in canastos.items():
+        if cantidad == 0:
+            continue
+        unidades_por_canasto = 32 if sabor == 'original' else UNIDADES_POR_CANASTO
+        total_unidades = cantidad * unidades_por_canasto
+        gramos_pan_rallado = total_unidades * 10
+        detalles_por_sabor.setdefault(sabor, {})
+        detalles_por_sabor[sabor]['Pan Rallado'] = gramos_pan_rallado
+        add(total_ingredientes, 'Pan Rallado', gramos_pan_rallado)
 
     # Agregar masa base (soja, harina, chimichurri, sal) a detalles_por_sabor para cada sabor
     receta_masa_por_canasto = {
