@@ -5,7 +5,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Configuración</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
     <style>
+    body {
+        font-family: 'Inter', sans-serif;
+        background-color: #f4f6f9;
+        color: #333;
+    }
     @media (max-width: 600px) {
         .formulario-container {
             width: 90% !important;
@@ -34,6 +40,39 @@
             font-size: 1.4em;
             text-align: center;
         }
+    }
+    .titulo-seccion {
+        font-size: 1.8em;
+        font-weight: 600;
+        color: #2c3e50;
+        margin-bottom: 20px;
+    }
+    .label-formulario {
+        display: block;
+        font-weight: 500;
+        margin-bottom: 8px;
+        color: #444;
+    }
+    .input-formulario {
+        padding: 10px;
+        border-radius: 6px;
+        border: 1px solid #ccc;
+        box-shadow: inset 0 1px 3px rgba(0,0,0,0.05);
+        font-size: 1em;
+    }
+    .formulario-container {
+        background-color: #fff;
+        border-radius: 12px;
+        padding: 30px;
+        box-shadow: 0 4px 16px rgba(0,0,0,0.05);
+    }
+    .checkbox-item input[type="checkbox"] {
+        margin-right: 8px;
+        transform: scale(1.2);
+    }
+    .contenedor-principal {
+        background-color: #f4f6f9;
+        padding: 40px 20px;
     }
     .top-bar {
         display: flex;
@@ -69,6 +108,28 @@
             margin-bottom: 8px;
         }
     }
+    .btn-mac-style {
+        background: linear-gradient(to bottom, #f9f9f9, #e0e0e0);
+        border: 1px solid #ccc;
+        border-radius: 12px;
+        padding: 10px 20px;
+        font-size: 0.95em;
+        color: #333;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.08);
+        text-decoration: none;
+        display: inline-block;
+    }
+    .btn-mac-style:hover {
+        background: linear-gradient(to bottom, #ffffff, #d4d4d4);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        transform: translateY(-1px);
+    }
+    .btn-mac-style:active {
+        transform: scale(0.97);
+    }
     </style>
 </head>
 <body>
@@ -76,6 +137,7 @@
         <img src="/static/logo.png" alt="Logo" class="logo-top">
         <div class="top-buttons">
             <a href="/" class="btn-mac-style">🏠 Menú Principal</a>
+            <button type="submit" form="form-configuracion" class="btn-mac-style">💾 Guardar</button>
         </div>
     </div>
     {% with messages = get_flashed_messages(with_categories=true) %}
@@ -88,11 +150,11 @@
       {% endif %}
     {% endwith %}
 
-    <div class="contenedor-principal" style="display: flex; justify-content: center; align-items: center; min-height: 100vh; flex-direction: column;">
+    <div class="contenedor-principal" style="display: flex; justify-content: center; align-items: flex-start; margin-top: 20px;">
         <div class="formulario-container" style="width: 100%; max-width: 500px;">
             <div class="formulario-general">
                 <h2 class="titulo-seccion">Configuración General</h2>
-                <form method="post" action="{{ url_for('configuracion') }}">
+                <form method="post" action="{{ url_for('configuracion') }}" id="form-configuracion">
                     <div class="campo-formulario">
                         <label for="cupo_diario" class="label-formulario">Cupo máximo de producción por día:</label>
                         <input type="number" id="cupo_diario" name="cupo_diario" value="{{ cupo_diario }}" min="1" required class="input-formulario">
@@ -107,7 +169,6 @@
                         </div>
                         {% endfor %}
                     </div>
-                    <button class="boton-principal" type="submit">Guardar</button>
                 </form>
             </div>
         </div>

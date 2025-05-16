@@ -140,12 +140,26 @@
         </div>
     </div>
     <div class="contenedor-dashboard">
-        <h2 class="titulo-dashboard">Resumen Financiero</h2>
+        <h2 class="titulo-dashboard">Resumen</h2>
         <div id="datos-rentabilidad"></div>
 
 
         <div style="margin-top: 40px;">
             <h3 style="text-align:center;">Sugerencias de Mejora</h3>
+            <div id="kpis-sugerencias" style="margin-top: 20px; font-size: 16px; color: #333;">
+                <p><strong>🔍 KPIs Inteligentes:</strong></p>
+                <ul style="list-style: disc; padding-left: 20px;">
+                    <li id="kpi-ingrediente-top">Cargando ingredientes más costosos...</li>
+                    <li id="kpi-margen-promedio">Calculando margen promedio...</li>
+                    <li id="kpi-rentabilidad-advertencia">Analizando sabores con rentabilidad baja...</li>
+                    <li id="kpi-rendimiento-canasto">Calculando rendimiento por canasto...</li>
+                    <li id="kpi-costo-promedio-caja">Calculando costo promedio por caja...</li>
+                    <li id="kpi-menor-ganancia">Calculando sabor con menor ganancia total...</li>
+                    <li id="kpi-mayor-ganancia">Calculando sabor con mayor ganancia total...</li>
+                    <li id="kpi-participacion">Calculando participación de sabores en facturación...</li>
+                    <li id="kpi-costos-fijos-ingresos">Calculando % de costos fijos sobre ingresos...</li>
+                </ul>
+            </div>
             <ul id="sugerencias" style="font-size: 16px; line-height: 1.6;"></ul>
         </div>
 
@@ -820,3 +834,172 @@ function descargarResumen() {
 </script>
 </body>
 </html>
+
+<script>
+// --- KPIs Inteligentes ---
+function calcularKPIs() {
+    if (typeof window.cajasPorSabor === "undefined" || typeof window.costoVariablePorSabor === "undefined") return;
+
+    const data = {
+        total_canastos: typeof window.totalCanastos !== "undefined" ? window.totalCanastos : 0
+    };
+    // Intentar obtener total_canastos desde el DOM si no está en window
+    if (!data.total_canastos) {
+        const el = document.querySelector('p.dato strong');
+        if (el && el.parentElement && el.parentElement.innerText.includes('Canastos Producidos Totales')) {
+            const match = el.parentElement.innerText.match(/Canastos Producidos Totales:\s*(\d+)/i);
+            if (match) data.total_canastos = parseInt(match[1]);
+        }
+    }
+    // Si sigue sin estar, usar 0
+    if (!data.total_canastos) data.total_canastos = 0;
+
+    const recetas = window.detallesPorSabor || {};
+    const ingredientesCostos = JSON.parse(localStorage.getItem('ingredientes_costos') || '{}');
+    const cajasPorSabor = window.cajasPorSabor || {};
+    const costoVariablePorSabor = window.costoVariablePorSabor || {};
+    const sabores = Object.keys(cajasPorSabor);
+    const baseEnKg = ['soja', 'harina'];
+
+    // Ingrediente más costoso
+    const topIngredientes = Object.entries(recetas).flatMap(([sabor, receta]) => {
+        return Object.entries(receta).map(([ing, cant]) => {
+            const clave = ing.toLowerCase().replace(/\s+/g, '_');
+            const precio = parseFloat(ingredientesCostos[clave] || 0);
+            let cantidadKg;
+            if (clave === 'pan_rallado') {
+                cantidadKg = cant / 1000;
+            } else {
+                cantidadKg = baseEnKg.includes(clave) ? cant : cant / 1000;
+            }
+            return { nombre: ing, costo: cantidadKg * precio };
+        });
+    });
+    const ingredientesTotales = {};
+    topIngredientes.forEach(({ nombre, costo }) => {
+        if (!ingredientesTotales[nombre]) ingredientesTotales[nombre] = 0;
+        ingredientesTotales[nombre] += costo;
+    });
+    const ingredienteTop = Object.entries(ingredientesTotales).sort((a, b) => b[1] - a[1])[0];
+    if (ingredienteTop) {
+        document.getElementById("kpi-ingrediente-top").innerText = `Ingrediente más costoso: ${ingredienteTop[0]} ($${ingredienteTop[1].toLocaleString('es-AR', { minimumFractionDigits: 2 })})`;
+    }
+
+    // Variables necesarias para los KPIs extra
+    const precioPack = parseFloat(localStorage.getItem("precio_pack") || 0);
+    const precioCaja = parseFloat(localStorage.getItem("precio_caja") || 0);
+    const cajasTotales = Object.values(cajasPorSabor).reduce((a, b) => a + b, 0);
+    const totalCajasMes = cajasTotales;
+    // Calcular totalFijos y totalVariables
+    const totalFijos = [
+        'alquiler', 'edenor', 'aysa', 'gas', 'municipal', 'sueldos',
+        'cargas_sociales', 'iva', 'créditos', 'flete', 'varios'
+    ].reduce((acc, id) => acc + parseFloat(localStorage.getItem(id) || 0), 0);
+    // Total variables: ingredientes + packaging + cajas
+    let totalIngredientesGlobal = 0;
+    Object.entries(recetas).forEach(([sabor, receta]) => {
+        Object.entries(receta).forEach(([ing, cantidad]) => {
+            const clave = ing.toLowerCase().replace(/\s+/g, '_');
+            const precio = parseFloat(ingredientesCostos[clave] || 0);
+            let base = ['soja', 'harina'];
+            const cantidadKg = base.includes(clave) ? cantidad : cantidad / 1000;
+            totalIngredientesGlobal += cantidadKg * precio;
+        });
+    });
+    const totalPackaging = cajasTotales * 4 * precioPack;
+    const totalCajasCosto = cajasTotales * precioCaja;
+    const totalPackagingYcajas = totalPackaging + totalCajasCosto;
+    const totalVariables = totalIngredientesGlobal + totalPackagingYcajas;
+    // Costo fijo por caja
+    const costoFijoPorCaja = cajasTotales > 0 ? totalFijos / cajasTotales : 0;
+
+    // Precios por sabor
+    let precioPorSabor = {};
+    sabores.forEach(sabor => {
+        precioPorSabor[sabor] = parseFloat(localStorage.getItem(`precio_${sabor}`) || 0);
+    });
+
+    // Total a facturar
+    let totalFacturar = 0;
+    Object.entries(cajasPorSabor).forEach(([sabor, cantidad]) => {
+        const precio = precioPorSabor[sabor] || 0;
+        totalFacturar += cantidad * precio;
+    });
+
+    // Margen promedio (ya se calculaba)
+    let sumaMargenContribucion = 0;
+    sabores.forEach(sabor => {
+        const precioVenta = precioPorSabor[sabor] || 0;
+        const costoVariable = costoVariablePorSabor[sabor] || 0;
+        const packaging = (precioPack * 15) + precioCaja;
+        const costoTotal = costoVariable + packaging;
+        const margen = precioVenta - costoTotal;
+        const cantidad = cajasPorSabor[sabor] || 0;
+        sumaMargenContribucion += margen * cantidad;
+    });
+    const margenPromedio = cajasTotales > 0 ? sumaMargenContribucion / cajasTotales : 0;
+    document.getElementById("kpi-margen-promedio").innerText = `Margen de contribución promedio por caja: $${margenPromedio.toLocaleString('es-AR', { minimumFractionDigits: 2 })}`;
+
+    // KPI: Rendimiento promedio por canasto
+    const rendimientoPorCanasto = data.total_canastos > 0 ? totalCajasMes / data.total_canastos : 0;
+    document.getElementById("kpi-rendimiento-canasto").innerText = `Rendimiento promedio por canasto: ${rendimientoPorCanasto.toFixed(2)} cajas`;
+
+    // KPI: Costo total promedio por caja
+    const costoTotalPromCaja = totalCajasMes > 0 ? (totalFijos + totalVariables) / totalCajasMes : 0;
+    document.getElementById("kpi-costo-promedio-caja").innerText = `Costo total promedio por caja: $${costoTotalPromCaja.toLocaleString('es-AR', { minimumFractionDigits: 2 })}`;
+
+    // KPI: Sabor con menor y mayor ganancia total
+    let menor = { sabor: null, ganancia: Infinity };
+    let mayor = { sabor: null, ganancia: -Infinity };
+    Object.entries(cajasPorSabor).forEach(([sabor, cantidad]) => {
+        const precio = precioPorSabor[sabor] || 0;
+        const costoVariable = costoVariablePorSabor[sabor] || 0;
+        const packaging = (precioPack * 15) + precioCaja;
+        const costoFijo = costoFijoPorCaja;
+        const ganancia = (precio - (costoVariable + packaging + costoFijo)) * cantidad;
+        if (ganancia < menor.ganancia) menor = { sabor, ganancia };
+        if (ganancia > mayor.ganancia) mayor = { sabor, ganancia };
+    });
+    document.getElementById("kpi-menor-ganancia").innerText = `Sabor con menor ganancia total: ${menor.sabor} ($${menor.ganancia.toLocaleString('es-AR', { minimumFractionDigits: 2 })})`;
+    document.getElementById("kpi-mayor-ganancia").innerText = `Sabor con mayor ganancia total: ${mayor.sabor} ($${mayor.ganancia.toLocaleString('es-AR', { minimumFractionDigits: 2 })})`;
+
+    // KPI: Participación por sabor
+    const participaciones = Object.entries(cajasPorSabor).map(([sabor, cantidad]) => {
+        const precio = precioPorSabor[sabor] || 0;
+        return { sabor, valor: cantidad * precio };
+    });
+    participaciones.sort((a, b) => b.valor - a.valor);
+    const topParticipacion = participaciones[0] || { sabor: '-', valor: 0 };
+    const porcentaje = totalFacturar > 0 ? (topParticipacion.valor / totalFacturar) * 100 : 0;
+    document.getElementById("kpi-participacion").innerText = `Mayor participación en facturación: ${topParticipacion.sabor} (${porcentaje.toFixed(1)}%)`;
+
+    // KPI: % de costos fijos sobre ingresos
+    const porcentajeFijosSobreIngresos = totalFacturar > 0 ? (totalFijos / totalFacturar) * 100 : 0;
+    document.getElementById("kpi-costos-fijos-ingresos").innerText = `Costos fijos sobre ingresos: ${porcentajeFijosSobreIngresos.toFixed(1)}%`;
+
+    // Rentabilidad baja advertencia
+    const saboresRentabilidadBaja = sabores.filter(sabor => {
+        const precio = precioPorSabor[sabor] || 0;
+        const costoVariable = costoVariablePorSabor[sabor] || 0;
+        const packaging = (precioPack * 15) + precioCaja;
+        const costoTotal = costoVariable + packaging + costoFijoPorCaja;
+        const rentabilidad = precio > 0 ? (precio - costoTotal) / precio : 0;
+        return rentabilidad < 0.15;
+    }).map(sabor => sabor.charAt(0).toUpperCase() + sabor.slice(1));
+    const advertenciaTexto = saboresRentabilidadBaja.length > 0
+        ? `Revisar rentabilidad de: ${saboresRentabilidadBaja.join(', ')}`
+        : "Todos los sabores tienen buena rentabilidad.";
+    document.getElementById("kpi-rentabilidad-advertencia").innerText = advertenciaTexto;
+}
+
+// Ejecutar KPIs cuando se calcula el resumen
+window.detallesPorSabor = null;
+fetch('/resumen_datos')
+    .then(response => response.json())
+    .then(data => {
+        window.detallesPorSabor = data.detalles_por_sabor || {};
+        setTimeout(() => {
+            calcularKPIs();
+        }, 1000);
+    });
+</script>
