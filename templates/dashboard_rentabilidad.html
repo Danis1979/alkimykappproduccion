@@ -7,6 +7,32 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
+        .kpi-card {
+            background-color: #fffde7;
+            border: 1px solid #ccc;
+            border-radius: 10px;
+            padding: 12px 16px;
+            margin-bottom: 10px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+            font-size: 16px;
+            color: #333;
+        }
+        .kpi-grid {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 16px;
+            margin-top: 10px;
+        }
+        .kpi-card {
+            flex: 1 1 calc(50% - 16px);
+            max-width: calc(50% - 16px);
+        }
+        @media (max-width: 768px) {
+            .kpi-card {
+                flex: 1 1 100%;
+                max-width: 100%;
+            }
+        }
         .contenedor-dashboard {
             max-width: 1000px;
             margin: 40px auto;
@@ -147,18 +173,18 @@
         <div style="margin-top: 40px;">
             <h3 style="text-align:center;">Sugerencias de Mejora</h3>
             <div id="kpis-sugerencias" style="margin-top: 20px; font-size: 16px; color: #333;">
-                <p><strong>🔍 KPIs Inteligentes:</strong></p>
-                <ul style="list-style: disc; padding-left: 20px;">
-                    <li id="kpi-ingrediente-top">Cargando ingredientes más costosos...</li>
-                    <li id="kpi-margen-promedio">Calculando margen promedio...</li>
-                    <li id="kpi-rentabilidad-advertencia">Analizando sabores con rentabilidad baja...</li>
-                    <li id="kpi-rendimiento-canasto">Calculando rendimiento por canasto...</li>
-                    <li id="kpi-costo-promedio-caja">Calculando costo promedio por caja...</li>
-                    <li id="kpi-menor-ganancia">Calculando sabor con menor ganancia total...</li>
-                    <li id="kpi-mayor-ganancia">Calculando sabor con mayor ganancia total...</li>
-                    <li id="kpi-participacion">Calculando participación de sabores en facturación...</li>
-                    <li id="kpi-costos-fijos-ingresos">Calculando % de costos fijos sobre ingresos...</li>
-                </ul>
+                <p><strong>🔍 KPIs:</strong></p>
+                <div class="kpi-grid">
+                    <div class="kpi-card"><strong id="kpi-ingrediente-top">Cargando ingredientes más costosos...</strong></div>
+                    <div class="kpi-card"><strong id="kpi-margen-promedio">Calculando margen promedio...</strong></div>
+                    <div class="kpi-card"><strong id="kpi-rentabilidad-advertencia">Analizando sabores con rentabilidad baja...</strong></div>
+                    <div class="kpi-card"><strong id="kpi-rendimiento-canasto">Calculando rendimiento por canasto...</strong></div>
+                    <div class="kpi-card"><strong id="kpi-costo-promedio-caja">Calculando costo promedio por caja...</strong></div>
+                    <div class="kpi-card"><strong id="kpi-menor-ganancia">Calculando sabor con menor ganancia total...</strong></div>
+                    <div class="kpi-card"><strong id="kpi-mayor-ganancia">Calculando sabor con mayor ganancia total...</strong></div>
+                    <div class="kpi-card"><strong id="kpi-participacion">Calculando participación de sabores en facturación...</strong></div>
+                    <div class="kpi-card"><strong id="kpi-costos-fijos-ingresos">Calculando % de costos fijos sobre ingresos...</strong></div>
+                </div>
             </div>
             <ul id="sugerencias" style="font-size: 16px; line-height: 1.6;"></ul>
         </div>
