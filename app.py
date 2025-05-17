@@ -1,4 +1,6 @@
 from flask import Flask, render_template, request, send_file, session, redirect, url_for, jsonify, flash
+from flask_sqlalchemy import SQLAlchemy
+import os
 from io import BytesIO
 from openpyxl.styles import Font, Border, Side
 from openpyxl.utils import get_column_letter
@@ -21,6 +23,18 @@ CANASTOS_BASE = 94
 
 app = Flask(__name__)
 app.secret_key = 'alkimyk_clave_segura'
+app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://alkimyk_db_user:7vP5jvsKt9KEM8f9JZsd2dSdWGjiCphv@dpg-d0kfn13uibrs739gn9bg-a.oregon-postgres.render.com/alkimyk_db'
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+db = SQLAlchemy(app)
+
+# Modelo de usuario
+class Usuario(db.Model):
+    __tablename__ = 'usuarios'
+    id = db.Column(db.Integer, primary_key=True)
+    nombre = db.Column(db.String(100), nullable=False)
+    email = db.Column(db.String(100), unique=True, nullable=False)
+    password = db.Column(db.String(200), nullable=False)
+    rol = db.Column(db.String(50), nullable=False)
 
 # Filtro de plantilla para formatear fechas en los templates Jinja2
 @app.template_filter('datetimeformat')
@@ -887,20 +901,15 @@ def configuracion():
 # Ruta para login de administrador
 @app.route('/login_admin', methods=['GET', 'POST'])
 def login_admin():
-    import sqlite3
     from werkzeug.security import check_password_hash
     if request.method == 'POST':
         email = request.form.get('email')
         password = request.form.get('password')
-        conn = sqlite3.connect('basedatos.db')
-        c = conn.cursor()
-        c.execute("SELECT * FROM usuarios WHERE email = ?", (email,))
-        user = c.fetchone()
-        conn.close()
-        if user and check_password_hash(user[3], password):
-            session['usuario'] = user[1]
-            session['rol'] = user[4]
-            if user[4] == 'admin':
+        user = Usuario.query.filter_by(email=email).first()
+        if user and check_password_hash(user.password, password):
+            session['usuario'] = user.nombre
+            session['rol'] = user.rol
+            if user.rol == 'admin':
                 session['post_login_redirect'] = '/'
                 flash('Inicio de sesión como administrador', 'success')
                 return redirect('/splash')
@@ -919,7 +928,7 @@ def crear_usuario():
     if session.get('rol') != 'admin':
         flash('Acceso restringido solo para administradores.', 'danger')
         return redirect(url_for('home'))
-    
+
     if request.method == 'POST':
         nombre = request.form.get('nombre')
         email = request.form.get('email')
@@ -929,17 +938,13 @@ def crear_usuario():
         from werkzeug.security import generate_password_hash
         password_hash = generate_password_hash(password)
 
-        import sqlite3
-        conn = sqlite3.connect('basedatos.db')
-        c = conn.cursor()
-        try:
-            c.execute("INSERT INTO usuarios (nombre, email, password, rol) VALUES (?, ?, ?, ?)",
-                      (nombre, email, password_hash, rol))
-            conn.commit()
-            flash('Usuario creado correctamente.', 'success')
-        except sqlite3.IntegrityError:
+        if Usuario.query.filter_by(email=email).first():
             flash('El email ya está registrado.', 'danger')
-        conn.close()
+        else:
+            nuevo_usuario = Usuario(nombre=nombre, email=email, password=password_hash, rol=rol)
+            db.session.add(nuevo_usuario)
+            db.session.commit()
+            flash('Usuario creado correctamente.', 'success')
 
     return render_template('crear_usuario.html')
 
