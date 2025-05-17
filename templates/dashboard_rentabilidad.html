@@ -383,8 +383,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 // Asegurar que los valores de packaging estén actualizados desde localStorage
                 precioPack = parseFloat(localStorage.getItem("precio_pack") || 0);
                 precioCaja = parseFloat(localStorage.getItem("precio_caja") || 0);
-                // Cálculo de packaging unitario por caja (15 packs + 1 caja)
-                const packaging = (precioPack * 15) + precioCaja;
+                // Cálculo de packaging unitario por caja (distinguir entre original y otros)
+                const packaging = sabor === 'original' ? (precioPack * 27) + precioCaja : (precioPack * 15) + precioCaja;
                 const costoVariable = costoVariablePorSabor[sabor] || 0;
                 const costoFijo = costoFijoPorCaja;
                 const costoTotal = costoVariable + costoFijo + packaging;
@@ -444,7 +444,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 Object.entries(cajasPorSabor).forEach(([sabor, cantidad]) => {
                     const precioVenta = precioPorSabor[sabor] || 0;
                     const costoVariable = costoVariablePorSabor[sabor] || 0;
-                    const packaging = (precioPack * 15) + precioCaja;
+                    const packaging = sabor === 'original' ? (precioPack * 27) + precioCaja : (precioPack * 15) + precioCaja;
                     const costoTotal = costoVariable + packaging;
                     const margenContribucionUnitario = precioVenta - costoTotal;
                     sumaMargenContribucion += margenContribucionUnitario * cantidad;
@@ -497,7 +497,7 @@ document.addEventListener('DOMContentLoaded', () => {
             <tbody>
                 ${Object.entries(cajasPorSabor).map(([sabor, cantidad]) => {
                     const costoVariable = costoVariablePorSabor[sabor] || 0;
-                    const packaging = (precioPack * 15) + precioCaja;
+                    const packaging = sabor === 'original' ? (precioPack * 27) + precioCaja : (precioPack * 15) + precioCaja;
                     const costoFijo = costoFijoPorCaja;
                     const costoTotal = costoVariable + costoFijo + packaging;
                     return `
@@ -682,7 +682,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 const precioPack = parseFloat(localStorage.getItem("precio_pack") || 0);
                 const precioCaja = parseFloat(localStorage.getItem("precio_caja") || 0);
                 const cantidadCajasSabor = cajasPorSabor[sabor] || 0;
-                const packaging = cantidadCajasSabor * ((precioPack * 15) + precioCaja);
+                const packaging = cantidadCajasSabor * (sabor === 'original' ? (precioPack * 27) + precioCaja : (precioPack * 15) + precioCaja);
                 // Nuevo cálculo de costo fijo proporcional y exacto
                 const cajasTotales = Object.values(cajasPorSabor).reduce((a, b) => a + b, 0);
                 const costoFijoPorCaja = cajasTotales > 0 ? totalFijos / cajasTotales : 0;
@@ -957,7 +957,7 @@ function calcularKPIs() {
     sabores.forEach(sabor => {
         const precioVenta = precioPorSabor[sabor] || 0;
         const costoVariable = costoVariablePorSabor[sabor] || 0;
-        const packaging = (precioPack * 15) + precioCaja;
+        const packaging = sabor === 'original' ? (precioPack * 27) + precioCaja : (precioPack * 15) + precioCaja;
         const costoTotal = costoVariable + packaging;
         const margen = precioVenta - costoTotal;
         const cantidad = cajasPorSabor[sabor] || 0;
@@ -980,7 +980,7 @@ function calcularKPIs() {
     Object.entries(cajasPorSabor).forEach(([sabor, cantidad]) => {
         const precio = precioPorSabor[sabor] || 0;
         const costoVariable = costoVariablePorSabor[sabor] || 0;
-        const packaging = (precioPack * 15) + precioCaja;
+        const packaging = sabor === 'original' ? (precioPack * 27) + precioCaja : (precioPack * 15) + precioCaja;
         const costoFijo = costoFijoPorCaja;
         const ganancia = (precio - (costoVariable + packaging + costoFijo)) * cantidad;
         if (ganancia < menor.ganancia) menor = { sabor, ganancia };
@@ -1007,7 +1007,7 @@ function calcularKPIs() {
     const saboresRentabilidadBaja = sabores.filter(sabor => {
         const precio = precioPorSabor[sabor] || 0;
         const costoVariable = costoVariablePorSabor[sabor] || 0;
-        const packaging = (precioPack * 15) + precioCaja;
+        const packaging = sabor === 'original' ? (precioPack * 27) + precioCaja : (precioPack * 15) + precioCaja;
         const costoTotal = costoVariable + packaging + costoFijoPorCaja;
         const rentabilidad = precio > 0 ? (precio - costoTotal) / precio : 0;
         return rentabilidad < 0.15;
