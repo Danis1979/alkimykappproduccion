@@ -1273,8 +1273,8 @@ def splash():
 
 
 
-# Crear tablas si no existen antes de la primera petición
-@app.before_first_request
+# Crear tablas si no existen antes de cada petición (garantiza inicialización en todos los entornos)
+@app.before_request
 def crear_tablas_si_no_existen():
     db.create_all()
     # Crear usuario administrador por defecto si no existe
