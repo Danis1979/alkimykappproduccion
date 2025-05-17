@@ -1271,6 +1271,24 @@ def resumen_datos():
 def splash():
     return render_template('splash.html')
 
+
+
+# Crear tablas si no existen antes de la primera petición
+@app.before_first_request
+def crear_tablas_si_no_existen():
+    db.create_all()
+    # Crear usuario administrador por defecto si no existe
+    from werkzeug.security import generate_password_hash
+    if not Usuario.query.filter_by(email='alkimykfood@gmail.com').first():
+        admin = Usuario(
+            nombre='Administrador',
+            email='alkimykfood@gmail.com',
+            password=generate_password_hash('Mica1979'),
+            rol='admin'
+        )
+        db.session.add(admin)
+        db.session.commit()
+
 if __name__ == '__main__':
     threading.Timer(1.25, abrir_navegador).start()
     app.run(debug=True)
