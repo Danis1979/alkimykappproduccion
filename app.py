@@ -1138,7 +1138,8 @@ def costos():
         costos_fijos=costos_fijos,
         precios_costos_fijos=costos_fijos,
         precios_ingredientes=precios_ingredientes,
-        precios_venta_por_sabor=precios_venta_por_sabor
+        precios_venta_por_sabor=precios_venta_por_sabor,
+        precios_venta=precios_venta_por_sabor
     )
 
 
