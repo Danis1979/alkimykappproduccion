@@ -36,6 +36,36 @@ class Usuario(db.Model):
     password = db.Column(db.String(200), nullable=False)
     rol = db.Column(db.String(50), nullable=False)
 
+# Modelo Produccion para guardar canastos por usuario
+class Produccion(db.Model):
+    __tablename__ = 'produccion'
+    id = db.Column(db.Integer, primary_key=True)
+    usuario_email = db.Column(db.String(100), nullable=False)
+    fecha = db.Column(db.DateTime, default=datetime.utcnow)
+    sabor = db.Column(db.String(50), nullable=False)
+    canastos = db.Column(db.Integer, nullable=False)
+
+# Modelo CostoFijo para guardar costos fijos por usuario
+class CostoFijo(db.Model):
+    __tablename__ = 'costos_fijos'
+    id = db.Column(db.Integer, primary_key=True)
+    usuario_email = db.Column(db.String(100), nullable=False)
+    nombre = db.Column(db.String(100), nullable=False)
+    monto = db.Column(db.Float, nullable=False)
+
+# Modelo para guardar histórico de rentabilidad
+class ResumenHistorico(db.Model):
+    __tablename__ = 'resumen_historico'
+    id = db.Column(db.Integer, primary_key=True)
+    usuario_email = db.Column(db.String(100), nullable=False)
+    fecha = db.Column(db.DateTime, default=datetime.utcnow)
+    total_canastos = db.Column(db.Integer)
+    total_cajas = db.Column(db.Integer)
+    total_facturar = db.Column(db.Float)
+    total_con_iva = db.Column(db.Float)
+    ganancia_total = db.Column(db.Float)
+    rentabilidad = db.Column(db.Float)
+
 # Filtro de plantilla para formatear fechas en los templates Jinja2
 @app.template_filter('datetimeformat')
 def datetimeformat(value, format='%A'):
@@ -127,6 +157,15 @@ def canastos():
             return render_template('canastos.html', errores=errores, mostrar=mostrar, canastos=datos_formulario)
         mostrar = True
         session['canastos'] = canastos
+        # Guardar canastos en la tabla Produccion por usuario
+        if 'usuario' in session:
+            usuario_email = session['usuario']
+            Produccion.query.filter_by(usuario_email=usuario_email).delete()
+            for sabor, cantidad in canastos.items():
+                if cantidad > 0:
+                    nueva_prod = Produccion(usuario_email=usuario_email, sabor=sabor, canastos=cantidad)
+                    db.session.add(nueva_prod)
+            db.session.commit()
         total_canastos = sum(canastos.values())
 
         # Definir unidades por canasto para original
@@ -961,7 +1000,12 @@ def logout():
 # Nueva ruta /costos
 @app.route('/costos')
 def costos():
-    canastos = session.get('canastos', {})
+    canastos = {}
+    if 'usuario' in session:
+        usuario_email = session['usuario']
+        producciones = Produccion.query.filter_by(usuario_email=usuario_email).all()
+        for p in producciones:
+            canastos[p.sabor] = canastos.get(p.sabor, 0) + p.canastos
     if not canastos:
         flash("No hay datos de producción cargados.", "warning")
         return redirect(url_for('canastos'))
@@ -1054,7 +1098,15 @@ def costos():
         gramos_pan_rallado = total_unidades * 10
         total_ingredientes['Pan Rallado'] = total_ingredientes.get('Pan Rallado', 0) + gramos_pan_rallado
 
-    return render_template('costos.html', ingredientes=total_ingredientes)
+    # Obtener costos fijos desde la base de datos para el usuario
+    costos_fijos = {}
+    if 'usuario' in session:
+        usuario_email = session['usuario']
+        costos = CostoFijo.query.filter_by(usuario_email=usuario_email).all()
+        for costo in costos:
+            costos_fijos[costo.nombre] = costo.monto
+
+    return render_template('costos.html', ingredientes=total_ingredientes, costos_fijos=costos_fijos)
 
 @app.route('/dashboard_rentabilidad')
 def dashboard_rentabilidad():
@@ -1288,6 +1340,58 @@ def crear_tablas_si_no_existen():
         )
         db.session.add(admin)
         db.session.commit()
+
+
+# Ruta para guardar costos fijos del usuario
+@app.route('/guardar_costos', methods=['POST'])
+def guardar_costos():
+    if 'usuario' not in session:
+        return jsonify({'success': False, 'message': 'Usuario no autenticado'})
+
+    usuario_email = session['usuario']
+    data = request.get_json()
+
+    if not data:
+        return jsonify({'success': False, 'message': 'No se recibieron datos'})
+
+    # Borrar los costos fijos anteriores del usuario
+    CostoFijo.query.filter_by(usuario_email=usuario_email).delete()
+
+    for nombre, monto in data.items():
+        try:
+            monto_float = float(str(monto).replace(',', '').replace('$', ''))
+        except ValueError:
+            monto_float = 0
+        nuevo_costo = CostoFijo(usuario_email=usuario_email, nombre=nombre, monto=monto_float)
+        db.session.add(nuevo_costo)
+
+    db.session.commit()
+    return jsonify({'success': True, 'message': 'Costos guardados correctamente'})
+
+
+# Ruta para guardar resumen histórico de rentabilidad
+@app.route('/guardar_resumen_historico', methods=['POST'])
+def guardar_resumen_historico():
+    if 'usuario' not in session:
+        return jsonify({'success': False, 'message': 'Usuario no autenticado'})
+
+    data = request.get_json()
+    usuario_email = session['usuario']
+    try:
+        nuevo = ResumenHistorico(
+            usuario_email=usuario_email,
+            total_canastos=data.get('total_canastos'),
+            total_cajas=data.get('total_cajas'),
+            total_facturar=data.get('total_facturar'),
+            total_con_iva=data.get('total_con_iva'),
+            ganancia_total=data.get('ganancia_total'),
+            rentabilidad=data.get('rentabilidad')
+        )
+        db.session.add(nuevo)
+        db.session.commit()
+        return jsonify({'success': True})
+    except Exception as e:
+        return jsonify({'success': False, 'message': str(e)})
 
 if __name__ == '__main__':
     threading.Timer(1.25, abrir_navegador).start()

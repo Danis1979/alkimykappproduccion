@@ -191,10 +191,10 @@
                     </tr>
                 </thead>
                 <tbody>
-                    {% for fijo in ['Alquiler', 'Edenor', 'Aysa', 'Gas', 'Municipal', 'Sueldos', 'Cargas Sociales', 'IVA', 'Créditos', 'Flete', 'Varios'] %}
+                    {% for costo in costos_fijos %}
                     <tr>
-                        <td>{{ fijo }}</td>
-                        <td><input id="{{ fijo | lower | replace(' ', '_') }}" type="text" step="0.01" class="input-formulario" style="width: 180px;" min="0" max="10000000"></td>
+                        <td>{{ costo.nombre }}</td>
+                        <td><input id="{{ costo.nombre | lower | replace(' ', '_') }}" type="text" step="0.01" class="input-formulario" style="width: 180px;" min="0" max="10000000" value="{{ costo.monto }}"></td>
                     </tr>
                     {% endfor %}
                 </tbody>
@@ -485,46 +485,68 @@ function calcularRentabilidad() {
 }
 
 function guardarPrecios() {
-    const precioPack = document.getElementById("precio_packaging");
-    const precioCaja = document.getElementById("precio_cajas");
-    if (precioPack) localStorage.setItem("precio_pack", precioPack.value.replace(/\./g, '').replace(',', '.'));
-    if (precioCaja) localStorage.setItem("precio_caja", precioCaja.value.replace(/\./g, '').replace(',', '.'));
-    if (precioPack) document.cookie = `precio_pack=${precioPack.value.replace(/\./g, '').replace(',', '.')}`;
-    if (precioCaja) document.cookie = `precio_caja=${precioCaja.value.replace(/\./g, '').replace(',', '.')}`;
+    const precios = {
+        precio_pack: document.getElementById("precio_packaging")?.value.replace(/\./g, '').replace(',', '.') || "0",
+        precio_caja: document.getElementById("precio_cajas")?.value.replace(/\./g, '').replace(',', '.') || "0",
+        ingredientes: {},
+        costos_fijos: {},
+        precios_venta: {}
+    };
 
+    // Guardar ingredientes
+    document.querySelectorAll('input[id^="ingrediente_"]').forEach(input => {
+        const nombre = input.id.replace("ingrediente_", "");
+        const valor = input.value.replace(/\./g, '').replace(',', '.');
+        precios.ingredientes[nombre] = valor;
+    });
+
+    // Guardar costos fijos
+    const costosFijosIds = [
+        "alquiler", "edenor", "aysa", "gas", "municipal", "sueldos",
+        "cargas_sociales", "iva", "créditos", "flete", "varios"
+    ];
+    costosFijosIds.forEach(id => {
+        const input = document.getElementById(id);
+        if (input) {
+            precios.costos_fijos[id] = input.value.replace(/\./g, '').replace(',', '.');
+        }
+    });
+
+    // Guardar precios por sabor
     const sabores = ["aceituna", "caprese", "queso_azul", "cebolla", "espinaca", "calabaza", "brocoli", "original"];
     sabores.forEach(sabor => {
         const input = document.getElementById(`precio_${sabor}`);
         if (input) {
-            localStorage.setItem(`precio_${sabor}`, input.value.replace(/\./g, '').replace(',', '.'));
+            precios.precios_venta[sabor] = input.value.replace(/\./g, '').replace(',', '.');
         }
     });
 
-    alert("✅ Cambios guardados correctamente.");
+    // Enviar al backend
+    fetch('/guardar_costos', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(precios)
+    }).then(response => {
+        if (response.ok) {
+            alert("✅ Cambios guardados en la base de datos correctamente.");
+            // Redirigir al usuario después de guardar los cambios
+            window.location.href = "{{ url_for('home') }}";
+        } else {
+            alert("❌ Error al guardar en la base de datos.");
+        }
+    }).catch(error => {
+        console.error("Error:", error);
+        alert("❌ Error al conectar con el servidor.");
+    });
 }
 
 function confirmarYVolver() {
-    // Guardar precios de packaging
-    const precioPack = document.getElementById("precio_packaging");
-    const precioCaja = document.getElementById("precio_cajas");
-    if (precioPack) localStorage.setItem("precio_pack", precioPack.value.replace(/\./g, '').replace(',', '.'));
-    if (precioCaja) localStorage.setItem("precio_caja", precioCaja.value.replace(/\./g, '').replace(',', '.'));
-    // Guardar también como cookies para backend
-    if (precioPack) document.cookie = `precio_pack=${precioPack.value.replace(/\./g, '').replace(',', '.')}`;
-    if (precioCaja) document.cookie = `precio_caja=${precioCaja.value.replace(/\./g, '').replace(',', '.')}`;
-
-    // Guardar precios de venta por sabor
-    const sabores = ["aceituna", "caprese", "queso_azul", "cebolla", "espinaca", "calabaza", "brocoli", "original"];
-    sabores.forEach(sabor => {
-        const input = document.getElementById(`precio_${sabor}`);
-        if (input) {
-            localStorage.setItem(`precio_${sabor}`, input.value.replace(/\./g, '').replace(',', '.'));
-        }
-    });
-
     if (confirm("¿Querés guardar los precios y volver al menú principal?")) {
-        alert("✅ Precios guardados correctamente.");
-        window.location.href = "{{ url_for('home') }}";
+        guardarPrecios();
+        // alert("✅ Precios guardados correctamente."); // Eliminado: redundante
+        // La redirección será manejada en guardarPrecios()
     }
 }
 </script>

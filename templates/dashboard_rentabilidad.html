@@ -791,32 +791,38 @@ function toggleCalculadora() {
     const div = document.getElementById('bloque-calculadora');
     div.style.display = (div.style.display === "none") ? "block" : "none";
 }
-// Guardar resumen mensual en histórico (localStorage)
+// Guardar resumen mensual en histórico (enviar al backend)
 </script>
 <script>
 function guardarMesEnHistorico() {
-    const mesActual = new Date().toISOString().slice(0, 7); // formato "2025-05"
+    // Solo los datos necesarios para enviar al backend
     const resumen = {
-        fecha: mesActual,
-        cajasPorSabor: window.cajasPorSabor,
-        rentabilidadTotal: window.rentabilidadTotal,
-        totalFacturar: window.totalFacturar,
-        porcentajeRentabilidadTotal: window.porcentajeRentabilidadTotal
+        total_canastos: parseFloat(document.querySelector("p.dato strong").innerText) || 0,
+        total_cajas: Object.values(window.cajasPorSabor || {}).reduce((a, b) => a + b, 0),
+        total_facturar: window.totalFacturar || 0,
+        total_con_iva: (window.totalFacturar || 0) * 1.21,
+        ganancia_total: window.rentabilidadTotal || 0,
+        rentabilidad: window.porcentajeRentabilidadTotal || 0
     };
 
-    let historico = JSON.parse(localStorage.getItem('resumen_historico') || '[]');
-    const yaExiste = historico.some(r => r.fecha === mesActual);
-
-    if (yaExiste) {
-        if (!confirm("Ya existe un resumen guardado para este mes. ¿Deseás sobrescribirlo?")) {
-            return;
+    fetch('/guardar_resumen_historico', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(resumen)
+    })
+    .then(response => {
+        if (response.ok) {
+            alert("✅ Resumen mensual guardado en la base de datos.");
+        } else {
+            alert("❌ Error al guardar el resumen en la base de datos.");
         }
-        historico = historico.filter(r => r.fecha !== mesActual);
-    }
-
-    historico.push(resumen);
-    localStorage.setItem('resumen_historico', JSON.stringify(historico));
-    alert("✅ Resumen mensual guardado correctamente.");
+    })
+    .catch(error => {
+        console.error("Error al guardar el resumen:", error);
+        alert("❌ Error al guardar el resumen.");
+    });
 }
 </script>
 <script>
