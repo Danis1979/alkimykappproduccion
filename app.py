@@ -66,6 +66,14 @@ class ResumenHistorico(db.Model):
     ganancia_total = db.Column(db.Float)
     rentabilidad = db.Column(db.Float)
 
+# Modelo para guardar precios de ingredientes por usuario
+class PrecioIngrediente(db.Model):
+    __tablename__ = 'precios_ingredientes'
+    id = db.Column(db.Integer, primary_key=True)
+    usuario_email = db.Column(db.String(100), nullable=False)
+    ingrediente = db.Column(db.String(100), nullable=False)
+    precio_unitario = db.Column(db.Float, nullable=False)
+
 # Filtro de plantilla para formatear fechas en los templates Jinja2
 @app.template_filter('datetimeformat')
 def datetimeformat(value, format='%A'):
@@ -1102,11 +1110,62 @@ def costos():
     costos_fijos = {}
     if 'usuario' in session:
         usuario_email = session['usuario']
-        costos = CostoFijo.query.filter_by(usuario_email=usuario_email).all()
-        for costo in costos:
-            costos_fijos[costo.nombre] = costo.monto
+        costos_fijos_query = CostoFijo.query.filter_by(usuario_email=usuario_email).all()
+        costos_fijos = {c.nombre: c.monto for c in costos_fijos_query}
 
-    return render_template('costos.html', ingredientes=total_ingredientes, costos_fijos=costos_fijos)
+    # Obtener precios de ingredientes previos si existen
+    precios_ingredientes = {}
+    if 'usuario' in session:
+        usuario_email = session['usuario']
+        precios = PrecioIngrediente.query.filter_by(usuario_email=usuario_email).all()
+        for p in precios:
+            precios_ingredientes[p.ingrediente] = p.precio_unitario
+
+    # Obtener precios de venta por sabor desde la base si están disponibles
+    precios_venta_por_sabor = {}
+    if 'usuario' in session:
+        precios_cookie = request.cookies.get("precios_venta_por_sabor")
+        if precios_cookie:
+            try:
+                import json
+                precios_venta_por_sabor = json.loads(precios_cookie)
+            except:
+                precios_venta_por_sabor = {}
+
+    return render_template(
+        'costos.html',
+        ingredientes=total_ingredientes,
+        costos_fijos=costos_fijos,
+        precios_ingredientes=precios_ingredientes,
+        precios_venta_por_sabor=precios_venta_por_sabor
+    )
+
+
+# Ruta para guardar precios unitarios de ingredientes
+@app.route('/guardar_precios_ingredientes', methods=['POST'])
+def guardar_precios_ingredientes():
+    if 'usuario' not in session:
+        return jsonify({'success': False, 'message': 'Usuario no autenticado'})
+
+    usuario_email = session['usuario']
+    data = request.get_json()
+
+    if not data:
+        return jsonify({'success': False, 'message': 'No se recibieron datos'})
+
+    # Borrar los precios anteriores del usuario
+    PrecioIngrediente.query.filter_by(usuario_email=usuario_email).delete()
+
+    for ingrediente, precio in data.items():
+        try:
+            precio_unitario = float(str(precio).replace(',', '').replace('$', ''))
+        except ValueError:
+            precio_unitario = 0
+        nuevo_precio = PrecioIngrediente(usuario_email=usuario_email, ingrediente=ingrediente, precio_unitario=precio_unitario)
+        db.session.add(nuevo_precio)
+
+    db.session.commit()
+    return jsonify({'success': True, 'message': 'Precios guardados correctamente'})
 
 @app.route('/dashboard_rentabilidad')
 def dashboard_rentabilidad():

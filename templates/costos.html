@@ -134,9 +134,6 @@
                 <tbody>
                     {% set total_unidades = 0 %}
                     {% for nombre, cantidad in ingredientes.items() %}
-                        {% if nombre not in ['Packaging', 'Cajas'] %}
-                            {% set total_unidades = total_unidades + cantidad %}
-                        {% endif %}
                         <tr>
                             <td>{{ nombre }}</td>
                             <td>
@@ -155,7 +152,7 @@
                                     g
                                 {% endif %}
                             </td>
-                            <td><input id="ingrediente_{{ nombre | lower | replace(' ', '_') }}" type="text" step="0.01" placeholder="0.00" class="input-formulario" style="width: 180px;" min="0" max="10000000"></td>
+                            <td><input id="ingrediente_{{ nombre | lower | replace(' ', '_') }}" type="text" step="0.01" placeholder="0.00" class="input-formulario" style="width: 180px;" min="0" max="10000000" value="{{ precios_ingredientes.get(nombre | lower | replace(' ', '_'), '') }}"></td>
                             <td class="costo-total">$0.00</td>
                         </tr>
                     {% endfor %}
@@ -165,14 +162,14 @@
                         <td>Packaging</td>
                         <td>{{ (total_unidades / 4) | round(0, 'ceil') }}</td>
                         <td>un</td>
-                        <td><input id="precio_packaging" type="text" step="0.01" placeholder="0.00" class="input-formulario" style="width: 180px;" min="0" max="10000000"></td>
+                        <td><input id="precio_packaging" type="text" step="0.01" placeholder="0.00" class="input-formulario" style="width: 180px;" min="0" max="10000000" value="{{ precios_ingredientes.get('packaging', '') }}"></td>
                         <td class="costo-total">$0.00</td>
                     </tr>
                     <tr>
                         <td>Cajas</td>
                         <td>{{ (total_unidades / 60) | round(0, 'ceil') }}</td>
                         <td>un</td>
-                        <td><input id="precio_cajas" type="text" step="0.01" placeholder="0.00" class="input-formulario" style="width: 180px;" min="0" max="10000000"></td>
+                        <td><input id="precio_cajas" type="text" step="0.01" placeholder="0.00" class="input-formulario" style="width: 180px;" min="0" max="10000000" value="{{ precios_ingredientes.get('cajas', '') }}"></td>
                         <td class="costo-total">$0.00</td>
                     </tr>
                 </tbody>
@@ -191,10 +188,11 @@
                     </tr>
                 </thead>
                 <tbody>
-                    {% for costo in costos_fijos %}
+                    {% set conceptos = ['Alquiler', 'Edenor', 'Aysa', 'Gas', 'Municipal', 'Sueldos', 'Cargas Sociales', 'IVA', 'Créditos', 'Flete', 'Varios'] %}
+                    {% for concepto in conceptos %}
                     <tr>
-                        <td>{{ costo.nombre }}</td>
-                        <td><input id="{{ costo.nombre | lower | replace(' ', '_') }}" type="text" step="0.01" class="input-formulario" style="width: 180px;" min="0" max="10000000" value="{{ costo.monto }}"></td>
+                        <td>{{ concepto }}</td>
+                        <td><input id="{{ concepto | lower | replace(' ', '_') }}" type="text" step="0.01" class="input-formulario" style="width: 180px;" min="0" max="10000000" value="{{ precios_costos_fijos.get(concepto | lower | replace(' ', '_'), '') }}"></td>
                     </tr>
                     {% endfor %}
                 </tbody>
@@ -215,35 +213,35 @@
                 <tbody>
                     <tr>
                         <td>Aceitunas</td>
-                        <td><input id="precio_aceituna" type="text" step="0.01" class="input-formulario" style="width: 200px;" min="0" max="10000000"></td>
+                        <td><input id="precio_aceituna" type="text" step="0.01" class="input-formulario" style="width: 200px;" min="0" max="10000000" value="{{ precios_venta.get('aceituna', '') }}"></td>
                     </tr>
                     <tr>
                         <td>Caprese</td>
-                        <td><input id="precio_caprese" type="text" step="0.01" class="input-formulario" style="width: 200px;" min="0" max="10000000"></td>
+                        <td><input id="precio_caprese" type="text" step="0.01" class="input-formulario" style="width: 200px;" min="0" max="10000000" value="{{ precios_venta.get('caprese', '') }}"></td>
                     </tr>
                     <tr>
                         <td>Queso Azul</td>
-                        <td><input id="precio_queso_azul" type="text" step="0.01" class="input-formulario" style="width: 200px;" min="0" max="10000000"></td>
+                        <td><input id="precio_queso_azul" type="text" step="0.01" class="input-formulario" style="width: 200px;" min="0" max="10000000" value="{{ precios_venta.get('queso_azul', '') }}"></td>
                     </tr>
                     <tr>
                         <td>Cebolla</td>
-                        <td><input id="precio_cebolla" type="text" step="0.01" class="input-formulario" style="width: 200px;" min="0" max="10000000"></td>
+                        <td><input id="precio_cebolla" type="text" step="0.01" class="input-formulario" style="width: 200px;" min="0" max="10000000" value="{{ precios_venta.get('cebolla', '') }}"></td>
                     </tr>
                     <tr>
                         <td>Espinaca</td>
-                        <td><input id="precio_espinaca" type="text" step="0.01" class="input-formulario" style="width: 200px;" min="0" max="10000000"></td>
+                        <td><input id="precio_espinaca" type="text" step="0.01" class="input-formulario" style="width: 200px;" min="0" max="10000000" value="{{ precios_venta.get('espinaca', '') }}"></td>
                     </tr>
                     <tr>
                         <td>Calabaza</td>
-                        <td><input id="precio_calabaza" type="text" step="0.01" class="input-formulario" style="width: 200px;" min="0" max="10000000"></td>
+                        <td><input id="precio_calabaza" type="text" step="0.01" class="input-formulario" style="width: 200px;" min="0" max="10000000" value="{{ precios_venta.get('calabaza', '') }}"></td>
                     </tr>
                     <tr>
                         <td>Brócoli</td>
-                        <td><input id="precio_brocoli" type="text" step="0.01" class="input-formulario" style="width: 200px;" min="0" max="10000000"></td>
+                        <td><input id="precio_brocoli" type="text" step="0.01" class="input-formulario" style="width: 200px;" min="0" max="10000000" value="{{ precios_venta.get('brocoli', '') }}"></td>
                     </tr>
                     <tr>
                         <td>Original</td>
-                        <td><input id="precio_original" type="text" step="0.01" class="input-formulario" style="width: 200px;" min="0" max="10000000"></td>
+                        <td><input id="precio_original" type="text" step="0.01" class="input-formulario" style="width: 200px;" min="0" max="10000000" value="{{ precios_venta.get('original', '') }}"></td>
                     </tr>
                 </tbody>
             </table>
