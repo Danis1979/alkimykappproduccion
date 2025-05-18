@@ -1430,6 +1430,7 @@ def guardar_costos():
     return jsonify({'success': True, 'message': 'Costos guardados correctamente'})
 
 
+
 # Ruta para guardar resumen histórico de rentabilidad
 @app.route('/guardar_resumen_historico', methods=['POST'])
 def guardar_resumen_historico():
@@ -1453,6 +1454,49 @@ def guardar_resumen_historico():
         return jsonify({'success': True})
     except Exception as e:
         return jsonify({'success': False, 'message': str(e)})
+
+# Nueva ruta para guardar todos los cambios de la página de costos sin redireccionar al index
+@app.route('/guardar_todos_los_costos', methods=['POST'])
+def guardar_todos_los_costos():
+    if 'usuario' not in session:
+        return jsonify({'success': False, 'message': 'Usuario no autenticado'})
+
+    usuario_email = session['usuario']
+    data = request.get_json()
+    if not data:
+        return jsonify({'success': False, 'message': 'No se recibieron datos'})
+
+    precios_ingredientes = data.get('precios_ingredientes', {})
+    costos_fijos = data.get('costos_fijos', {})
+    precios_venta = data.get('precios_venta', {})
+
+    # Guardar precios de ingredientes
+    PrecioIngrediente.query.filter_by(usuario_email=usuario_email).delete()
+    for ingrediente, precio in precios_ingredientes.items():
+        try:
+            precio_unitario = float(str(precio).replace(',', '').replace('$', ''))
+        except ValueError:
+            precio_unitario = 0
+        nuevo_precio = PrecioIngrediente(usuario_email=usuario_email, ingrediente=ingrediente, precio_unitario=precio_unitario)
+        db.session.add(nuevo_precio)
+
+    # Guardar costos fijos
+    CostoFijo.query.filter_by(usuario_email=usuario_email).delete()
+    for nombre, monto in costos_fijos.items():
+        try:
+            monto_float = float(str(monto).replace(',', '').replace('$', ''))
+        except ValueError:
+            monto_float = 0
+        nuevo_costo = CostoFijo(usuario_email=usuario_email, nombre=nombre, monto=monto_float)
+        db.session.add(nuevo_costo)
+
+    # Guardar precios de venta por sabor en cookies
+    import json
+    response = jsonify({'success': True, 'message': 'Todos los datos guardados correctamente'})
+    response.set_cookie("precios_venta_por_sabor", json.dumps(precios_venta), max_age=60*60*24*365)  # 1 año
+
+    db.session.commit()
+    return response
 
 if __name__ == '__main__':
     threading.Timer(1.25, abrir_navegador).start()
