@@ -278,7 +278,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 }
                 let value = parseFloat(raw);
                 if (!isNaN(value)) {
-                    input.value = value.toFixed(2);
+                    input.value = value.toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
                 }
             });
         }
