@@ -1,15 +1,8 @@
 def normalizar_importe(valor):
     try:
         if isinstance(valor, str):
-            valor = valor.replace('$', '').replace(' ', '')
-            if ',' in valor and '.' in valor:
-                # Si contiene ambos, asume punto como miles y coma como decimal
-                valor = valor.replace('.', '').replace(',', '.')
-            elif ',' in valor:
-                valor = valor.replace(',', '.')
-            else:
-                valor = valor.replace('.', '')  # solo si no hay coma decimal
-        return float(valor)
+            valor = valor.replace('$', '').replace(' ', '').replace('.', '').replace(',', '.')
+        return round(float(valor), 2)
     except ValueError:
         return 0
 from flask import Flask, render_template, request, send_file, session, redirect, url_for, jsonify, flash
