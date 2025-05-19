@@ -224,8 +224,8 @@ function limpiarYParsear(valor) {
 }
 
 // Declarar precioPack y precioCaja fuera del event listener para que estén accesibles en todo el script
-let precioPack = limpiarYParsear(localStorage.getItem("precio_pack"));
-let precioCaja = limpiarYParsear(localStorage.getItem("precio_caja"));
+let precioPack;
+let precioCaja;
 document.addEventListener('DOMContentLoaded', () => {
     fetch('/resumen_datos')
         .then(response => response.json())
@@ -234,6 +234,9 @@ document.addEventListener('DOMContentLoaded', () => {
             const contenedor = document.getElementById('datos-rentabilidad');
             const totalCajas = data.total_cajas;
 
+            // Asignar precios de packaging y caja desde backend
+            precioPack = limpiarYParsear(data.packaging);
+            precioCaja = limpiarYParsear(data.cajas);
             const packagingCantidad = totalCajas * 4;
             const totalPackaging = packagingCantidad * precioPack;
             const totalCajasCosto = totalCajas * precioCaja;
@@ -398,9 +401,6 @@ document.addEventListener('DOMContentLoaded', () => {
             let rentabilidadTotal = 0;
 
             Object.entries(cajasPorSabor).forEach(([sabor, cantidad]) => {
-                // Asegurar que los valores de packaging estén actualizados desde localStorage antes de cada cálculo
-                precioPack = limpiarYParsear(localStorage.getItem("precio_pack"));
-                precioCaja = limpiarYParsear(localStorage.getItem("precio_caja"));
                 // Cálculo de packaging unitario por caja (distinguir entre original y otros)
                 const packaging = sabor === 'original' ? (precioPack * 27) + precioCaja : (precioPack * 15) + precioCaja;
                 const costoVariable = costoVariablePorSabor[sabor] || 0;
@@ -697,8 +697,6 @@ document.addEventListener('DOMContentLoaded', () => {
                     cantidades.push(total);
                 });
 
-                const precioPack = limpiarYParsear(localStorage.getItem("precio_pack"));
-                const precioCaja = limpiarYParsear(localStorage.getItem("precio_caja"));
                 const cantidadCajasSabor = cajasPorSabor[sabor] || 0;
                 const packaging = cantidadCajasSabor * (sabor === 'original' ? (precioPack * 27) + precioCaja : (precioPack * 15) + precioCaja);
                 // Nuevo cálculo de costo fijo proporcional y exacto
@@ -906,7 +904,7 @@ function calcularKPIs() {
 
     const recetas = window.detallesPorSabor || {};
     // Limpiar y parsear todos los valores de ingredientes_costos para KPIs
-    let ingredientesCostosRaw = JSON.parse(localStorage.getItem('ingredientes_costos') || '{}');
+    let ingredientesCostosRaw = window.ingredientesCostosRaw || {};
     let ingredientesCostos = {};
     Object.entries(ingredientesCostosRaw).forEach(([k, v]) => {
         ingredientesCostos[k] = limpiarYParsear(v);
@@ -941,8 +939,8 @@ function calcularKPIs() {
     }
 
     // Variables necesarias para los KPIs extra
-    const precioPack = limpiarYParsear(localStorage.getItem("precio_pack"));
-    const precioCaja = limpiarYParsear(localStorage.getItem("precio_caja"));
+    const precioPack = limpiarYParsear(window.ingredientesCostosRaw && window.ingredientesCostosRaw.packaging ? window.ingredientesCostosRaw.packaging : localStorage.getItem("precio_pack"));
+    const precioCaja = limpiarYParsear(window.ingredientesCostosRaw && window.ingredientesCostosRaw.cajas ? window.ingredientesCostosRaw.cajas : localStorage.getItem("precio_caja"));
     const cajasTotales = Object.values(cajasPorSabor).reduce((a, b) => a + b, 0);
     const totalCajasMes = cajasTotales;
     // Calcular totalFijos y totalVariables
@@ -1053,6 +1051,7 @@ fetch('/resumen_datos')
     .then(response => response.json())
     .then(data => {
         window.detallesPorSabor = data.detalles_por_sabor || {};
+        window.ingredientesCostosRaw = data.precios_ingredientes || {};
         setTimeout(() => {
             calcularKPIs();
         }, 1000);
