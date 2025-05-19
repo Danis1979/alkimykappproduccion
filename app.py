@@ -1,7 +1,13 @@
 def normalizar_importe(valor):
     try:
         if isinstance(valor, str):
-            valor = valor.replace('$', '').replace('.', '').replace(',', '.').strip()
+            # Eliminar símbolo de $ y espacios
+            valor = valor.replace('$', '').strip()
+            # Eliminar puntos como separadores de miles (solo si están antes de la coma o final)
+            # Ejemplo: "1.234,56" -> "1234,56"
+            valor = valor.replace('.', '')
+            # Reemplazar coma decimal por punto decimal
+            valor = valor.replace(',', '.')
             if valor == '':
                 return 0
         return round(float(valor), 2)
@@ -1471,7 +1477,7 @@ def guardar_todos_los_costos():
     usuario_email = session['usuario']
     data = request.get_json()
     print("🔍 Datos recibidos en /guardar_todos_los_costos:", data)
-    precios_ingredientes = data.get('precios_ingredientes', {})
+    precios_ingredientes = data.get('ingredientes', {})
     print("📦 Ingredientes recibidos:")
     for ingr, val in precios_ingredientes.items():
         print(f"  - {ingr}: {val}")
