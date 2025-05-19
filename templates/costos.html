@@ -400,6 +400,9 @@ function guardarPrecios() {
         costos_fijos: {},
         precios_venta: {}
     };
+    localStorage.removeItem("ingredientes");
+    localStorage.removeItem("costos_fijos");
+    localStorage.removeItem("precios_venta");
 
     // Guardar ingredientes
     document.querySelectorAll('input[id^="ingrediente_"]').forEach(input => {
@@ -450,6 +453,10 @@ function guardarPrecios() {
         },
         body: JSON.stringify(precios)
     }).then(response => {
+        // Actualizar localStorage después de guardar correctamente
+        localStorage.setItem("ingredientes", JSON.stringify(precios.ingredientes));
+        localStorage.setItem("costos_fijos", JSON.stringify(precios.costos_fijos));
+        localStorage.setItem("precios_venta", JSON.stringify(precios.precios_venta));
         if (response.ok) {
             alert("✅ Cambios guardados correctamente en la base de datos.");
         } else {
@@ -517,6 +524,10 @@ function confirmarYVolver() {
             },
             body: JSON.stringify(precios)
         }).then(response => {
+            // Actualizar localStorage después de guardar correctamente
+            localStorage.setItem("ingredientes", JSON.stringify(precios.ingredientes));
+            localStorage.setItem("costos_fijos", JSON.stringify(precios.costos_fijos));
+            localStorage.setItem("precios_venta", JSON.stringify(precios.precios_venta));
             if (response.ok) {
                 alert("✅ Cambios guardados correctamente.");
                 window.location.href = "/";
