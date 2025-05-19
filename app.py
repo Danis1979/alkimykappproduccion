@@ -3,14 +3,14 @@ def normalizar_importe(valor):
         if isinstance(valor, str):
             # Eliminar símbolo de $ y espacios
             valor = valor.replace('$', '').strip()
-            # Eliminar puntos como separadores de miles (solo si están antes de la coma o final)
-            # Ejemplo: "1.234,56" -> "1234,56"
+            # Eliminar puntos (separadores de miles)
             valor = valor.replace('.', '')
-            # Reemplazar coma decimal por punto decimal
+            # Reemplazar coma decimal por punto
             valor = valor.replace(',', '.')
             if valor == '':
                 return 0
-        return round(float(valor), 2)
+        # Convertir a float y devolver sin redondear ni formatear con ceros
+        return float(valor)
     except Exception:
         return 0
 from flask import Flask, render_template, request, send_file, session, redirect, url_for, jsonify, flash
