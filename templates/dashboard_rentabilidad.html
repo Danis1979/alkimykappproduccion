@@ -211,9 +211,17 @@
     </div>
 
 <script>
+// Función auxiliar para limpiar y parsear números en formato argentino
+function limpiarYParsear(valor) {
+    if (!valor || typeof valor !== "string") return 0;
+    valor = valor.trim().replace(/\./g, '').replace(',', '.');
+    const num = Number(valor);
+    return (!isNaN(num) && isFinite(num)) ? parseFloat(num.toFixed(2)) : 0;
+}
+
 // Declarar precioPack y precioCaja fuera del event listener para que estén accesibles en todo el script
-let precioPack = parseFloat(localStorage.getItem("precio_pack") || 0);
-let precioCaja = parseFloat(localStorage.getItem("precio_caja") || 0);
+let precioPack = limpiarYParsear(localStorage.getItem("precio_pack"));
+let precioCaja = limpiarYParsear(localStorage.getItem("precio_caja"));
 document.addEventListener('DOMContentLoaded', () => {
     fetch('/resumen_datos')
         .then(response => response.json())
@@ -252,7 +260,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
             // Calcular costo variable por sabor
             const recetas = data.detalles_por_sabor || {};
-            const ingredientesCostos = JSON.parse(localStorage.getItem('ingredientes_costos') || '{}');
+            // Limpiar y parsear todos los valores de ingredientes_costos
+            let ingredientesCostosRaw = JSON.parse(localStorage.getItem('ingredientes_costos') || '{}');
+            let ingredientesCostos = {};
+            Object.entries(ingredientesCostosRaw).forEach(([k, v]) => {
+                ingredientesCostos[k] = limpiarYParsear(v);
+            });
 
             let costoVariablePorSabor = {};
             Object.entries(cajasPorSabor).forEach(([sabor, cajas]) => {
@@ -263,7 +276,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     if (!ingredientesCostos.hasOwnProperty(claveNormalizada)) {
                         console.warn(`Ingrediente sin precio: ${ingrediente} → Clave usada: ${claveNormalizada}`);
                     }
-                    const precioUnitario = parseFloat(ingredientesCostos[claveNormalizada]) || 0;
+                    const precioUnitario = limpiarYParsear(ingredientesCostos[claveNormalizada]);
                     console.log(`Sabor: ${sabor} - Ingrediente: ${ingrediente} - Clave: ${claveNormalizada} - Precio: ${precioUnitario} - Cantidad: ${cantidad}`);
                     // Conversión a kg solo si corresponde (Soja y Harina ya están en kg)
                     let baseEnKg = ['soja', 'harina'];
@@ -291,7 +304,7 @@ document.addEventListener('DOMContentLoaded', () => {
                             let totalIngredientes = 0;
                             Object.entries(receta).forEach(([ingrediente, cantIng]) => {
                                 const clave = ingrediente.toLowerCase().replace(/\s+/g, '_');
-                                const precio = parseFloat(ingredientesCostos[clave] || 0);
+                                const precio = limpiarYParsear(ingredientesCostos[clave]);
                             let baseEnKg = ['soja', 'harina'];
                             const cantidadKg = baseEnKg.includes(clave) ? cantIng : cantIng / 1000;
                                 totalIngredientes += cantidadKg * precio;
@@ -314,7 +327,7 @@ document.addEventListener('DOMContentLoaded', () => {
             ];
             let totalFijos = 0;
             costosFijos.forEach(id => {
-                const val = parseFloat(localStorage.getItem(id) || 0);
+                const val = limpiarYParsear(localStorage.getItem(id));
                 if (!isNaN(val)) totalFijos += val;
             });
             document.getElementById("sugerencias").innerHTML += `<li><strong>Total Costos Fijos:</strong> $${totalFijos.toLocaleString('es-AR', {maximumFractionDigits: 2})}</li>`;
@@ -323,7 +336,7 @@ document.addEventListener('DOMContentLoaded', () => {
             Object.entries(recetas).forEach(([sabor, receta]) => {
                 Object.entries(receta).forEach(([ing, cantidad]) => {
                     const clave = ing.toLowerCase().replace(/\s+/g, '_');
-                    const precio = parseFloat(ingredientesCostos[clave] || 0);
+                    const precio = limpiarYParsear(ingredientesCostos[clave]);
                     let baseEnKg = ['soja', 'harina'];
                     const cantidadKg = baseEnKg.includes(clave) ? cantidad : cantidad / 1000;
                     totalIngredientesGlobal += cantidadKg * precio;
@@ -339,14 +352,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
             let precioPorSabor = {
-                'aceituna': parseFloat(localStorage.getItem('precio_aceituna') || 0),
-                'caprese': parseFloat(localStorage.getItem('precio_caprese') || 0),
-                'queso_azul': parseFloat(localStorage.getItem('precio_queso_azul') || 0),
-                'cebolla': parseFloat(localStorage.getItem('precio_cebolla') || 0),
-                'espinaca': parseFloat(localStorage.getItem('precio_espinaca') || 0),
-                'calabaza': parseFloat(localStorage.getItem('precio_calabaza') || 0),
-                'brocoli': parseFloat(localStorage.getItem('precio_brocoli') || 0),
-                'original': parseFloat(localStorage.getItem('precio_original') || 0)
+                'aceituna': limpiarYParsear(localStorage.getItem('precio_aceituna')),
+                'caprese': limpiarYParsear(localStorage.getItem('precio_caprese')),
+                'queso_azul': limpiarYParsear(localStorage.getItem('precio_queso_azul')),
+                'cebolla': limpiarYParsear(localStorage.getItem('precio_cebolla')),
+                'espinaca': limpiarYParsear(localStorage.getItem('precio_espinaca')),
+                'calabaza': limpiarYParsear(localStorage.getItem('precio_calabaza')),
+                'brocoli': limpiarYParsear(localStorage.getItem('precio_brocoli')),
+                'original': limpiarYParsear(localStorage.getItem('precio_original'))
             };
 
             // Calcular total a facturar y total con IVA
@@ -381,8 +394,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
             Object.entries(cajasPorSabor).forEach(([sabor, cantidad]) => {
                 // Asegurar que los valores de packaging estén actualizados desde localStorage
-                precioPack = parseFloat(localStorage.getItem("precio_pack") || 0);
-                precioCaja = parseFloat(localStorage.getItem("precio_caja") || 0);
+                precioPack = limpiarYParsear(localStorage.getItem("precio_pack"));
+                precioCaja = limpiarYParsear(localStorage.getItem("precio_caja"));
                 // Cálculo de packaging unitario por caja (distinguir entre original y otros)
                 const packaging = sabor === 'original' ? (precioPack * 27) + precioCaja : (precioPack * 15) + precioCaja;
                 const costoVariable = costoVariablePorSabor[sabor] || 0;
@@ -543,7 +556,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     <tbody>
                         ${Object.entries(receta).map(([ing, cantidad]) => {
                             const clave = ing.toLowerCase().replace(/\s+/g, '_');
-                            const precio = parseFloat(ingredientesCostos[clave] || 0);
+                            const precio = limpiarYParsear(ingredientesCostos[clave]);
                             let baseEnKg = ['soja', 'harina'];
                             let cantidadKg = baseEnKg.includes(clave) ? cantidad : cantidad / 1000;
                             const costoTotal = cantidadKg * precio;
@@ -594,7 +607,7 @@ document.addEventListener('DOMContentLoaded', () => {
             Object.entries(recetas).forEach(([sabor, receta]) => {
                 Object.entries(receta).forEach(([ing, cantidad]) => {
                     const clave = ing.toLowerCase().replace(/\s+/g, '_');
-                    const precio = parseFloat(ingredientesCostos[clave] || 0);
+                            const precio = limpiarYParsear(ingredientesCostos[clave]);
                     let baseEnKg = ['soja', 'harina'];
                     const cantidadKg = baseEnKg.includes(clave) ? cantidad : cantidad / 1000;
                     const costo = cantidadKg * precio;
@@ -679,8 +692,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     cantidades.push(total);
                 });
 
-                const precioPack = parseFloat(localStorage.getItem("precio_pack") || 0);
-                const precioCaja = parseFloat(localStorage.getItem("precio_caja") || 0);
+                const precioPack = limpiarYParsear(localStorage.getItem("precio_pack"));
+                const precioCaja = limpiarYParsear(localStorage.getItem("precio_caja"));
                 const cantidadCajasSabor = cajasPorSabor[sabor] || 0;
                 const packaging = cantidadCajasSabor * (sabor === 'original' ? (precioPack * 27) + precioCaja : (precioPack * 15) + precioCaja);
                 // Nuevo cálculo de costo fijo proporcional y exacto
@@ -778,7 +791,7 @@ if (historico.length > 0) {
 function calcularPrecioSugerido(sabor, costoTotal) {
     const porcentaje = parseFloat(document.getElementById(`rentabilidad_${sabor}`).value || 0);
     const precioSugerido = costoTotal / (1 - (porcentaje / 100));
-    const precioActual = parseFloat(localStorage.getItem(`precio_${sabor}`) || 0);
+    const precioActual = limpiarYParsear(localStorage.getItem(`precio_${sabor}`));
     const aumento = precioActual > 0 ? ((precioSugerido - precioActual) / precioActual) * 100 : 0;
 
     document.getElementById(`aumento_necesario_${sabor}`).innerText = aumento.toFixed(1) + "%";
@@ -887,7 +900,12 @@ function calcularKPIs() {
     if (!data.total_canastos) data.total_canastos = 0;
 
     const recetas = window.detallesPorSabor || {};
-    const ingredientesCostos = JSON.parse(localStorage.getItem('ingredientes_costos') || '{}');
+    // Limpiar y parsear todos los valores de ingredientes_costos para KPIs
+    let ingredientesCostosRaw = JSON.parse(localStorage.getItem('ingredientes_costos') || '{}');
+    let ingredientesCostos = {};
+    Object.entries(ingredientesCostosRaw).forEach(([k, v]) => {
+        ingredientesCostos[k] = limpiarYParsear(v);
+    });
     const cajasPorSabor = window.cajasPorSabor || {};
     const costoVariablePorSabor = window.costoVariablePorSabor || {};
     const sabores = Object.keys(cajasPorSabor);
@@ -897,7 +915,7 @@ function calcularKPIs() {
     const topIngredientes = Object.entries(recetas).flatMap(([sabor, receta]) => {
         return Object.entries(receta).map(([ing, cant]) => {
             const clave = ing.toLowerCase().replace(/\s+/g, '_');
-            const precio = parseFloat(ingredientesCostos[clave] || 0);
+            const precio = limpiarYParsear(ingredientesCostos[clave]);
             let cantidadKg;
             if (clave === 'pan_rallado') {
                 cantidadKg = cant / 1000;
@@ -918,21 +936,21 @@ function calcularKPIs() {
     }
 
     // Variables necesarias para los KPIs extra
-    const precioPack = parseFloat(localStorage.getItem("precio_pack") || 0);
-    const precioCaja = parseFloat(localStorage.getItem("precio_caja") || 0);
+    const precioPack = limpiarYParsear(localStorage.getItem("precio_pack"));
+    const precioCaja = limpiarYParsear(localStorage.getItem("precio_caja"));
     const cajasTotales = Object.values(cajasPorSabor).reduce((a, b) => a + b, 0);
     const totalCajasMes = cajasTotales;
     // Calcular totalFijos y totalVariables
     const totalFijos = [
         'alquiler', 'edenor', 'aysa', 'gas', 'municipal', 'sueldos',
         'cargas_sociales', 'iva', 'créditos', 'flete', 'varios'
-    ].reduce((acc, id) => acc + parseFloat(localStorage.getItem(id) || 0), 0);
+    ].reduce((acc, id) => acc + limpiarYParsear(localStorage.getItem(id)), 0);
     // Total variables: ingredientes + packaging + cajas
     let totalIngredientesGlobal = 0;
     Object.entries(recetas).forEach(([sabor, receta]) => {
         Object.entries(receta).forEach(([ing, cantidad]) => {
             const clave = ing.toLowerCase().replace(/\s+/g, '_');
-            const precio = parseFloat(ingredientesCostos[clave] || 0);
+            const precio = limpiarYParsear(ingredientesCostos[clave]);
             let base = ['soja', 'harina'];
             const cantidadKg = base.includes(clave) ? cantidad : cantidad / 1000;
             totalIngredientesGlobal += cantidadKg * precio;
@@ -948,7 +966,7 @@ function calcularKPIs() {
     // Precios por sabor
     let precioPorSabor = {};
     sabores.forEach(sabor => {
-        precioPorSabor[sabor] = parseFloat(localStorage.getItem(`precio_${sabor}`) || 0);
+        precioPorSabor[sabor] = limpiarYParsear(localStorage.getItem(`precio_${sabor}`));
     });
 
     // Total a facturar

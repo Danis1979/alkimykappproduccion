@@ -362,7 +362,7 @@ function limpiarValor(valor) {
     if (!valor || typeof valor !== "string") return "0";
     valor = valor.trim().replace(/\./g, '').replace(',', '.');
     const num = Number(valor);
-    return (!isNaN(num) && isFinite(num)) ? num.toString() : "0";
+    return (!isNaN(num) && isFinite(num)) ? num.toFixed(2) : "0";
 }
 
 function guardarPrecios() {
