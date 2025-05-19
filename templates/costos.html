@@ -269,9 +269,9 @@ document.addEventListener('DOMContentLoaded', function () {
             });
             input.addEventListener('blur', () => {
                 let raw = input.value.trim();
-                // Eliminar cualquier separador de miles (puntos), convertir coma decimal a punto
-                raw = raw.replace(/[\.,](?=\d{3,})/g, ''); // elimina puntos y comas de miles
-                raw = raw.replace(',', '.');
+                // Eliminar todos los puntos (miles) y convertir coma decimal a punto
+                raw = raw.replace(/\./g, ''); // elimina todos los puntos (miles)
+                raw = raw.replace(',', '.'); // reemplaza coma por punto decimal
                 // Eliminar notación científica accidental
                 if (/e/i.test(raw)) {
                     raw = Number(raw).toFixed(2);
