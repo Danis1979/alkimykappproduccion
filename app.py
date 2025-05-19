@@ -1,3 +1,12 @@
+def normalizar_importe(valor):
+    try:
+        if isinstance(valor, str):
+            valor = valor.replace('$', '').replace(' ', '')
+            valor = valor.replace('.', '')  # eliminar puntos (separadores de miles)
+            valor = valor.replace(',', '.')  # convertir coma decimal a punto
+        return float(valor)
+    except ValueError:
+        return 0
 from flask import Flask, render_template, request, send_file, session, redirect, url_for, jsonify, flash
 from flask_sqlalchemy import SQLAlchemy
 import os
@@ -73,6 +82,14 @@ class PrecioIngrediente(db.Model):
     usuario_email = db.Column(db.String(100), nullable=False)
     ingrediente = db.Column(db.String(100), nullable=False)
     precio_unitario = db.Column(db.Float, nullable=False)
+
+# Modelo para guardar precios de venta por sabor
+class PrecioVentaSabor(db.Model):
+    __tablename__ = 'precios_venta_sabor'
+    id = db.Column(db.Integer, primary_key=True)
+    usuario_email = db.Column(db.String(100), nullable=False)
+    sabor = db.Column(db.String(100), nullable=False)
+    precio = db.Column(db.Float, nullable=False)
 
 # Filtro de plantilla para formatear fechas en los templates Jinja2
 @app.template_filter('datetimeformat')
@@ -1124,13 +1141,10 @@ def costos():
     # Obtener precios de venta por sabor desde la base si están disponibles
     precios_venta_por_sabor = {}
     if 'usuario' in session:
-        precios_cookie = request.cookies.get("precios_venta_por_sabor")
-        if precios_cookie:
-            try:
-                import json
-                precios_venta_por_sabor = json.loads(precios_cookie)
-            except:
-                precios_venta_por_sabor = {}
+        usuario_email = session['usuario']
+        precios_db = PrecioVentaSabor.query.filter_by(usuario_email=usuario_email).all()
+        for p in precios_db:
+            precios_venta_por_sabor[p.sabor] = p.precio
 
     return render_template(
         'costos.html',
@@ -1159,10 +1173,7 @@ def guardar_precios_ingredientes():
     PrecioIngrediente.query.filter_by(usuario_email=usuario_email).delete()
 
     for ingrediente, precio in data.items():
-        try:
-            precio_unitario = float(str(precio).replace(',', '').replace('$', ''))
-        except ValueError:
-            precio_unitario = 0
+        precio_unitario = normalizar_importe(precio)
         nuevo_precio = PrecioIngrediente(usuario_email=usuario_email, ingrediente=ingrediente, precio_unitario=precio_unitario)
         db.session.add(nuevo_precio)
 
@@ -1419,10 +1430,7 @@ def guardar_costos():
     CostoFijo.query.filter_by(usuario_email=usuario_email).delete()
 
     for nombre, monto in data.items():
-        try:
-            monto_float = float(str(monto).replace(',', '').replace('$', ''))
-        except ValueError:
-            monto_float = 0
+        monto_float = normalizar_importe(monto)
         nuevo_costo = CostoFijo(usuario_email=usuario_email, nombre=nombre, monto=monto_float)
         db.session.add(nuevo_costo)
 
@@ -1472,41 +1480,26 @@ def guardar_todos_los_costos():
     # Guardar precios de ingredientes
     PrecioIngrediente.query.filter_by(usuario_email=usuario_email).delete()
     for ingrediente, precio in precios_ingredientes.items():
-        try:
-            # Normalización: Eliminar $ y espacios, luego reemplazar ',' por '.' solo si no hay punto decimal
-            precio_str = str(precio).replace('$', '').replace(' ', '')
-            if ',' in precio_str and '.' not in precio_str:
-                precio_str = precio_str.replace('.', '').replace(',', '.')
-            else:
-                precio_str = precio_str.replace(',', '')
-            precio_unitario = float(precio_str)
-        except ValueError:
-            precio_unitario = 0
+        precio_unitario = normalizar_importe(precio)
         nuevo_precio = PrecioIngrediente(usuario_email=usuario_email, ingrediente=ingrediente, precio_unitario=precio_unitario)
         db.session.add(nuevo_precio)
 
     # Guardar costos fijos
     CostoFijo.query.filter_by(usuario_email=usuario_email).delete()
     for nombre, monto in costos_fijos.items():
-        try:
-            monto_str = str(monto).replace('$', '').replace(' ', '')
-            if ',' in monto_str and '.' not in monto_str:
-                monto_str = monto_str.replace('.', '').replace(',', '.')
-            else:
-                monto_str = monto_str.replace(',', '')
-            monto_float = float(monto_str)
-        except ValueError:
-            monto_float = 0
+        monto_float = normalizar_importe(monto)
         nuevo_costo = CostoFijo(usuario_email=usuario_email, nombre=nombre, monto=monto_float)
         db.session.add(nuevo_costo)
 
-    # Guardar precios de venta por sabor en cookies (solo para refuerzo visual, no como única fuente)
-    import json
-    response = jsonify({'success': True, 'message': 'Todos los datos guardados correctamente'})
-    response.set_cookie("precios_venta_por_sabor", json.dumps(precios_venta), max_age=60*60*24*365)  # 1 año
+    # Guardar precios de venta en la base de datos
+    PrecioVentaSabor.query.filter_by(usuario_email=usuario_email).delete()
+    for sabor, precio_str in precios_venta.items():
+        precio_float = normalizar_importe(precio_str)
+        nuevo_precio = PrecioVentaSabor(usuario_email=usuario_email, sabor=sabor, precio=precio_float)
+        db.session.add(nuevo_precio)
 
     db.session.commit()
-    return response
+    return jsonify({'success': True, 'message': 'Todos los datos guardados correctamente'})
 
 if __name__ == '__main__':
     threading.Timer(1.25, abrir_navegador).start()
