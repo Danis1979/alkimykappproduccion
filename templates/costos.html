@@ -248,7 +248,9 @@
         </div>
 
         <div style="margin-top: 30px; display: flex; flex-wrap: wrap; gap: 16px; align-items: center; justify-content: center;">
-            <button type="button" onclick="calcularRentabilidad()" class="btn-mac-style">📊 Calcular Rentabilidad</button>
+            <form action="/dashboard_rentabilidad" method="GET" style="display: inline;">
+                <button type="submit" class="btn-mac-style">📊 Calcular Rentabilidad</button>
+            </form>
             <button onclick="window.print()" class="btn-mac-style">🖨️ Imprimir</button>
             <button onclick="guardarPrecios()" class="btn-mac-style">💾 Guardar Cambios</button>
             <button class="btn-mac-style" onclick="confirmarYVolver()">↩️ Volver al menú</button>
@@ -329,137 +331,29 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 });
 
-function calcularRentabilidad() {
-    console.log("✅ Función calcularRentabilidad() llamada");
-    const inputs = document.querySelectorAll('input[type="text"]');
-    let faltanCampos = false;
-    inputs.forEach(input => {
-        const esValido = input.value && !isNaN(parseFloat(input.value));
-        if (!esValido) {
-            input.style.border = '2px solid red';
-            if (!faltanCampos) input.focus();
-            faltanCampos = true;
-        } else {
-            input.style.border = ''; // limpiar borde si está bien
-        }
-    });
-
-    if (faltanCampos) {
-        alert("⚠️ Faltan completar algunos precios. Por favor, revisá los campos resaltados en rojo.");
-        return;
-    }
-    const rows = document.querySelectorAll('table tbody tr');
-    let costoVariable = 0;
-
-    rows.forEach(row => {
-        // Verificación para evitar errores en filas no válidas
-        if (!row || row.children.length < 3) return;
-        const precioInput = row.querySelector('input[type="text"]');
-        const precioId = precioInput.id;
-        let precio;
-        if (precioId.startsWith('ingrediente_')) {
-            precio = parseFloat(precioInput.value);
-        } else if (precioId === 'precio_packaging' || precioId === 'precio_cajas') {
-            precio = parseFloat(precioInput.value);
-        } else {
-            // Ignorar inputs de precio de venta por caja en cálculo variable
-            precio = NaN;
-        }
-        let cantidad = parseFloat(row.children[1].innerText.replace(',', '.'));
-        // Corrección específica para Soja y Harina
-        const nombreIngrediente = row.children[0].innerText.trim().toLowerCase();
-        let unidad = row.children[2].innerText.trim();
-        if (nombreIngrediente === "soja" || nombreIngrediente === "harina") {
-            unidad = "kg";
-        }
-        let cantidadConvertida = unidad === "g" ? cantidad / 1000 : cantidad;
-        if (!isNaN(precio) && !isNaN(cantidadConvertida)) {
-            costoVariable += precio * cantidadConvertida;
-        }
-    });
-
-    const fijos = ['alquiler', 'edenor', 'aysa', 'gas', 'municipal', 'sueldos', 'cargas_sociales', 'iva', 'créditos', 'flete', 'varios']
-        .map(id => parseFloat(document.getElementById(id).value) || 0)
-        .reduce((a, b) => a + b, 0);
-
-    const totalUnidades = Array.from(document.querySelectorAll('table tbody tr'))
-        .map(row => parseFloat(row.children[1].innerText.replace(',', '.')))
-        .reduce((a, b) => a + (isNaN(b) ? 0 : b), 0);
-
-    const totalCajas = Math.ceil(totalUnidades / 60);
-    const costoFijoPorCaja = totalCajas > 0 ? fijos / totalCajas : 0;
-
-    const precioQueso = parseFloat(document.getElementById('precio_queso_azul').value) || 0;
-    const precioVeg = (
-        (parseFloat(document.getElementById('precio_aceituna').value) || 0) +
-        (parseFloat(document.getElementById('precio_caprese').value) || 0)
-    );
-    const precioVegana = (
-        (parseFloat(document.getElementById('precio_cebolla').value) || 0) +
-        (parseFloat(document.getElementById('precio_espinaca').value) || 0) +
-        (parseFloat(document.getElementById('precio_calabaza').value) || 0) +
-        (parseFloat(document.getElementById('precio_brocoli').value) || 0)
-    );
-
-    const precioVenta = precioQueso + precioVeg + precioVegana;
-    const costoTotal = costoVariable + fijos;
-    const rentabilidad = precioVenta - costoTotal;
-    const rentabilidadPct = (precioVenta > 0) ? ((rentabilidad / precioVenta) * 100).toFixed(2) : 0;
-
-    const resultadoDiv = document.getElementById('resultado');
-    /*
-    resultadoDiv.innerHTML = `
-        <p><strong>Costo variable total:</strong> $${costoVariable.toFixed(2)}</p>
-        <p><strong>Costo fijo total:</strong> $${fijos.toFixed(2)}</p>
-        <p><strong>Costo total:</strong> $${costoTotal.toFixed(2)}</p>
-        <p><strong>Rentabilidad absoluta:</strong> $${rentabilidad.toFixed(2)}</p>
-        <p><strong>Rentabilidad (%):</strong> ${rentabilidadPct}%</p>
-    `;
-
-    resultadoDiv.innerHTML += `
-        <hr>
-        <h4>Análisis por Tipo de Caja</h4>
-        <p><strong>Costo fijo por caja estimado:</strong> $${costoFijoPorCaja.toFixed(2)}</p>
-        <p><strong>Queso Azul:</strong> Precio $${precioQueso}, Rentabilidad $${(precioQueso - costoFijoPorCaja).toFixed(2)}</p>
-        <p><strong>Vegetarianas:</strong> Precio $${precioVeg}, Rentabilidad $${(precioVeg - costoFijoPorCaja).toFixed(2)}</p>
-        <p><strong>Veganas:</strong> Precio $${precioVegana}, Rentabilidad $${(precioVegana - costoFijoPorCaja).toFixed(2)}</p>
-    `;
-
-    const semaforo = document.getElementById('semaforo');
-    if (rentabilidadPct >= 30) {
-        semaforo.style.backgroundColor = 'green';
-    } else if (rentabilidadPct >= 10) {
-        semaforo.style.backgroundColor = 'orange';
-    } else {
-        semaforo.style.backgroundColor = 'red';
-    }
-    */
-    const cajasQueso = Math.ceil(totalCajas / 3);
-    const cajasVeg = Math.ceil(totalCajas / 3);
-    const cajasVegana = totalCajas - cajasQueso - cajasVeg;
-
-    const data = {
-        costoVariable: costoVariable.toFixed(2),
-        costosFijos: fijos.toFixed(2),
-        costoTotal: costoTotal.toFixed(2),
-        rentabilidad: rentabilidad.toFixed(2),
-        rentabilidadPct: rentabilidadPct,
-        costoFijoCaja: costoFijoPorCaja.toFixed(2),
-        precioQueso: precioQueso,
-        precioVeg: precioVeg,
-        precioVegana: precioVegana,
-        rentaQueso: (precioQueso - costoFijoPorCaja).toFixed(2),
-        rentaVeg: (precioVeg - costoFijoPorCaja).toFixed(2),
-        rentaVegana: (precioVegana - costoFijoPorCaja).toFixed(2),
-        cajasQueso: cajasQueso,
-        cajasVeg: cajasVeg,
-        cajasVegana: cajasVegana
-    };
-
-    // Eliminado localStorage para no guardar datos localmente.
-    alert("✅ Rentabilidad calculada. Mostrando resultados...");
-    window.location.href = "/dashboard_rentabilidad";
-}
+// function calcularRentabilidad() {
+//     console.log("✅ Función calcularRentabilidad() llamada");
+//     const inputs = document.querySelectorAll('input[type="text"]');
+//     let faltanCampos = false;
+//     inputs.forEach(input => {
+//         const esValido = input.value && !isNaN(parseFloat(input.value));
+//         if (!esValido) {
+//             input.style.border = '2px solid red';
+//             if (!faltanCampos) input.focus();
+//             faltanCampos = true;
+//         } else {
+//             input.style.border = ''; // limpiar borde si está bien
+//         }
+//     });
+//
+//     if (faltanCampos) {
+//         alert("⚠️ Faltan completar algunos precios. Por favor, revisá los campos resaltados en rojo.");
+//         return;
+//     }
+//     // ... resto de la función ...
+//     alert("✅ Rentabilidad calculada. Mostrando resultados...");
+//     // window.location.href = "/dashboard_rentabilidad";
+// }
 
 function limpiarValor(valor) {
     if (!valor || valor === "") return "0";
