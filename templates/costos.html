@@ -192,7 +192,7 @@
                     {% for concepto in conceptos %}
                     <tr>
                         <td>{{ concepto }}</td>
-                        <td><input id="{{ concepto | lower | replace(' ', '_') }}" type="text" step="0.01" class="input-formulario" style="width: 180px;" min="0" max="10000000" value="{{ '%.2f' % precios_costos_fijos.get(concepto | lower | replace(' ', '_'), 0) }}"></td>
+                        <td><input id="{{ concepto | lower | replace(' ', '_') }}" type="number" step="any" class="input-formulario" style="width: 180px;" min="0" max="10000000" value="{{ '%.2f' % precios_costos_fijos.get(concepto | lower | replace(' ', '_'), 0) }}"></td>
                     </tr>
                     {% endfor %}
                 </tbody>
@@ -213,35 +213,35 @@
                 <tbody>
                     <tr>
                         <td>Aceitunas</td>
-                        <td><input id="precio_aceituna" type="text" step="0.01" class="input-formulario" style="width: 200px;" min="0" max="10000000" value="{{ '%.2f' % precios_venta.get('aceituna', 0) }}"></td>
+                        <td><input id="precio_aceituna" type="number" step="any" class="input-formulario" style="width: 200px;" min="0" max="10000000" value="{{ '%.2f' % precios_venta.get('aceituna', 0) }}"></td>
                     </tr>
                     <tr>
                         <td>Caprese</td>
-                        <td><input id="precio_caprese" type="text" step="0.01" class="input-formulario" style="width: 200px;" min="0" max="10000000" value="{{ '%.2f' % precios_venta.get('caprese', 0) }}"></td>
+                        <td><input id="precio_caprese" type="number" step="any" class="input-formulario" style="width: 200px;" min="0" max="10000000" value="{{ '%.2f' % precios_venta.get('caprese', 0) }}"></td>
                     </tr>
                     <tr>
                         <td>Queso Azul</td>
-                        <td><input id="precio_queso_azul" type="text" step="0.01" class="input-formulario" style="width: 200px;" min="0" max="10000000" value="{{ '%.2f' % precios_venta.get('queso_azul', 0) }}"></td>
+                        <td><input id="precio_queso_azul" type="number" step="any" class="input-formulario" style="width: 200px;" min="0" max="10000000" value="{{ '%.2f' % precios_venta.get('queso_azul', 0) }}"></td>
                     </tr>
                     <tr>
                         <td>Cebolla</td>
-                        <td><input id="precio_cebolla" type="text" step="0.01" class="input-formulario" style="width: 200px;" min="0" max="10000000" value="{{ '%.2f' % precios_venta.get('cebolla', 0) }}"></td>
+                        <td><input id="precio_cebolla" type="number" step="any" class="input-formulario" style="width: 200px;" min="0" max="10000000" value="{{ '%.2f' % precios_venta.get('cebolla', 0) }}"></td>
                     </tr>
                     <tr>
                         <td>Espinaca</td>
-                        <td><input id="precio_espinaca" type="text" step="0.01" class="input-formulario" style="width: 200px;" min="0" max="10000000" value="{{ '%.2f' % precios_venta.get('espinaca', 0) }}"></td>
+                        <td><input id="precio_espinaca" type="number" step="any" class="input-formulario" style="width: 200px;" min="0" max="10000000" value="{{ '%.2f' % precios_venta.get('espinaca', 0) }}"></td>
                     </tr>
                     <tr>
                         <td>Calabaza</td>
-                        <td><input id="precio_calabaza" type="text" step="0.01" class="input-formulario" style="width: 200px;" min="0" max="10000000" value="{{ '%.2f' % precios_venta.get('calabaza', 0) }}"></td>
+                        <td><input id="precio_calabaza" type="number" step="any" class="input-formulario" style="width: 200px;" min="0" max="10000000" value="{{ '%.2f' % precios_venta.get('calabaza', 0) }}"></td>
                     </tr>
                     <tr>
                         <td>Brócoli</td>
-                        <td><input id="precio_brocoli" type="text" step="0.01" class="input-formulario" style="width: 200px;" min="0" max="10000000" value="{{ '%.2f' % precios_venta.get('brocoli', 0) }}"></td>
+                        <td><input id="precio_brocoli" type="number" step="any" class="input-formulario" style="width: 200px;" min="0" max="10000000" value="{{ '%.2f' % precios_venta.get('brocoli', 0) }}"></td>
                     </tr>
                     <tr>
                         <td>Original</td>
-                        <td><input id="precio_original" type="text" step="0.01" class="input-formulario" style="width: 200px;" min="0" max="10000000" value="{{ '%.2f' % precios_venta.get('original', 0) }}"></td>
+                        <td><input id="precio_original" type="number" step="any" class="input-formulario" style="width: 200px;" min="0" max="10000000" value="{{ '%.2f' % precios_venta.get('original', 0) }}"></td>
                     </tr>
                 </tbody>
             </table>
@@ -259,18 +259,22 @@
     </div>
 <script>
 document.addEventListener('DOMContentLoaded', function () {
-    // Formato visual: al salir del campo (blur), mostrar con dos decimales sin separadores de miles;
-    // al hacer focus, quitar formato (dejar número puro)
-    document.querySelectorAll('input[type="text"]').forEach(input => {
+    // Formato visual: sólo aplicar formato en blur, no en focus
+    document.querySelectorAll('input[type="number"]').forEach(input => {
         if (input.id) {
             input.addEventListener('focus', () => {
-                const numericValue = input.value.replace(/\./g, '').replace(',', '.');
-                input.value = numericValue;
+                // No formatear en focus, dejar el valor tal cual (evita multiplicación de ceros)
             });
-            // Al salir del campo, mostrar siempre con dos decimales, sin separadores de miles
             input.addEventListener('blur', () => {
-                const raw = input.value.replace(/\./g, '').replace(',', '.');
-                const value = parseFloat(raw);
+                let raw = input.value.trim();
+                // Eliminar cualquier separador de miles (puntos), convertir coma decimal a punto
+                raw = raw.replace(/[\.,](?=\d{3,})/g, ''); // elimina puntos y comas de miles
+                raw = raw.replace(',', '.');
+                // Eliminar notación científica accidental
+                if (/e/i.test(raw)) {
+                    raw = Number(raw).toFixed(2);
+                }
+                let value = parseFloat(raw);
                 if (!isNaN(value)) {
                     input.value = value.toFixed(2);
                 }
@@ -278,16 +282,17 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     });
 
+    // Actualización de costos totales para inputs de ingredientes y packaging/cajas
     const rows = document.querySelectorAll('table tbody tr');
     rows.forEach(row => {
         // Verificación para evitar errores en filas no válidas
         if (!row || row.children.length < 3) return;
-        const precioInput = row.querySelector('input[type="text"]');
+        const precioInput = row.querySelector('input[type="number"]');
+        if (!precioInput) return;
         const cantidadText = row.children[1].innerText.replace(',', '.');
         const costoTotalCell = row.querySelector('.costo-total');
 
         precioInput.addEventListener('input', () => {
-            // Verificación para evitar errores en filas no válidas
             if (!row || row.children.length < 3) return;
             const precio = parseFloat(precioInput.value);
             let cantidad = parseFloat(cantidadText);
@@ -309,7 +314,6 @@ document.addEventListener('DOMContentLoaded', function () {
         // Al cargar la página, actualizar el costo total si hay valor guardado
         const precio = parseFloat(precioInput.value);
         let cantidad = parseFloat(cantidadText);
-        // --- Corrección específica para Soja y Harina ---
         const nombreIngrediente = row.children[0].innerText.trim().toLowerCase();
         let unidad = row.children[2].innerText.trim();
         if (nombreIngrediente === "soja" || nombreIngrediente === "harina") {
@@ -457,30 +461,25 @@ function calcularRentabilidad() {
     window.location.href = "/dashboard_rentabilidad";
 }
 
+function limpiarValor(valor) {
+    if (!valor || valor === "") return "0";
+    // Eliminar todos los puntos (miles), convertir coma decimal a punto, quitar notación científica
+    valor = valor.replace(/[\.,](?=\d{3,})/g, ''); // elimina puntos y comas de miles
+    valor = valor.replace(',', '.');
+    // Eliminar notación científica accidental
+    if (/e/i.test(valor)) {
+        valor = Number(valor).toFixed(2);
+    }
+    // Forzar número entero si no tiene decimales válidos
+    let num = parseFloat(valor);
+    if (isNaN(num) || !isFinite(num)) num = 0;
+    return num.toFixed(2);
+}
+
 function guardarPrecios() {
     const precios = {
-        packaging: (function() {
-            let valor = document.getElementById("precio_packaging")?.value.trim();
-            if (!valor || valor === "") valor = "0";
-            else {
-                valor = valor.replace(/\./g, '').replace(',', '.');
-                if (!/^\d+(\.\d+)?$/.test(valor)) valor = "0";
-                valor = parseFloat(valor);
-                if (isNaN(valor) || !isFinite(valor)) valor = 0;
-            }
-            return Number(valor).toFixed(2);
-        })(),
-        cajas: (function() {
-            let valor = document.getElementById("precio_cajas")?.value.trim();
-            if (!valor || valor === "") valor = "0";
-            else {
-                valor = valor.replace(/\./g, '').replace(',', '.');
-                if (!/^\d+(\.\d+)?$/.test(valor)) valor = "0";
-                valor = parseFloat(valor);
-                if (isNaN(valor) || !isFinite(valor)) valor = 0;
-            }
-            return Number(valor).toFixed(2);
-        })(),
+        packaging: limpiarValor(document.getElementById("precio_packaging")?.value.trim()),
+        cajas: limpiarValor(document.getElementById("precio_cajas")?.value.trim()),
         ingredientes: {},
         costos_fijos: {},
         precios_venta: {}
@@ -488,17 +487,8 @@ function guardarPrecios() {
 
     // Guardar ingredientes
     document.querySelectorAll('input[id^="ingrediente_"]').forEach(input => {
-        // Usar el nombre exacto (sin reemplazo de guion bajo por espacio) para los ingredientes
         const nombre = input.id.replace("ingrediente_", "").toLowerCase();
-        let valor = input.value.trim();
-        if (valor === "") valor = "0";
-        else {
-            valor = valor.replace(/\./g, '').replace(',', '.');
-            if (!/^\d+(\.\d+)?$/.test(valor)) valor = "0";
-            valor = parseFloat(valor);
-            if (isNaN(valor) || !isFinite(valor)) valor = 0;
-        }
-        precios.ingredientes[nombre] = Number(valor).toFixed(2);
+        precios.ingredientes[nombre] = limpiarValor(input.value.trim());
     });
 
     // Guardar costos fijos
@@ -509,15 +499,7 @@ function guardarPrecios() {
     costosFijosIds.forEach(id => {
         const input = document.getElementById(id);
         if (input) {
-            let valor = input.value.trim();
-            if (valor === "") valor = "0";
-            else {
-                valor = valor.replace(/\./g, '').replace(',', '.');
-                if (!/^\d+(\.\d+)?$/.test(valor)) valor = "0";
-                valor = parseFloat(valor);
-                if (isNaN(valor) || !isFinite(valor)) valor = 0;
-            }
-            precios.costos_fijos[id] = Number(valor).toFixed(2);
+            precios.costos_fijos[id] = limpiarValor(input.value.trim());
         }
     });
 
@@ -526,15 +508,7 @@ function guardarPrecios() {
     sabores.forEach(sabor => {
         const input = document.getElementById(`precio_${sabor}`);
         if (input) {
-            let valor = input.value.trim();
-            if (valor === "") valor = "0";
-            else {
-                valor = valor.replace(/\./g, '').replace(',', '.');
-                if (!/^\d+(\.\d+)?$/.test(valor)) valor = "0";
-                valor = parseFloat(valor);
-                if (isNaN(valor) || !isFinite(valor)) valor = 0;
-            }
-            precios.precios_venta[sabor] = Number(valor).toFixed(2);
+            precios.precios_venta[sabor] = limpiarValor(input.value.trim());
         }
     });
 
@@ -559,45 +533,16 @@ function guardarPrecios() {
 function confirmarYVolver() {
     if (confirm("¿Querés guardar los precios y volver al menú principal?")) {
         const precios = {
-            packaging: (function() {
-                let valor = document.getElementById("precio_packaging")?.value.trim();
-                if (!valor || valor === "") valor = "0";
-                else {
-                    valor = valor.replace(/\./g, '').replace(',', '.');
-                    if (!/^\d+(\.\d+)?$/.test(valor)) valor = "0";
-                    valor = parseFloat(valor);
-                    if (isNaN(valor) || !isFinite(valor)) valor = 0;
-                }
-                return Number(valor).toFixed(2);
-            })(),
-            cajas: (function() {
-                let valor = document.getElementById("precio_cajas")?.value.trim();
-                if (!valor || valor === "") valor = "0";
-                else {
-                    valor = valor.replace(/\./g, '').replace(',', '.');
-                    if (!/^\d+(\.\d+)?$/.test(valor)) valor = "0";
-                    valor = parseFloat(valor);
-                    if (isNaN(valor) || !isFinite(valor)) valor = 0;
-                }
-                return Number(valor).toFixed(2);
-            })(),
+            packaging: limpiarValor(document.getElementById("precio_packaging")?.value.trim()),
+            cajas: limpiarValor(document.getElementById("precio_cajas")?.value.trim()),
             ingredientes: {},
             costos_fijos: {},
             precios_venta: {}
         };
 
         document.querySelectorAll('input[id^="ingrediente_"]').forEach(input => {
-            // Usar el nombre exacto (sin reemplazo de guion bajo por espacio) para los ingredientes
             const nombre = input.id.replace("ingrediente_", "").toLowerCase();
-            let valor = input.value.trim();
-            if (valor === "") valor = "0";
-            else {
-                valor = valor.replace(/\./g, '').replace(',', '.');
-                if (!/^\d+(\.\d+)?$/.test(valor)) valor = "0";
-                valor = parseFloat(valor);
-                if (isNaN(valor) || !isFinite(valor)) valor = 0;
-            }
-            precios.ingredientes[nombre] = Number(valor).toFixed(2);
+            precios.ingredientes[nombre] = limpiarValor(input.value.trim());
         });
 
         const costosFijosIds = [
@@ -607,15 +552,7 @@ function confirmarYVolver() {
         costosFijosIds.forEach(id => {
             const input = document.getElementById(id);
             if (input) {
-                let valor = input.value.trim();
-                if (valor === "") valor = "0";
-                else {
-                    valor = valor.replace(/\./g, '').replace(',', '.');
-                    if (!/^\d+(\.\d+)?$/.test(valor)) valor = "0";
-                    valor = parseFloat(valor);
-                    if (isNaN(valor) || !isFinite(valor)) valor = 0;
-                }
-                precios.costos_fijos[id] = Number(valor).toFixed(2);
+                precios.costos_fijos[id] = limpiarValor(input.value.trim());
             }
         });
 
@@ -623,15 +560,7 @@ function confirmarYVolver() {
         sabores.forEach(sabor => {
             const input = document.getElementById(`precio_${sabor}`);
             if (input) {
-                let valor = input.value.trim();
-                if (valor === "") valor = "0";
-                else {
-                    valor = valor.replace(/\./g, '').replace(',', '.');
-                    if (!/^\d+(\.\d+)?$/.test(valor)) valor = "0";
-                    valor = parseFloat(valor);
-                    if (isNaN(valor) || !isFinite(valor)) valor = 0;
-                }
-                precios.precios_venta[sabor] = Number(valor).toFixed(2);
+                precios.precios_venta[sabor] = limpiarValor(input.value.trim());
             }
         });
 
