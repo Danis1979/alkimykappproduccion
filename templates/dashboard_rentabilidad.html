@@ -260,7 +260,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             // Calcular costo variable por sabor
             const recetas = data.detalles_por_sabor || {};
-            // Limpiar y parsear todos los valores de ingredientes_costos
+            // Limpiar y parsear todos los valores de ingredientes_costos (usando limpiarYParsear)
             let ingredientesCostosRaw = JSON.parse(localStorage.getItem('ingredientes_costos') || '{}');
             let ingredientesCostos = {};
             Object.entries(ingredientesCostosRaw).forEach(([k, v]) => {
@@ -556,7 +556,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     <tbody>
                         ${Object.entries(receta).map(([ing, cantidad]) => {
                             const clave = ing.toLowerCase().replace(/\s+/g, '_');
-                            const precio = limpiarYParsear(ingredientesCostos[clave]);
+                    const precio = limpiarYParsear(ingredientesCostos[clave]);
                             let baseEnKg = ['soja', 'harina'];
                             let cantidadKg = baseEnKg.includes(clave) ? cantidad : cantidad / 1000;
                             const costoTotal = cantidadKg * precio;
@@ -683,7 +683,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 let sumaIngredientes = 0;
                 Object.entries(receta).forEach(([ing, cantidad]) => {
                     const clave = ing.toLowerCase().replace(/\s+/g, '_');
-                    const precio = parseFloat(ingredientesCostos[clave] || 0);
+                    const precio = limpiarYParsear(ingredientesCostos[clave]);
                     const baseEnKg = ['soja', 'harina'];
                     const cantidadKg = baseEnKg.includes(clave) ? cantidad : cantidad / 1000;
                     const total = cantidadKg * precio;
