@@ -1200,6 +1200,15 @@ def dashboard_rentabilidad():
     from flask import jsonify
     canastos = session.get('canastos', {})
     detalles_por_sabor = {}
+
+    # Traer los precios unitarios desde la base de datos
+    precios_ingredientes = {}
+    if 'usuario' in session:
+        usuario_email = session['usuario']
+        precios = PrecioIngrediente.query.filter_by(usuario_email=usuario_email).all()
+        for p in precios:
+            precios_ingredientes[p.ingrediente] = p.precio_unitario
+
     for sabor, cantidad in canastos.items():
         if cantidad == 0:
             continue
@@ -1266,6 +1275,13 @@ def dashboard_rentabilidad():
                 temp['Chimichurri'] = total_relleno / 1000 * 5
                 temp['Sal'] = temp.get('Sal', 0) + total_relleno / 1000 * 5
         detalles_por_sabor[sabor] = temp
+        # Calcular el costo total por sabor
+        costo_total_sabor = 0
+        for ingr, cant in detalles_por_sabor[sabor].items():
+            precio_unitario = precios_ingredientes.get(ingr, 0)
+            # Para cantidades >= 1000, se asume kg, si no gramos, pero el precio es por kg
+            costo_total_sabor += (cant / 1000) * precio_unitario if cant >= 0 else 0
+        detalles_por_sabor[sabor]['Costo Variable Total'] = costo_total_sabor
         print(f"Receta para {sabor}: {temp}")
 
     # Agregar pan rallado (10 g por unidad)
