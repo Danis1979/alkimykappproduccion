@@ -4,7 +4,7 @@ def normalizar_importe(valor):
             valor = valor.replace('$', '').replace('.', '').replace(',', '.').strip()
             if valor == '':
                 return 0
-        return float(valor)
+        return round(float(valor), 2)
     except Exception:
         return 0
 from flask import Flask, render_template, request, send_file, session, redirect, url_for, jsonify, flash
@@ -1480,8 +1480,9 @@ def guardar_todos_los_costos():
     # Guardar precios de ingredientes con normalización robusta
     PrecioIngrediente.query.filter_by(usuario_email=usuario_email).delete()
     for ingrediente, precio in precios_ingredientes.items():
+        ingrediente_limpio = ingrediente.strip()
         precio_unitario = normalizar_importe(precio)
-        nuevo_precio = PrecioIngrediente(usuario_email=usuario_email, ingrediente=ingrediente, precio_unitario=precio_unitario)
+        nuevo_precio = PrecioIngrediente(usuario_email=usuario_email, ingrediente=ingrediente_limpio, precio_unitario=precio_unitario)
         db.session.add(nuevo_precio)
 
     # Guardar costos fijos
