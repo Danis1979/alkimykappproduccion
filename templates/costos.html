@@ -152,7 +152,7 @@
                                     g
                                 {% endif %}
                             </td>
-                            <td><input id="ingrediente_{{ nombre | lower | replace(' ', '_') }}" type="text" step="0.01" placeholder="0.00" class="input-formulario" style="width: 180px;" min="0" max="10000000" value="{{ precios_ingredientes.get(nombre | lower | replace(' ', '_') | replace('ó', 'o'), '') }}"></td>
+                            <td><input id="ingrediente_{{ nombre | lower | replace(' ', '_') }}" type="text" step="0.01" placeholder="0.00" class="input-formulario" style="width: 180px;" min="0" max="10000000" value="{{ '%.2f' % precios_ingredientes.get(nombre | lower | replace(' ', '_') | replace('ó', 'o'), 0) }}"></td>
                             <td class="costo-total">$0.00</td>
                         </tr>
                     {% endfor %}
@@ -162,14 +162,14 @@
                         <td>Packaging</td>
                         <td>{{ (total_unidades / 4) | round(0, 'ceil') }}</td>
                         <td>un</td>
-                        <td><input id="precio_packaging" type="text" step="0.01" placeholder="0.00" class="input-formulario" style="width: 180px;" min="0" max="10000000" value="{{ precios_ingredientes.get('packaging', '') }}"></td>
+                        <td><input id="precio_packaging" type="text" step="0.01" placeholder="0.00" class="input-formulario" style="width: 180px;" min="0" max="10000000" value="{{ '%.2f' % precios_ingredientes.get('packaging', 0) }}"></td>
                         <td class="costo-total">$0.00</td>
                     </tr>
                     <tr>
                         <td>Cajas</td>
                         <td>{{ (total_unidades / 60) | round(0, 'ceil') }}</td>
                         <td>un</td>
-                        <td><input id="precio_cajas" type="text" step="0.01" placeholder="0.00" class="input-formulario" style="width: 180px;" min="0" max="10000000" value="{{ precios_ingredientes.get('cajas', '') }}"></td>
+                        <td><input id="precio_cajas" type="text" step="0.01" placeholder="0.00" class="input-formulario" style="width: 180px;" min="0" max="10000000" value="{{ '%.2f' % precios_ingredientes.get('cajas', 0) }}"></td>
                         <td class="costo-total">$0.00</td>
                     </tr>
                 </tbody>
@@ -192,7 +192,7 @@
                     {% for concepto in conceptos %}
                     <tr>
                         <td>{{ concepto }}</td>
-                        <td><input id="{{ concepto | lower | replace(' ', '_') }}" type="text" step="0.01" class="input-formulario" style="width: 180px;" min="0" max="10000000" value="{{ precios_costos_fijos.get(concepto | lower | replace(' ', '_'), '') }}"></td>
+                        <td><input id="{{ concepto | lower | replace(' ', '_') }}" type="text" step="0.01" class="input-formulario" style="width: 180px;" min="0" max="10000000" value="{{ '%.2f' % precios_costos_fijos.get(concepto | lower | replace(' ', '_'), 0) }}"></td>
                     </tr>
                     {% endfor %}
                 </tbody>
@@ -213,35 +213,35 @@
                 <tbody>
                     <tr>
                         <td>Aceitunas</td>
-                        <td><input id="precio_aceituna" type="text" step="0.01" class="input-formulario" style="width: 200px;" min="0" max="10000000" value="{{ precios_venta.get('aceituna', '') }}"></td>
+                        <td><input id="precio_aceituna" type="text" step="0.01" class="input-formulario" style="width: 200px;" min="0" max="10000000" value="{{ '%.2f' % precios_venta.get('aceituna', 0) }}"></td>
                     </tr>
                     <tr>
                         <td>Caprese</td>
-                        <td><input id="precio_caprese" type="text" step="0.01" class="input-formulario" style="width: 200px;" min="0" max="10000000" value="{{ precios_venta.get('caprese', '') }}"></td>
+                        <td><input id="precio_caprese" type="text" step="0.01" class="input-formulario" style="width: 200px;" min="0" max="10000000" value="{{ '%.2f' % precios_venta.get('caprese', 0) }}"></td>
                     </tr>
                     <tr>
                         <td>Queso Azul</td>
-                        <td><input id="precio_queso_azul" type="text" step="0.01" class="input-formulario" style="width: 200px;" min="0" max="10000000" value="{{ precios_venta.get('queso_azul', '') }}"></td>
+                        <td><input id="precio_queso_azul" type="text" step="0.01" class="input-formulario" style="width: 200px;" min="0" max="10000000" value="{{ '%.2f' % precios_venta.get('queso_azul', 0) }}"></td>
                     </tr>
                     <tr>
                         <td>Cebolla</td>
-                        <td><input id="precio_cebolla" type="text" step="0.01" class="input-formulario" style="width: 200px;" min="0" max="10000000" value="{{ precios_venta.get('cebolla', '') }}"></td>
+                        <td><input id="precio_cebolla" type="text" step="0.01" class="input-formulario" style="width: 200px;" min="0" max="10000000" value="{{ '%.2f' % precios_venta.get('cebolla', 0) }}"></td>
                     </tr>
                     <tr>
                         <td>Espinaca</td>
-                        <td><input id="precio_espinaca" type="text" step="0.01" class="input-formulario" style="width: 200px;" min="0" max="10000000" value="{{ precios_venta.get('espinaca', '') }}"></td>
+                        <td><input id="precio_espinaca" type="text" step="0.01" class="input-formulario" style="width: 200px;" min="0" max="10000000" value="{{ '%.2f' % precios_venta.get('espinaca', 0) }}"></td>
                     </tr>
                     <tr>
                         <td>Calabaza</td>
-                        <td><input id="precio_calabaza" type="text" step="0.01" class="input-formulario" style="width: 200px;" min="0" max="10000000" value="{{ precios_venta.get('calabaza', '') }}"></td>
+                        <td><input id="precio_calabaza" type="text" step="0.01" class="input-formulario" style="width: 200px;" min="0" max="10000000" value="{{ '%.2f' % precios_venta.get('calabaza', 0) }}"></td>
                     </tr>
                     <tr>
                         <td>Brócoli</td>
-                        <td><input id="precio_brocoli" type="text" step="0.01" class="input-formulario" style="width: 200px;" min="0" max="10000000" value="{{ precios_venta.get('brocoli', '') }}"></td>
+                        <td><input id="precio_brocoli" type="text" step="0.01" class="input-formulario" style="width: 200px;" min="0" max="10000000" value="{{ '%.2f' % precios_venta.get('brocoli', 0) }}"></td>
                     </tr>
                     <tr>
                         <td>Original</td>
-                        <td><input id="precio_original" type="text" step="0.01" class="input-formulario" style="width: 200px;" min="0" max="10000000" value="{{ precios_venta.get('original', '') }}"></td>
+                        <td><input id="precio_original" type="text" step="0.01" class="input-formulario" style="width: 200px;" min="0" max="10000000" value="{{ '%.2f' % precios_venta.get('original', 0) }}"></td>
                     </tr>
                 </tbody>
             </table>
@@ -259,19 +259,20 @@
     </div>
 <script>
 document.addEventListener('DOMContentLoaded', function () {
-    // Formato visual con separador de miles al salir del campo (blur) y quitar formato en focus
+    // Formato visual: al salir del campo (blur), mostrar con dos decimales sin separadores de miles;
+    // al hacer focus, quitar formato (dejar número puro)
     document.querySelectorAll('input[type="text"]').forEach(input => {
         if (input.id) {
             input.addEventListener('focus', () => {
                 const numericValue = input.value.replace(/\./g, '').replace(',', '.');
                 input.value = numericValue;
             });
-            // Formato visual con separador de miles al salir del campo (blur)
+            // Al salir del campo, mostrar siempre con dos decimales, sin separadores de miles
             input.addEventListener('blur', () => {
                 const raw = input.value.replace(/\./g, '').replace(',', '.');
                 const value = parseFloat(raw);
                 if (!isNaN(value)) {
-                    input.value = value.toLocaleString('es-AR', { minimumFractionDigits: 0, maximumFractionDigits: 2 });
+                    input.value = value.toFixed(2);
                 }
             });
         }

@@ -1485,15 +1485,20 @@ def guardar_todos_los_costos():
         return jsonify({'success': False, 'message': 'No se recibieron datos'})
 
     precios_ingredientes = data.get('precios_ingredientes', {})
+    # Asegurarse de que precios_ingredientes esté correctamente poblado (debug opcional)
+    # print("precios_ingredientes recibidos:", precios_ingredientes)
     costos_fijos = data.get('costos_fijos', {})
     precios_venta = data.get('precios_venta', {})
 
-    # Guardar precios de ingredientes
+    # Guardar precios de ingredientes con control de errores y normalización robusta
     PrecioIngrediente.query.filter_by(usuario_email=usuario_email).delete()
     for ingrediente, precio in precios_ingredientes.items():
-        precio_unitario = normalizar_importe(precio)
-        nuevo_precio = PrecioIngrediente(usuario_email=usuario_email, ingrediente=ingrediente, precio_unitario=precio_unitario)
-        db.session.add(nuevo_precio)
+        try:
+            precio_unitario = normalizar_importe(precio)
+            nuevo_precio = PrecioIngrediente(usuario_email=usuario_email, ingrediente=ingrediente, precio_unitario=precio_unitario)
+            db.session.add(nuevo_precio)
+        except Exception as e:
+            print(f"Error al guardar ingrediente {ingrediente}: {e}")
 
     # Guardar costos fijos
     CostoFijo.query.filter_by(usuario_email=usuario_email).delete()
