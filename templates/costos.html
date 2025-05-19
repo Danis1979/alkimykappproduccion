@@ -437,6 +437,9 @@ function guardarPrecios() {
         }
     });
 
+    // Log para verificar datos antes de guardar
+    console.log("🔍 Precios a guardar:", precios);
+
     fetch('/guardar_todos_los_costos', {
         method: 'POST',
         headers: {
@@ -497,6 +500,9 @@ function confirmarYVolver() {
                 precios.precios_venta[sabor] = limpiarValor(input.value.trim());
             }
         });
+
+        // Log para verificar datos antes de guardar al volver
+        console.log("🔍 Precios al volver:", precios);
 
         fetch('/guardar_todos_los_costos', {
             method: 'POST',
