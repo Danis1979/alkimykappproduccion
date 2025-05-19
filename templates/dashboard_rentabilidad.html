@@ -268,6 +268,30 @@ document.addEventListener('DOMContentLoaded', () => {
             // Limpiar y parsear todos los valores de ingredientes_costos (usando limpiarYParsear en cada valor)
             let ingredientesCostosRaw = JSON.parse(localStorage.getItem('ingredientes_costos') || '{}');
             console.log("🧪 Ingredientes desde localStorage:", ingredientesCostosRaw);
+            // 🧪 Agregado: verificar si los costos fijos y precios por sabor llegan bien
+            console.log("🧪 Costos fijos desde localStorage:", {
+                alquiler: localStorage.getItem('alquiler'),
+                edenor: localStorage.getItem('edenor'),
+                aysa: localStorage.getItem('aysa'),
+                gas: localStorage.getItem('gas'),
+                municipal: localStorage.getItem('municipal'),
+                sueldos: localStorage.getItem('sueldos'),
+                cargas_sociales: localStorage.getItem('cargas_sociales'),
+                iva: localStorage.getItem('iva'),
+                créditos: localStorage.getItem('créditos'),
+                flete: localStorage.getItem('flete'),
+                varios: localStorage.getItem('varios'),
+            });
+            console.log("🧪 Precios por sabor desde localStorage:", {
+                aceituna: localStorage.getItem('precio_aceituna'),
+                caprese: localStorage.getItem('precio_caprese'),
+                queso_azul: localStorage.getItem('precio_queso_azul'),
+                cebolla: localStorage.getItem('precio_cebolla'),
+                espinaca: localStorage.getItem('precio_espinaca'),
+                calabaza: localStorage.getItem('precio_calabaza'),
+                brocoli: localStorage.getItem('precio_brocoli'),
+                original: localStorage.getItem('precio_original'),
+            });
             let ingredientesCostos = {};
             Object.entries(ingredientesCostosRaw).forEach(([k, v]) => {
                 ingredientesCostos[k] = limpiarYParsear(v);
