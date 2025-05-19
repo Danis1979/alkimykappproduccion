@@ -1,9 +1,22 @@
 def normalizar_importe(valor):
     try:
         if isinstance(valor, str):
-            valor = valor.replace('$', '').replace(' ', '').replace('.', '').replace(',', '.')
+            # Eliminar cualquier caracter que no sea número o coma
+            # Primero, eliminar todo excepto dígitos y comas
+            import re
+            # Eliminar $ y espacios
+            valor = valor.replace('$', '').replace(' ', '')
+            # Eliminar todos los puntos (separadores de miles)
+            valor = valor.replace('.', '')
+            # Reemplazar la última coma por punto para decimal
+            if valor.count(',') > 1:
+                # Si hay más de una coma, dejar solo la última como decimal
+                partes = valor.rsplit(',', 1)
+                valor = ''.join(partes[:-1]).replace(',', '') + '.' + partes[-1]
+            else:
+                valor = valor.replace(',', '.')
         return round(float(valor), 2)
-    except ValueError:
+    except Exception:
         return 0
 from flask import Flask, render_template, request, send_file, session, redirect, url_for, jsonify, flash
 from flask_sqlalchemy import SQLAlchemy

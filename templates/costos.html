@@ -462,21 +462,21 @@ function guardarPrecios() {
             let valor = document.getElementById("precio_packaging")?.value.trim();
             if (!valor || valor === "") valor = "0";
             else {
-                valor = valor.toString().replace(/\./g, '').replace(',', '.');
+                valor = String(valor).replace(/\./g, '').replace(',', '.');
                 valor = Number(valor);
                 if (isNaN(valor) || !isFinite(valor)) valor = 0;
             }
-            return parseFloat(valor).toFixed(2);
+            return Number(valor).toFixed(2);
         })(),
         cajas: (function() {
             let valor = document.getElementById("precio_cajas")?.value.trim();
             if (!valor || valor === "") valor = "0";
             else {
-                valor = valor.toString().replace(/\./g, '').replace(',', '.');
+                valor = String(valor).replace(/\./g, '').replace(',', '.');
                 valor = Number(valor);
                 if (isNaN(valor) || !isFinite(valor)) valor = 0;
             }
-            return parseFloat(valor).toFixed(2);
+            return Number(valor).toFixed(2);
         })(),
         ingredientes: {},
         costos_fijos: {},
@@ -490,11 +490,11 @@ function guardarPrecios() {
         let valor = input.value.trim();
         if (valor === "") valor = "0";
         else {
-            valor = valor.toString().replace(/\./g, '').replace(',', '.');
+            valor = String(valor).replace(/\./g, '').replace(',', '.');
             valor = Number(valor);
             if (isNaN(valor) || !isFinite(valor)) valor = 0;
         }
-        precios.ingredientes[nombre] = parseFloat(valor).toFixed(2);
+        precios.ingredientes[nombre] = Number(valor).toFixed(2);
     });
 
     // Guardar costos fijos
@@ -508,11 +508,11 @@ function guardarPrecios() {
             let valor = input.value.trim();
             if (valor === "") valor = "0";
             else {
-                valor = valor.toString().replace(/\./g, '').replace(',', '.');
+                valor = String(valor).replace(/\./g, '').replace(',', '.');
                 valor = Number(valor);
                 if (isNaN(valor) || !isFinite(valor)) valor = 0;
             }
-            precios.costos_fijos[id] = parseFloat(valor).toFixed(2);
+            precios.costos_fijos[id] = Number(valor).toFixed(2);
         }
     });
 
@@ -524,11 +524,11 @@ function guardarPrecios() {
             let valor = input.value.trim();
             if (valor === "") valor = "0";
             else {
-                valor = valor.toString().replace(/\./g, '').replace(',', '.');
+                valor = String(valor).replace(/\./g, '').replace(',', '.');
                 valor = Number(valor);
                 if (isNaN(valor) || !isFinite(valor)) valor = 0;
             }
-            precios.precios_venta[sabor] = parseFloat(valor).toFixed(2);
+            precios.precios_venta[sabor] = Number(valor).toFixed(2);
         }
     });
 
@@ -557,21 +557,21 @@ function confirmarYVolver() {
                 let valor = document.getElementById("precio_packaging")?.value.trim();
                 if (!valor || valor === "") valor = "0";
                 else {
-                    valor = valor.toString().replace(/\./g, '').replace(',', '.');
+                    valor = String(valor).replace(/\./g, '').replace(',', '.');
                     valor = Number(valor);
                     if (isNaN(valor) || !isFinite(valor)) valor = 0;
                 }
-                return parseFloat(valor).toFixed(2);
+                return Number(valor).toFixed(2);
             })(),
             cajas: (function() {
                 let valor = document.getElementById("precio_cajas")?.value.trim();
                 if (!valor || valor === "") valor = "0";
                 else {
-                    valor = valor.toString().replace(/\./g, '').replace(',', '.');
+                    valor = String(valor).replace(/\./g, '').replace(',', '.');
                     valor = Number(valor);
                     if (isNaN(valor) || !isFinite(valor)) valor = 0;
                 }
-                return parseFloat(valor).toFixed(2);
+                return Number(valor).toFixed(2);
             })(),
             ingredientes: {},
             costos_fijos: {},
@@ -584,11 +584,11 @@ function confirmarYVolver() {
             let valor = input.value.trim();
             if (valor === "") valor = "0";
             else {
-                valor = valor.toString().replace(/\./g, '').replace(',', '.');
+                valor = String(valor).replace(/\./g, '').replace(',', '.');
                 valor = Number(valor);
                 if (isNaN(valor) || !isFinite(valor)) valor = 0;
             }
-            precios.ingredientes[nombre] = parseFloat(valor).toFixed(2);
+            precios.ingredientes[nombre] = Number(valor).toFixed(2);
         });
 
         const costosFijosIds = [
@@ -601,11 +601,11 @@ function confirmarYVolver() {
                 let valor = input.value.trim();
                 if (valor === "") valor = "0";
                 else {
-                    valor = valor.toString().replace(/\./g, '').replace(',', '.');
+                    valor = String(valor).replace(/\./g, '').replace(',', '.');
                     valor = Number(valor);
                     if (isNaN(valor) || !isFinite(valor)) valor = 0;
                 }
-                precios.costos_fijos[id] = parseFloat(valor).toFixed(2);
+                precios.costos_fijos[id] = Number(valor).toFixed(2);
             }
         });
 
@@ -616,11 +616,11 @@ function confirmarYVolver() {
                 let valor = input.value.trim();
                 if (valor === "") valor = "0";
                 else {
-                    valor = valor.toString().replace(/\./g, '').replace(',', '.');
+                    valor = String(valor).replace(/\./g, '').replace(',', '.');
                     valor = Number(valor);
                     if (isNaN(valor) || !isFinite(valor)) valor = 0;
                 }
-                precios.precios_venta[sabor] = parseFloat(valor).toFixed(2);
+                precios.precios_venta[sabor] = Number(valor).toFixed(2);
             }
         });
 
