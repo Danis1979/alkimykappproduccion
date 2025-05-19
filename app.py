@@ -1489,11 +1489,10 @@ def guardar_todos_los_costos():
     # Guardar precios de ingredientes con normalización robusta
     PrecioIngrediente.query.filter_by(usuario_email=usuario_email).delete()
     for ingrediente, precio in precios_ingredientes.items():
-        ingrediente_limpio = ingrediente.strip()
+        ingrediente_limpio = ingrediente.strip().lower().replace(' ', '_')
         precio_unitario = normalizar_importe(precio)
-        if precio_unitario > 0:
-            nuevo_precio = PrecioIngrediente(usuario_email=usuario_email, ingrediente=ingrediente_limpio, precio_unitario=precio_unitario)
-            db.session.add(nuevo_precio)
+        nuevo_precio = PrecioIngrediente(usuario_email=usuario_email, ingrediente=ingrediente_limpio, precio_unitario=precio_unitario)
+        db.session.add(nuevo_precio)
 
     # Guardar costos fijos
     CostoFijo.query.filter_by(usuario_email=usuario_email).delete()
