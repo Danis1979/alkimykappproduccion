@@ -424,7 +424,7 @@ function guardarPrecios() {
     costosFijosIds.forEach(id => {
         const input = document.getElementById(id);
         if (input) {
-            precios.costos_fijos[id] = limpiarValor(input.value.trim());
+            precios.costos_fijos[id] = parseFloat(limpiarValor(input.value.trim())).toFixed(2);
         }
     });
 
@@ -433,7 +433,7 @@ function guardarPrecios() {
     sabores.forEach(sabor => {
         const input = document.getElementById(`precio_${sabor}`);
         if (input) {
-            precios.precios_venta[sabor] = limpiarValor(input.value.trim());
+            precios.precios_venta[sabor] = parseFloat(limpiarValor(input.value.trim())).toFixed(2);
         }
     });
 
@@ -492,7 +492,7 @@ function confirmarYVolver() {
         costosFijosIds.forEach(id => {
             const input = document.getElementById(id);
             if (input) {
-                precios.costos_fijos[id] = limpiarValor(input.value.trim());
+                precios.costos_fijos[id] = parseFloat(limpiarValor(input.value.trim())).toFixed(2);
             }
         });
 
@@ -500,7 +500,7 @@ function confirmarYVolver() {
         sabores.forEach(sabor => {
             const input = document.getElementById(`precio_${sabor}`);
             if (input) {
-                precios.precios_venta[sabor] = limpiarValor(input.value.trim());
+                precios.precios_venta[sabor] = parseFloat(limpiarValor(input.value.trim())).toFixed(2);
             }
         });
 
