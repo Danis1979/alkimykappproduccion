@@ -458,8 +458,18 @@ function calcularRentabilidad() {
 
 function guardarPrecios() {
     const precios = {
-        packaging: (document.getElementById("precio_packaging")?.value.trim() === "" ? "0" : document.getElementById("precio_packaging")?.value.replace(/\./g, '').replace(',', '.')) || "0",
-        cajas: (document.getElementById("precio_cajas")?.value.trim() === "" ? "0" : document.getElementById("precio_cajas")?.value.replace(/\./g, '').replace(',', '.')) || "0",
+        packaging: (function() {
+            let valor = document.getElementById("precio_packaging")?.value.trim();
+            if (!valor || valor === "") valor = "0";
+            else valor = valor.replace(/\./g, '').replace(',', '.');
+            return parseFloat(valor).toFixed(2);
+        })(),
+        cajas: (function() {
+            let valor = document.getElementById("precio_cajas")?.value.trim();
+            if (!valor || valor === "") valor = "0";
+            else valor = valor.replace(/\./g, '').replace(',', '.');
+            return parseFloat(valor).toFixed(2);
+        })(),
         ingredientes: {},
         costos_fijos: {},
         precios_venta: {}
@@ -471,7 +481,7 @@ function guardarPrecios() {
         let valor = input.value.trim();
         if (valor === "") valor = "0";
         else valor = valor.replace(/\./g, '').replace(',', '.');
-        precios.ingredientes[nombre] = valor;
+        precios.ingredientes[nombre] = parseFloat(valor).toFixed(2);
     });
 
     // Guardar costos fijos
@@ -485,7 +495,7 @@ function guardarPrecios() {
             let valor = input.value.trim();
             if (valor === "") valor = "0";
             else valor = valor.replace(/\./g, '').replace(',', '.');
-            precios.costos_fijos[id] = valor;
+            precios.costos_fijos[id] = parseFloat(valor).toFixed(2);
         }
     });
 
@@ -497,7 +507,7 @@ function guardarPrecios() {
             let valor = input.value.trim();
             if (valor === "") valor = "0";
             else valor = valor.replace(/\./g, '').replace(',', '.');
-            precios.precios_venta[sabor] = valor;
+            precios.precios_venta[sabor] = parseFloat(valor).toFixed(2);
         }
     });
 
@@ -522,8 +532,18 @@ function guardarPrecios() {
 function confirmarYVolver() {
     if (confirm("¿Querés guardar los precios y volver al menú principal?")) {
         const precios = {
-            packaging: (document.getElementById("precio_packaging")?.value.trim() === "" ? "0" : document.getElementById("precio_packaging")?.value.replace(/\./g, '').replace(',', '.')) || "0",
-            cajas: (document.getElementById("precio_cajas")?.value.trim() === "" ? "0" : document.getElementById("precio_cajas")?.value.replace(/\./g, '').replace(',', '.')) || "0",
+            packaging: (function() {
+                let valor = document.getElementById("precio_packaging")?.value.trim();
+                if (!valor || valor === "") valor = "0";
+                else valor = valor.replace(/\./g, '').replace(',', '.');
+                return parseFloat(valor).toFixed(2);
+            })(),
+            cajas: (function() {
+                let valor = document.getElementById("precio_cajas")?.value.trim();
+                if (!valor || valor === "") valor = "0";
+                else valor = valor.replace(/\./g, '').replace(',', '.');
+                return parseFloat(valor).toFixed(2);
+            })(),
             ingredientes: {},
             costos_fijos: {},
             precios_venta: {}
@@ -534,7 +554,7 @@ function confirmarYVolver() {
             let valor = input.value.trim();
             if (valor === "") valor = "0";
             else valor = valor.replace(/\./g, '').replace(',', '.');
-            precios.ingredientes[nombre] = valor;
+            precios.ingredientes[nombre] = parseFloat(valor).toFixed(2);
         });
 
         const costosFijosIds = [
@@ -547,7 +567,7 @@ function confirmarYVolver() {
                 let valor = input.value.trim();
                 if (valor === "") valor = "0";
                 else valor = valor.replace(/\./g, '').replace(',', '.');
-                precios.costos_fijos[id] = valor;
+                precios.costos_fijos[id] = parseFloat(valor).toFixed(2);
             }
         });
 
@@ -558,7 +578,7 @@ function confirmarYVolver() {
                 let valor = input.value.trim();
                 if (valor === "") valor = "0";
                 else valor = valor.replace(/\./g, '').replace(',', '.');
-                precios.precios_venta[sabor] = valor;
+                precios.precios_venta[sabor] = parseFloat(valor).toFixed(2);
             }
         });
 
