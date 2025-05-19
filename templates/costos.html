@@ -278,7 +278,10 @@ document.addEventListener('DOMContentLoaded', function () {
                 }
                 let value = parseFloat(raw);
                 if (!isNaN(value)) {
-                    input.value = value.toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                    const formatted = value.toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                    input.value = formatted;
+                } else {
+                    input.value = raw; // en caso de que no se pueda parsear, mantener lo que escribió el usuario
                 }
             });
         }
