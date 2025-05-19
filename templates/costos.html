@@ -461,13 +461,21 @@ function guardarPrecios() {
         packaging: (function() {
             let valor = document.getElementById("precio_packaging")?.value.trim();
             if (!valor || valor === "") valor = "0";
-            else valor = valor.replace(/\./g, '').replace(',', '.');
+            else {
+                valor = valor.replace(/\./g, '').replace(',', '.');
+                valor = parseFloat(valor);
+                if (isNaN(valor)) valor = 0;
+            }
             return parseFloat(valor).toFixed(2);
         })(),
         cajas: (function() {
             let valor = document.getElementById("precio_cajas")?.value.trim();
             if (!valor || valor === "") valor = "0";
-            else valor = valor.replace(/\./g, '').replace(',', '.');
+            else {
+                valor = valor.replace(/\./g, '').replace(',', '.');
+                valor = parseFloat(valor);
+                if (isNaN(valor)) valor = 0;
+            }
             return parseFloat(valor).toFixed(2);
         })(),
         ingredientes: {},
@@ -477,10 +485,15 @@ function guardarPrecios() {
 
     // Guardar ingredientes
     document.querySelectorAll('input[id^="ingrediente_"]').forEach(input => {
-        const nombre = input.id.replace("ingrediente_", "").toLowerCase().replace(/\s+/g, '');
+        // Usar el nombre exacto (con espacios) para los ingredientes
+        const nombre = input.id.replace("ingrediente_", "").toLowerCase().replace(/_/g, ' ');
         let valor = input.value.trim();
         if (valor === "") valor = "0";
-        else valor = valor.replace(/\./g, '').replace(',', '.');
+        else {
+            valor = valor.replace(/\./g, '').replace(',', '.');
+            valor = parseFloat(valor);
+            if (isNaN(valor)) valor = 0;
+        }
         precios.ingredientes[nombre] = parseFloat(valor).toFixed(2);
     });
 
@@ -494,7 +507,11 @@ function guardarPrecios() {
         if (input) {
             let valor = input.value.trim();
             if (valor === "") valor = "0";
-            else valor = valor.replace(/\./g, '').replace(',', '.');
+            else {
+                valor = valor.replace(/\./g, '').replace(',', '.');
+                valor = parseFloat(valor);
+                if (isNaN(valor)) valor = 0;
+            }
             precios.costos_fijos[id] = parseFloat(valor).toFixed(2);
         }
     });
@@ -506,7 +523,11 @@ function guardarPrecios() {
         if (input) {
             let valor = input.value.trim();
             if (valor === "") valor = "0";
-            else valor = valor.replace(/\./g, '').replace(',', '.');
+            else {
+                valor = valor.replace(/\./g, '').replace(',', '.');
+                valor = parseFloat(valor);
+                if (isNaN(valor)) valor = 0;
+            }
             precios.precios_venta[sabor] = parseFloat(valor).toFixed(2);
         }
     });
@@ -535,13 +556,21 @@ function confirmarYVolver() {
             packaging: (function() {
                 let valor = document.getElementById("precio_packaging")?.value.trim();
                 if (!valor || valor === "") valor = "0";
-                else valor = valor.replace(/\./g, '').replace(',', '.');
+                else {
+                    valor = valor.replace(/\./g, '').replace(',', '.');
+                    valor = parseFloat(valor);
+                    if (isNaN(valor)) valor = 0;
+                }
                 return parseFloat(valor).toFixed(2);
             })(),
             cajas: (function() {
                 let valor = document.getElementById("precio_cajas")?.value.trim();
                 if (!valor || valor === "") valor = "0";
-                else valor = valor.replace(/\./g, '').replace(',', '.');
+                else {
+                    valor = valor.replace(/\./g, '').replace(',', '.');
+                    valor = parseFloat(valor);
+                    if (isNaN(valor)) valor = 0;
+                }
                 return parseFloat(valor).toFixed(2);
             })(),
             ingredientes: {},
@@ -550,10 +579,15 @@ function confirmarYVolver() {
         };
 
         document.querySelectorAll('input[id^="ingrediente_"]').forEach(input => {
-            const nombre = input.id.replace("ingrediente_", "").toLowerCase().replace(/\s+/g, '');
+            // Usar el nombre exacto (con espacios) para los ingredientes
+            const nombre = input.id.replace("ingrediente_", "").toLowerCase().replace(/_/g, ' ');
             let valor = input.value.trim();
             if (valor === "") valor = "0";
-            else valor = valor.replace(/\./g, '').replace(',', '.');
+            else {
+                valor = valor.replace(/\./g, '').replace(',', '.');
+                valor = parseFloat(valor);
+                if (isNaN(valor)) valor = 0;
+            }
             precios.ingredientes[nombre] = parseFloat(valor).toFixed(2);
         });
 
@@ -566,7 +600,11 @@ function confirmarYVolver() {
             if (input) {
                 let valor = input.value.trim();
                 if (valor === "") valor = "0";
-                else valor = valor.replace(/\./g, '').replace(',', '.');
+                else {
+                    valor = valor.replace(/\./g, '').replace(',', '.');
+                    valor = parseFloat(valor);
+                    if (isNaN(valor)) valor = 0;
+                }
                 precios.costos_fijos[id] = parseFloat(valor).toFixed(2);
             }
         });
@@ -577,7 +615,11 @@ function confirmarYVolver() {
             if (input) {
                 let valor = input.value.trim();
                 if (valor === "") valor = "0";
-                else valor = valor.replace(/\./g, '').replace(',', '.');
+                else {
+                    valor = valor.replace(/\./g, '').replace(',', '.');
+                    valor = parseFloat(valor);
+                    if (isNaN(valor)) valor = 0;
+                }
                 precios.precios_venta[sabor] = parseFloat(valor).toFixed(2);
             }
         });

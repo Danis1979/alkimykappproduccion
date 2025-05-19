@@ -1455,7 +1455,6 @@ def guardar_resumen_historico():
     except Exception as e:
         return jsonify({'success': False, 'message': str(e)})
 
-# Nueva ruta para guardar todos los cambios de la página de costos sin redireccionar al index
 @app.route('/guardar_todos_los_costos', methods=['POST'])
 def guardar_todos_los_costos():
     if 'usuario' not in session:
@@ -1474,7 +1473,13 @@ def guardar_todos_los_costos():
     PrecioIngrediente.query.filter_by(usuario_email=usuario_email).delete()
     for ingrediente, precio in precios_ingredientes.items():
         try:
-            precio_unitario = float(str(precio).replace('.', '').replace(',', '.').replace('$', ''))
+            # Normalización: Eliminar $ y espacios, luego reemplazar ',' por '.' solo si no hay punto decimal
+            precio_str = str(precio).replace('$', '').replace(' ', '')
+            if ',' in precio_str and '.' not in precio_str:
+                precio_str = precio_str.replace('.', '').replace(',', '.')
+            else:
+                precio_str = precio_str.replace(',', '')
+            precio_unitario = float(precio_str)
         except ValueError:
             precio_unitario = 0
         nuevo_precio = PrecioIngrediente(usuario_email=usuario_email, ingrediente=ingrediente, precio_unitario=precio_unitario)
@@ -1484,13 +1489,18 @@ def guardar_todos_los_costos():
     CostoFijo.query.filter_by(usuario_email=usuario_email).delete()
     for nombre, monto in costos_fijos.items():
         try:
-            monto_float = float(str(monto).replace('.', '').replace(',', '.').replace('$', ''))
+            monto_str = str(monto).replace('$', '').replace(' ', '')
+            if ',' in monto_str and '.' not in monto_str:
+                monto_str = monto_str.replace('.', '').replace(',', '.')
+            else:
+                monto_str = monto_str.replace(',', '')
+            monto_float = float(monto_str)
         except ValueError:
             monto_float = 0
         nuevo_costo = CostoFijo(usuario_email=usuario_email, nombre=nombre, monto=monto_float)
         db.session.add(nuevo_costo)
 
-    # Guardar precios de venta por sabor en cookies
+    # Guardar precios de venta por sabor en cookies (solo para refuerzo visual, no como única fuente)
     import json
     response = jsonify({'success': True, 'message': 'Todos los datos guardados correctamente'})
     response.set_cookie("precios_venta_por_sabor", json.dumps(precios_venta), max_age=60*60*24*365)  # 1 año
