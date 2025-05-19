@@ -268,20 +268,12 @@ document.addEventListener('DOMContentLoaded', function () {
                 // No formatear en focus, dejar el valor tal cual (evita multiplicación de ceros)
             });
             input.addEventListener('blur', () => {
-                let raw = input.value.trim();
-                // Eliminar todos los puntos (miles) y convertir coma decimal a punto
-                raw = raw.replace(/\./g, ''); // elimina todos los puntos (miles)
-                raw = raw.replace(',', '.'); // reemplaza coma por punto decimal
-                // Eliminar notación científica accidental
-                if (/e/i.test(raw)) {
-                    raw = Number(raw).toFixed(2);
-                }
-                let value = Number(raw);
+                let raw = input.value.trim().replace(/\./g, '').replace(',', '.');
+                let value = parseFloat(raw);
                 if (!isNaN(value)) {
-                    const formatted = value.toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-                    input.value = formatted;
+                    input.value = value.toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
                 } else {
-                    input.value = raw; // en caso de que no se pueda parsear, mantener lo que escribió el usuario
+                    input.value = '';
                 }
             });
         }
