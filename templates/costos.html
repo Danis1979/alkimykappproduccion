@@ -292,7 +292,7 @@ document.addEventListener('DOMContentLoaded', function () {
     rows.forEach(row => {
         // Verificación para evitar errores en filas no válidas
         if (!row || row.children.length < 3) return;
-        const precioInput = row.querySelector('input[type="number"]');
+        const precioInput = row.querySelector('input.input-formulario');
         if (!precioInput) return;
         const cantidadText = row.children[1].innerText.replace(',', '.');
         const costoTotalCell = row.querySelector('.costo-total');
