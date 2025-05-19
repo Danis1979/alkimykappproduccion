@@ -260,7 +260,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             // Calcular costo variable por sabor
             const recetas = data.detalles_por_sabor || {};
-            // Limpiar y parsear todos los valores de ingredientes_costos (usando limpiarYParsear)
+            // Limpiar y parsear todos los valores de ingredientes_costos (usando limpiarYParsear en cada valor)
             let ingredientesCostosRaw = JSON.parse(localStorage.getItem('ingredientes_costos') || '{}');
             let ingredientesCostos = {};
             Object.entries(ingredientesCostosRaw).forEach(([k, v]) => {
@@ -351,16 +351,11 @@ document.addEventListener('DOMContentLoaded', () => {
             const costoFijoPorCaja = totalCajasMes > 0 ? totalFijos / totalCajasMes : 0;
 
 
-            let precioPorSabor = {
-                'aceituna': limpiarYParsear(localStorage.getItem('precio_aceituna')),
-                'caprese': limpiarYParsear(localStorage.getItem('precio_caprese')),
-                'queso_azul': limpiarYParsear(localStorage.getItem('precio_queso_azul')),
-                'cebolla': limpiarYParsear(localStorage.getItem('precio_cebolla')),
-                'espinaca': limpiarYParsear(localStorage.getItem('precio_espinaca')),
-                'calabaza': limpiarYParsear(localStorage.getItem('precio_calabaza')),
-                'brocoli': limpiarYParsear(localStorage.getItem('precio_brocoli')),
-                'original': limpiarYParsear(localStorage.getItem('precio_original'))
-            };
+            // Recuperar precios de venta por sabor directamente del localStorage, usando limpiarYParsear
+            let precioPorSabor = {};
+            ['aceituna', 'caprese', 'queso_azul', 'cebolla', 'espinaca', 'calabaza', 'brocoli', 'original'].forEach(sabor => {
+                precioPorSabor[sabor] = limpiarYParsear(localStorage.getItem(`precio_${sabor}`));
+            });
 
             // Calcular total a facturar y total con IVA
             let totalFacturar = 0;
@@ -393,7 +388,7 @@ document.addEventListener('DOMContentLoaded', () => {
             let rentabilidadTotal = 0;
 
             Object.entries(cajasPorSabor).forEach(([sabor, cantidad]) => {
-                // Asegurar que los valores de packaging estén actualizados desde localStorage
+                // Asegurar que los valores de packaging estén actualizados desde localStorage antes de cada cálculo
                 precioPack = limpiarYParsear(localStorage.getItem("precio_pack"));
                 precioCaja = limpiarYParsear(localStorage.getItem("precio_caja"));
                 // Cálculo de packaging unitario por caja (distinguir entre original y otros)
