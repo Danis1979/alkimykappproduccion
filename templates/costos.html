@@ -262,7 +262,7 @@
 <script>
 document.addEventListener('DOMContentLoaded', function () {
     // Formato visual: sólo aplicar formato en blur, no en focus
-    document.querySelectorAll('input[type="number"]').forEach(input => {
+    document.querySelectorAll('input.input-formulario').forEach(input => {
         if (input.id) {
             input.addEventListener('focus', () => {
                 // No formatear en focus, dejar el valor tal cual (evita multiplicación de ceros)
