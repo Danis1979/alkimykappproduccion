@@ -1481,20 +1481,25 @@ def guardar_todos_los_costos():
 
     usuario_email = session['usuario']
     data = request.get_json()
+    precios_ingredientes = data.get('precios_ingredientes', {}) if data else {}
+    # Agregar print para depuración si data es vacío
     if not data:
+        print(precios_ingredientes)
         return jsonify({'success': False, 'message': 'No se recibieron datos'})
 
-    precios_ingredientes = data.get('precios_ingredientes', {})
-    # Asegurarse de que precios_ingredientes esté correctamente poblado (debug opcional)
-    # print("precios_ingredientes recibidos:", precios_ingredientes)
     costos_fijos = data.get('costos_fijos', {})
     precios_venta = data.get('precios_venta', {})
 
-    # Guardar precios de ingredientes con control de errores y normalización robusta
+    # Guardar precios de ingredientes con normalización robusta
     PrecioIngrediente.query.filter_by(usuario_email=usuario_email).delete()
     for ingrediente, precio in precios_ingredientes.items():
         try:
-            precio_unitario = normalizar_importe(precio)
+            # Normalización robusta: quitar puntos de miles y convertir coma decimal a punto
+            precio = str(precio).replace('.', '').replace(',', '.')
+            try:
+                precio_unitario = float(precio)
+            except:
+                precio_unitario = 0
             nuevo_precio = PrecioIngrediente(usuario_email=usuario_email, ingrediente=ingrediente, precio_unitario=precio_unitario)
             db.session.add(nuevo_precio)
         except Exception as e:
@@ -1507,10 +1512,17 @@ def guardar_todos_los_costos():
         nuevo_costo = CostoFijo(usuario_email=usuario_email, nombre=nombre, monto=monto_float)
         db.session.add(nuevo_costo)
 
-    # Guardar precios de venta en la base de datos
+    # Guardar precios de venta en la base de datos (normalización robusta)
     PrecioVentaSabor.query.filter_by(usuario_email=usuario_email).delete()
     for sabor, precio_str in precios_venta.items():
-        precio_float = normalizar_importe(precio_str)
+        try:
+            precio_str = str(precio_str).replace('.', '').replace(',', '.')
+            try:
+                precio_float = float(precio_str)
+            except:
+                precio_float = 0
+        except:
+            precio_float = 0
         nuevo_precio = PrecioVentaSabor(usuario_email=usuario_email, sabor=sabor, precio=precio_float)
         db.session.add(nuevo_precio)
 

@@ -152,7 +152,7 @@
                                     g
                                 {% endif %}
                             </td>
-                            <td><input id="ingrediente_{{ nombre | lower | replace(' ', '_') }}" type="text" step="0.01" placeholder="0.00" class="input-formulario" style="width: 180px;" min="0" max="10000000" value="{{ precios_ingredientes.get(nombre | lower | replace(' ', '_') | replace('ó', 'o'), '0') }}"></td>
+                            <td><input id="ingrediente_{{ nombre | lower | replace(' ', '_') }}" type="text" step="0.01" placeholder="0.00" class="input-formulario" style="width: 180px;" min="0" max="10000000" value="{{ precios_ingredientes.get(nombre | lower | replace(' ', '_') | replace('ó', 'o'), 0) }}"></td>
                             <td class="costo-total">$0.00</td>
                         </tr>
                     {% endfor %}
@@ -463,7 +463,7 @@ function guardarPrecios() {
             let valor = document.getElementById("precio_packaging")?.value.trim();
             if (!valor || valor === "") valor = "0";
             else {
-                valor = valor.replace(/\./g, '').replace(',', '.').replace(/\s+/g, '');
+                valor = valor.replace(/\./g, '').replace(',', '.');
                 if (!/^\d+(\.\d+)?$/.test(valor)) valor = "0";
                 valor = parseFloat(valor);
                 if (isNaN(valor) || !isFinite(valor)) valor = 0;
@@ -474,7 +474,7 @@ function guardarPrecios() {
             let valor = document.getElementById("precio_cajas")?.value.trim();
             if (!valor || valor === "") valor = "0";
             else {
-                valor = valor.replace(/\./g, '').replace(',', '.').replace(/\s+/g, '');
+                valor = valor.replace(/\./g, '').replace(',', '.');
                 if (!/^\d+(\.\d+)?$/.test(valor)) valor = "0";
                 valor = parseFloat(valor);
                 if (isNaN(valor) || !isFinite(valor)) valor = 0;
@@ -493,7 +493,7 @@ function guardarPrecios() {
         let valor = input.value.trim();
         if (valor === "") valor = "0";
         else {
-            valor = valor.replace(/\./g, '').replace(',', '.').replace(/\s+/g, '');
+            valor = valor.replace(/\./g, '').replace(',', '.');
             if (!/^\d+(\.\d+)?$/.test(valor)) valor = "0";
             valor = parseFloat(valor);
             if (isNaN(valor) || !isFinite(valor)) valor = 0;
@@ -512,7 +512,7 @@ function guardarPrecios() {
             let valor = input.value.trim();
             if (valor === "") valor = "0";
             else {
-                valor = valor.replace(/\./g, '').replace(',', '.').replace(/\s+/g, '');
+                valor = valor.replace(/\./g, '').replace(',', '.');
                 if (!/^\d+(\.\d+)?$/.test(valor)) valor = "0";
                 valor = parseFloat(valor);
                 if (isNaN(valor) || !isFinite(valor)) valor = 0;
@@ -529,7 +529,7 @@ function guardarPrecios() {
             let valor = input.value.trim();
             if (valor === "") valor = "0";
             else {
-                valor = valor.replace(/\./g, '').replace(',', '.').replace(/\s+/g, '');
+                valor = valor.replace(/\./g, '').replace(',', '.');
                 if (!/^\d+(\.\d+)?$/.test(valor)) valor = "0";
                 valor = parseFloat(valor);
                 if (isNaN(valor) || !isFinite(valor)) valor = 0;
@@ -563,7 +563,7 @@ function confirmarYVolver() {
                 let valor = document.getElementById("precio_packaging")?.value.trim();
                 if (!valor || valor === "") valor = "0";
                 else {
-                    valor = valor.replace(/\./g, '').replace(',', '.').replace(/\s+/g, '');
+                    valor = valor.replace(/\./g, '').replace(',', '.');
                     if (!/^\d+(\.\d+)?$/.test(valor)) valor = "0";
                     valor = parseFloat(valor);
                     if (isNaN(valor) || !isFinite(valor)) valor = 0;
@@ -574,7 +574,7 @@ function confirmarYVolver() {
                 let valor = document.getElementById("precio_cajas")?.value.trim();
                 if (!valor || valor === "") valor = "0";
                 else {
-                    valor = valor.replace(/\./g, '').replace(',', '.').replace(/\s+/g, '');
+                    valor = valor.replace(/\./g, '').replace(',', '.');
                     if (!/^\d+(\.\d+)?$/.test(valor)) valor = "0";
                     valor = parseFloat(valor);
                     if (isNaN(valor) || !isFinite(valor)) valor = 0;
@@ -592,7 +592,7 @@ function confirmarYVolver() {
             let valor = input.value.trim();
             if (valor === "") valor = "0";
             else {
-                valor = valor.replace(/\./g, '').replace(',', '.').replace(/\s+/g, '');
+                valor = valor.replace(/\./g, '').replace(',', '.');
                 if (!/^\d+(\.\d+)?$/.test(valor)) valor = "0";
                 valor = parseFloat(valor);
                 if (isNaN(valor) || !isFinite(valor)) valor = 0;
@@ -610,7 +610,7 @@ function confirmarYVolver() {
                 let valor = input.value.trim();
                 if (valor === "") valor = "0";
                 else {
-                    valor = valor.replace(/\./g, '').replace(',', '.').replace(/\s+/g, '');
+                    valor = valor.replace(/\./g, '').replace(',', '.');
                     if (!/^\d+(\.\d+)?$/.test(valor)) valor = "0";
                     valor = parseFloat(valor);
                     if (isNaN(valor) || !isFinite(valor)) valor = 0;
@@ -626,7 +626,7 @@ function confirmarYVolver() {
                 let valor = input.value.trim();
                 if (valor === "") valor = "0";
                 else {
-                    valor = valor.replace(/\./g, '').replace(',', '.').replace(/\s+/g, '');
+                    valor = valor.replace(/\./g, '').replace(',', '.');
                     if (!/^\d+(\.\d+)?$/.test(valor)) valor = "0";
                     valor = parseFloat(valor);
                     if (isNaN(valor) || !isFinite(valor)) valor = 0;
