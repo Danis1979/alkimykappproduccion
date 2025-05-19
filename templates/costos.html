@@ -299,7 +299,8 @@ document.addEventListener('DOMContentLoaded', function () {
 
         precioInput.addEventListener('input', () => {
             if (!row || row.children.length < 3) return;
-            const precio = parseFloat(precioInput.value);
+            let raw = precioInput.value.trim().replace(/\./g, '').replace(',', '.');
+            const precio = parseFloat(raw);
             let cantidad = parseFloat(cantidadText);
             // --- Corrección específica para Soja y Harina ---
             const nombreIngrediente = row.children[0].innerText.trim().toLowerCase();
@@ -317,7 +318,8 @@ document.addEventListener('DOMContentLoaded', function () {
         });
 
         // Al cargar la página, actualizar el costo total si hay valor guardado
-        const precio = parseFloat(precioInput.value);
+        let raw = precioInput.value.trim().replace(/\./g, '').replace(',', '.');
+        const precio = parseFloat(raw);
         let cantidad = parseFloat(cantidadText);
         const nombreIngrediente = row.children[0].innerText.trim().toLowerCase();
         let unidad = row.children[2].innerText.trim();
