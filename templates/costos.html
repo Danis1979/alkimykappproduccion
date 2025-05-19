@@ -359,11 +359,10 @@ document.addEventListener('DOMContentLoaded', function () {
 // }
 
 function limpiarValor(valor) {
-    if (!valor || valor === "") return "0";
-    valor = valor.replace(/\./g, '').replace(',', '.');
-    let num = parseFloat(valor);
-    if (isNaN(num) || !isFinite(num)) return "0";
-    return Math.floor(num).toString(); // Redondea hacia abajo y lo devuelve como string sin decimales
+    if (!valor || typeof valor !== "string") return "0";
+    valor = valor.trim().replace(/\./g, '').replace(',', '.');
+    const num = Number(valor);
+    return (!isNaN(num) && isFinite(num)) ? num.toString() : "0";
 }
 
 function guardarPrecios() {
