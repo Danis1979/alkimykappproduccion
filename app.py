@@ -1474,17 +1474,45 @@ def guardar_todos_los_costos():
     if 'usuario' not in session:
         return jsonify({'success': False, 'message': 'Usuario no autenticado'})
 
+    # Importar el formateador de números para consola
+    from babel.numbers import format_decimal
+
     usuario_email = session['usuario']
     data = request.get_json()
     print("🔍 Datos recibidos en /guardar_todos_los_costos:", data)
+    costos_fijos = data.get('costos_fijos', {})
+    precios_venta = data.get('precios_venta', {})
+
+    print("💰 Costos fijos:")
+    for nombre, val in costos_fijos.items():
+        try:
+            val_float = float(val)
+            val_format = format_decimal(val_float, locale='es_AR')
+        except:
+            val_format = val
+        print(f"  - {nombre}: {val_format}")
+
+    print("🏷️ Precios de venta:")
+    for sabor, val in precios_venta.items():
+        try:
+            val_float = float(val)
+            val_format = format_decimal(val_float, locale='es_AR')
+        except:
+            val_format = val
+        print(f"  - {sabor}: {val_format}")
+
     precios_ingredientes = data.get('ingredientes', {})
     print("📦 Ingredientes recibidos:")
     for ingr, val in precios_ingredientes.items():
-        print(f"  - {ingr}: {val}")
+        try:
+            val_float = float(val)
+            val_format = format_decimal(val_float, locale='es_AR')
+        except:
+            val_format = val
+        print(f"  - {ingr}: {val_format}")
+
     if not data:
         return jsonify({'success': False, 'message': 'No se recibieron datos'})
-    costos_fijos = data.get('costos_fijos', {})
-    precios_venta = data.get('precios_venta', {})
 
     # Guardar precios de ingredientes con normalización robusta
     PrecioIngrediente.query.filter_by(usuario_email=usuario_email).delete()
