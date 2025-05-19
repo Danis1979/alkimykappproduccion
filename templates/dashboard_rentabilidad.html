@@ -266,32 +266,11 @@ document.addEventListener('DOMContentLoaded', () => {
             // Calcular costo variable por sabor
             const recetas = data.detalles_por_sabor || {};
             // Limpiar y parsear todos los valores de ingredientes_costos (usando limpiarYParsear en cada valor)
-            let ingredientesCostosRaw = JSON.parse(localStorage.getItem('ingredientes_costos') || '{}');
-            console.log("🧪 Ingredientes desde localStorage:", ingredientesCostosRaw);
+            let ingredientesCostosRaw = data.precios_ingredientes || {};
+            console.log("🧪 Ingredientes desde /resumen_datos:", ingredientesCostosRaw);
             // 🧪 Agregado: verificar si los costos fijos y precios por sabor llegan bien
-            console.log("🧪 Costos fijos desde localStorage:", {
-                alquiler: localStorage.getItem('alquiler'),
-                edenor: localStorage.getItem('edenor'),
-                aysa: localStorage.getItem('aysa'),
-                gas: localStorage.getItem('gas'),
-                municipal: localStorage.getItem('municipal'),
-                sueldos: localStorage.getItem('sueldos'),
-                cargas_sociales: localStorage.getItem('cargas_sociales'),
-                iva: localStorage.getItem('iva'),
-                créditos: localStorage.getItem('créditos'),
-                flete: localStorage.getItem('flete'),
-                varios: localStorage.getItem('varios'),
-            });
-            console.log("🧪 Precios por sabor desde localStorage:", {
-                aceituna: localStorage.getItem('precio_aceituna'),
-                caprese: localStorage.getItem('precio_caprese'),
-                queso_azul: localStorage.getItem('precio_queso_azul'),
-                cebolla: localStorage.getItem('precio_cebolla'),
-                espinaca: localStorage.getItem('precio_espinaca'),
-                calabaza: localStorage.getItem('precio_calabaza'),
-                brocoli: localStorage.getItem('precio_brocoli'),
-                original: localStorage.getItem('precio_original'),
-            });
+            console.log("🧪 Costos fijos desde /resumen_datos:", data.costos_fijos);
+            console.log("🧪 Precios por sabor desde /resumen_datos:", data.precios_venta);
             let ingredientesCostos = {};
             Object.entries(ingredientesCostosRaw).forEach(([k, v]) => {
                 ingredientesCostos[k] = limpiarYParsear(v);
@@ -358,7 +337,7 @@ document.addEventListener('DOMContentLoaded', () => {
             ];
             let totalFijos = 0;
             costosFijos.forEach(id => {
-                const val = limpiarYParsear(localStorage.getItem(id));
+                const val = limpiarYParsear(data.costos_fijos[id]);
                 if (!isNaN(val)) totalFijos += val;
             });
             document.getElementById("sugerencias").innerHTML += `<li><strong>Total Costos Fijos:</strong> $${totalFijos.toLocaleString('es-AR', {maximumFractionDigits: 2})}</li>`;
@@ -382,10 +361,10 @@ document.addEventListener('DOMContentLoaded', () => {
             const costoFijoPorCaja = totalCajasMes > 0 ? totalFijos / totalCajasMes : 0;
 
 
-            // Recuperar precios de venta por sabor directamente del localStorage, usando limpiarYParsear
+            // Recuperar precios de venta por sabor desde data.precios_venta, usando limpiarYParsear
             let precioPorSabor = {};
             ['aceituna', 'caprese', 'queso_azul', 'cebolla', 'espinaca', 'calabaza', 'brocoli', 'original'].forEach(sabor => {
-                precioPorSabor[sabor] = limpiarYParsear(localStorage.getItem(`precio_${sabor}`));
+                precioPorSabor[sabor] = limpiarYParsear(data.precios_venta[sabor]);
             });
 
             // Calcular total a facturar y total con IVA
