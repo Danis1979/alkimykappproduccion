@@ -1,11 +1,14 @@
 def normalizar_importe(valor):
     try:
         if isinstance(valor, str):
-            # Eliminar puntos como separador de miles
             valor = valor.replace('$', '').replace('.', '').replace(',', '.').strip()
+            # Validar que solo haya un punto decimal válido al final
             if valor.count('.') > 1:
                 partes = valor.split('.')
                 valor = ''.join(partes[:-1]) + '.' + partes[-1]
+            # Asegurarse de que no se pase una cadena vacía
+            if valor == '':
+                return 0
         return round(float(valor), 2)
     except Exception:
         return 0
