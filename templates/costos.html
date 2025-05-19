@@ -287,30 +287,32 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     });
 
-    // Formateo en tiempo real para todos los campos de costos y precios
+    // Validación en tiempo real: permite escribir libremente sin formatear en tiempo real
     document.querySelectorAll('input.input-formulario').forEach(input => {
         input.addEventListener('input', () => {
+            // Permitir que el usuario escriba libremente sin reformatear en tiempo real
             let raw = input.value.trim().replace(/\./g, '').replace(',', '.');
-            let parsed = parseFloat(raw);
-            if (!isNaN(parsed)) {
-                input.value = parsed.toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+            if (!isNaN(parseFloat(raw))) {
+                input.style.border = ''; // sin borde rojo si es válido
+            } else {
+                input.style.border = '2px solid red';
             }
         });
     });
 
-    // Formateo en tiempo real para packaging y cajas (asegura formateo visual y guardado correcto)
-    ['precio_packaging', 'precio_cajas'].forEach(id => {
-        const input = document.getElementById(id);
-        if (input) {
-            input.addEventListener('input', () => {
-                let raw = input.value.trim().replace(/\./g, '').replace(',', '.');
-                let parsed = parseFloat(raw);
-                if (!isNaN(parsed)) {
-                    input.value = parsed.toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-                }
-            });
-        }
-    });
+    // // Formateo en tiempo real para packaging y cajas (asegura formateo visual y guardado correcto)
+    // ['precio_packaging', 'precio_cajas'].forEach(id => {
+    //     const input = document.getElementById(id);
+    //     if (input) {
+    //         input.addEventListener('input', () => {
+    //             let raw = input.value.trim().replace(/\./g, '').replace(',', '.');
+    //             let parsed = parseFloat(raw);
+    //             if (!isNaN(parsed)) {
+    //                 input.value = parsed.toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    //             }
+    //         });
+    //     }
+    // });
 
     // Actualización de costos totales para inputs de ingredientes y packaging/cajas
     const rows = document.querySelectorAll('table tbody tr');
