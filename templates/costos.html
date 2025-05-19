@@ -407,6 +407,10 @@ function guardarPrecios() {
         precios.ingredientes[nombre] = limpiarValor(input.value.trim());
     });
 
+    // Agregar packaging y cajas como ingredientes
+    precios.ingredientes['packaging'] = limpiarValor(document.getElementById("precio_packaging")?.value.trim());
+    precios.ingredientes['cajas'] = limpiarValor(document.getElementById("precio_cajas")?.value.trim());
+
     // Guardar costos fijos
     const costosFijosIds = [
         "alquiler", "edenor", "aysa", "gas", "municipal", "sueldos",
