@@ -226,6 +226,7 @@ document.addEventListener('DOMContentLoaded', () => {
     fetch('/resumen_datos')
         .then(response => response.json())
         .then(data => {
+            console.log("🧪 Datos desde /resumen_datos:", data);
             const contenedor = document.getElementById('datos-rentabilidad');
             const totalCajas = data.total_cajas;
 
@@ -262,10 +263,12 @@ document.addEventListener('DOMContentLoaded', () => {
             const recetas = data.detalles_por_sabor || {};
             // Limpiar y parsear todos los valores de ingredientes_costos (usando limpiarYParsear en cada valor)
             let ingredientesCostosRaw = JSON.parse(localStorage.getItem('ingredientes_costos') || '{}');
+            console.log("🧪 Ingredientes desde localStorage:", ingredientesCostosRaw);
             let ingredientesCostos = {};
             Object.entries(ingredientesCostosRaw).forEach(([k, v]) => {
                 ingredientesCostos[k] = limpiarYParsear(v);
             });
+            console.log("🧪 Ingredientes parseados:", ingredientesCostos);
 
             let costoVariablePorSabor = {};
             Object.entries(cajasPorSabor).forEach(([sabor, cajas]) => {
