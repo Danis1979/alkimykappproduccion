@@ -407,9 +407,14 @@ function guardarPrecios() {
         precios.ingredientes[nombre] = limpiarValor(input.value.trim());
     });
 
-    // Agregar packaging y cajas como ingredientes
-    precios.ingredientes['packaging'] = limpiarValor(document.getElementById("precio_packaging")?.value.trim());
-    precios.ingredientes['cajas'] = limpiarValor(document.getElementById("precio_cajas")?.value.trim());
+    // También guardar packaging y cajas si existen como inputs separados
+    ['precio_packaging', 'precio_cajas'].forEach(id => {
+        const input = document.getElementById(id);
+        if (input) {
+            const clave = id.replace("precio_", "");
+            precios.ingredientes[clave] = limpiarValor(input.value.trim());
+        }
+    });
 
     // Guardar costos fijos
     const costosFijosIds = [
@@ -463,6 +468,15 @@ function confirmarYVolver() {
         document.querySelectorAll('input[id^="ingrediente_"]').forEach(input => {
             const nombre = input.id.replace("ingrediente_", "").toLowerCase();
             precios.ingredientes[nombre] = limpiarValor(input.value.trim());
+        });
+
+        // También guardar packaging y cajas si existen como inputs separados
+        ['precio_packaging', 'precio_cajas'].forEach(id => {
+            const input = document.getElementById(id);
+            if (input) {
+                const clave = id.replace("precio_", "");
+                precios.ingredientes[clave] = limpiarValor(input.value.trim());
+            }
         });
 
         const costosFijosIds = [
