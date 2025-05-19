@@ -361,8 +361,8 @@ document.addEventListener('DOMContentLoaded', function () {
 function limpiarValor(valor) {
     if (!valor || typeof valor !== "string") return "0";
     valor = valor.trim().replace(/\./g, '').replace(',', '.');
-    const num = Number(valor);
-    return (!isNaN(num) && isFinite(num)) ? Math.round(num).toString() : "0";
+    const num = parseFloat(valor);
+    return (!isNaN(num) && isFinite(num)) ? num.toString() : "0";
 }
 
 function guardarPrecios() {
