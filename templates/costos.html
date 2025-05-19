@@ -259,24 +259,13 @@
     </div>
 <script>
 document.addEventListener('DOMContentLoaded', function () {
-    // Persistencia local de los precios ingresados con formato de miles al salir del campo
+    // Formato visual con separador de miles al salir del campo (blur) y quitar formato en focus
     document.querySelectorAll('input[type="text"]').forEach(input => {
         if (input.id) {
-            const saved = localStorage.getItem(input.id);
-            if (saved !== null) input.value = saved;
-
-            input.addEventListener('input', () => {
-                const clean = input.value.replace(/\./g, '').replace(',', '.');
-                if (!isNaN(clean)) {
-                    localStorage.setItem(input.id, clean);
-                }
-            });
-
             input.addEventListener('focus', () => {
                 const numericValue = input.value.replace(/\./g, '').replace(',', '.');
                 input.value = numericValue;
             });
-
             // Formato visual con separador de miles al salir del campo (blur)
             input.addEventListener('blur', () => {
                 const raw = input.value.replace(/\./g, '').replace(',', '.');
@@ -287,21 +276,6 @@ document.addEventListener('DOMContentLoaded', function () {
             });
         }
     });
-
-    // Guardar ingredientes en objeto unificado normalizado
-    const inputsIngredientes = Array.from(document.querySelectorAll('input[id^="ingrediente_"]'));
-    let costosIngredientes = {};
-
-    inputsIngredientes.forEach(input => {
-        const clave = input.id.replace("ingrediente_", "");
-        const raw = input.value.replace(/\./g, '').replace(',', '.');
-        const valor = parseFloat(raw);
-        if (!isNaN(valor)) {
-            costosIngredientes[clave] = valor;
-        }
-    });
-
-    localStorage.setItem("ingredientes_costos", JSON.stringify(costosIngredientes));
 
     const rows = document.querySelectorAll('table tbody tr');
     rows.forEach(row => {
@@ -529,6 +503,7 @@ function guardarPrecios() {
     }).then(response => {
         if (response.ok) {
             alert("✅ Cambios guardados correctamente en la base de datos.");
+            // Permanecer en la página sin redireccionar
         } else {
             alert("❌ Error al guardar en la base de datos.");
         }
@@ -543,6 +518,7 @@ function confirmarYVolver() {
         guardarPrecios();
         // alert("✅ Precios guardados correctamente."); // Eliminado: redundante
         // La redirección será manejada en guardarPrecios()
+        // window.location.href = "/"; // Eliminado para evitar redirección automática al menú
     }
 }
 </script>
