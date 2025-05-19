@@ -1278,7 +1278,7 @@ def dashboard_rentabilidad():
         # Calcular el costo total por sabor
         costo_total_sabor = 0
         for ingr, cant in detalles_por_sabor[sabor].items():
-            precio_unitario = precios_ingredientes.get(ingr, 0)
+            precio_unitario = precios_ingredientes.get(ingr.lower(), 0)
             # Para cantidades >= 1000, se asume kg, si no gramos, pero el precio es por kg
             costo_total_sabor += (cant / 1000) * precio_unitario if cant >= 0 else 0
         detalles_por_sabor[sabor]['Costo Variable Total'] = costo_total_sabor
@@ -1296,6 +1296,15 @@ def dashboard_rentabilidad():
 
     # Calcular packaging por sabor
     total_packaging_por_sabor = {}
+    try:
+        usuario_email = session['usuario']
+        precios_ingredientes_db = PrecioIngrediente.query.filter_by(usuario_email=usuario_email).all()
+        precios_map = {p.ingrediente.lower(): p.precio_unitario for p in precios_ingredientes_db}
+        precio_pack = precios_map.get('packaging', 0)
+        precio_caja = precios_map.get('cajas', 0)
+    except:
+        precio_pack = 0
+        precio_caja = 0
     for sabor, cantidad_canastos in canastos.items():
         if cantidad_canastos == 0:
             continue
@@ -1308,18 +1317,24 @@ def dashboard_rentabilidad():
             total_unidades = cantidad_canastos * UNIDADES_POR_CANASTO
             total_packs = total_unidades / 4
             cantidad_cajas = round(total_packs / 15)
-        try:
-            precio_pack = float(request.cookies.get("precio_pack", "0").replace(".", "").replace(",", "."))
-            precio_caja = float(request.cookies.get("precio_caja", "0").replace(".", "").replace(",", "."))
-        except:
-            precio_pack = 0
-            precio_caja = 0
         costo_packaging = total_packs * precio_pack + cantidad_cajas * precio_caja
         total_packaging_por_sabor[sabor] = costo_packaging
 
+    # Obtener costos fijos para el usuario
+    costos_fijos = {}
+    if 'usuario' in session:
+        usuario_email = session['usuario']
+        costos_fijos_query = CostoFijo.query.filter_by(usuario_email=usuario_email).all()
+        costos_fijos = {c.nombre: c.monto for c in costos_fijos_query}
+
     # Agregar variable index=True al contexto antes del render_template
-    index = True
-    return render_template('dashboard_rentabilidad.html', detalles_por_sabor=detalles_por_sabor, total_packaging_por_sabor=total_packaging_por_sabor, index=True)
+    return render_template(
+        'dashboard_rentabilidad.html',
+        detalles_por_sabor=detalles_por_sabor,
+        total_packaging_por_sabor=total_packaging_por_sabor,
+        costos_fijos=costos_fijos,
+        index=True
+    )
 
 @app.route('/resumen_datos')
 def resumen_datos():
