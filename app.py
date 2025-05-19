@@ -109,6 +109,15 @@ def to_datetime_filter(value, format='%Y-%m-%d'):
     from datetime import datetime
     return datetime.strptime(value, format)
 
+# Filtro de plantilla para formatear números con formato argentino (1.234,56)
+@app.template_filter('formato_argentino')
+def formato_argentino(value):
+    try:
+        from babel.numbers import format_decimal
+        return format_decimal(float(value), locale='es_AR')
+    except:
+        return value
+
 UNIDADES_POR_CANASTO = 18
 MASA_BASE_POR_100_CANASTOS = {
     'soja_kg': 50,
