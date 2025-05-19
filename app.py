@@ -1474,7 +1474,7 @@ def guardar_todos_los_costos():
     PrecioIngrediente.query.filter_by(usuario_email=usuario_email).delete()
     for ingrediente, precio in precios_ingredientes.items():
         try:
-            precio_unitario = float(str(precio).replace(',', '').replace('$', ''))
+            precio_unitario = float(str(precio).replace('.', '').replace(',', '.').replace('$', ''))
         except ValueError:
             precio_unitario = 0
         nuevo_precio = PrecioIngrediente(usuario_email=usuario_email, ingrediente=ingrediente, precio_unitario=precio_unitario)
@@ -1484,7 +1484,7 @@ def guardar_todos_los_costos():
     CostoFijo.query.filter_by(usuario_email=usuario_email).delete()
     for nombre, monto in costos_fijos.items():
         try:
-            monto_float = float(str(monto).replace(',', '').replace('$', ''))
+            monto_float = float(str(monto).replace('.', '').replace(',', '.').replace('$', ''))
         except ValueError:
             monto_float = 0
         nuevo_costo = CostoFijo(usuario_email=usuario_email, nombre=nombre, monto=monto_float)

@@ -458,8 +458,8 @@ function calcularRentabilidad() {
 
 function guardarPrecios() {
     const precios = {
-        precio_pack: document.getElementById("precio_packaging")?.value.replace(/\./g, '').replace(',', '.') || "0",
-        precio_caja: document.getElementById("precio_cajas")?.value.replace(/\./g, '').replace(',', '.') || "0",
+        packaging: (document.getElementById("precio_packaging")?.value.trim() === "" ? "0" : document.getElementById("precio_packaging")?.value.replace(/\./g, '').replace(',', '.')) || "0",
+        cajas: (document.getElementById("precio_cajas")?.value.trim() === "" ? "0" : document.getElementById("precio_cajas")?.value.replace(/\./g, '').replace(',', '.')) || "0",
         ingredientes: {},
         costos_fijos: {},
         precios_venta: {}
@@ -467,8 +467,10 @@ function guardarPrecios() {
 
     // Guardar ingredientes
     document.querySelectorAll('input[id^="ingrediente_"]').forEach(input => {
-        const nombre = input.id.replace("ingrediente_", "");
-        const valor = input.value.replace(/\./g, '').replace(',', '.');
+        const nombre = input.id.replace("ingrediente_", "").toLowerCase().replace(/\s+/g, '');
+        let valor = input.value.trim();
+        if (valor === "") valor = "0";
+        else valor = valor.replace(/\./g, '').replace(',', '.');
         precios.ingredientes[nombre] = valor;
     });
 
@@ -480,7 +482,10 @@ function guardarPrecios() {
     costosFijosIds.forEach(id => {
         const input = document.getElementById(id);
         if (input) {
-            precios.costos_fijos[id] = input.value.replace(/\./g, '').replace(',', '.');
+            let valor = input.value.trim();
+            if (valor === "") valor = "0";
+            else valor = valor.replace(/\./g, '').replace(',', '.');
+            precios.costos_fijos[id] = valor;
         }
     });
 
@@ -489,11 +494,13 @@ function guardarPrecios() {
     sabores.forEach(sabor => {
         const input = document.getElementById(`precio_${sabor}`);
         if (input) {
-            precios.precios_venta[sabor] = input.value.replace(/\./g, '').replace(',', '.');
+            let valor = input.value.trim();
+            if (valor === "") valor = "0";
+            else valor = valor.replace(/\./g, '').replace(',', '.');
+            precios.precios_venta[sabor] = valor;
         }
     });
 
-    // Enviar al backend
     fetch('/guardar_todos_los_costos', {
         method: 'POST',
         headers: {
@@ -503,7 +510,6 @@ function guardarPrecios() {
     }).then(response => {
         if (response.ok) {
             alert("✅ Cambios guardados correctamente en la base de datos.");
-            // Permanecer en la página sin redireccionar
         } else {
             alert("❌ Error al guardar en la base de datos.");
         }
@@ -515,10 +521,64 @@ function guardarPrecios() {
 
 function confirmarYVolver() {
     if (confirm("¿Querés guardar los precios y volver al menú principal?")) {
-        guardarPrecios();
-        // alert("✅ Precios guardados correctamente."); // Eliminado: redundante
-        // La redirección será manejada en guardarPrecios()
-        // window.location.href = "/"; // Eliminado para evitar redirección automática al menú
+        const precios = {
+            packaging: (document.getElementById("precio_packaging")?.value.trim() === "" ? "0" : document.getElementById("precio_packaging")?.value.replace(/\./g, '').replace(',', '.')) || "0",
+            cajas: (document.getElementById("precio_cajas")?.value.trim() === "" ? "0" : document.getElementById("precio_cajas")?.value.replace(/\./g, '').replace(',', '.')) || "0",
+            ingredientes: {},
+            costos_fijos: {},
+            precios_venta: {}
+        };
+
+        document.querySelectorAll('input[id^="ingrediente_"]').forEach(input => {
+            const nombre = input.id.replace("ingrediente_", "").toLowerCase().replace(/\s+/g, '');
+            let valor = input.value.trim();
+            if (valor === "") valor = "0";
+            else valor = valor.replace(/\./g, '').replace(',', '.');
+            precios.ingredientes[nombre] = valor;
+        });
+
+        const costosFijosIds = [
+            "alquiler", "edenor", "aysa", "gas", "municipal", "sueldos",
+            "cargas_sociales", "iva", "créditos", "flete", "varios"
+        ];
+        costosFijosIds.forEach(id => {
+            const input = document.getElementById(id);
+            if (input) {
+                let valor = input.value.trim();
+                if (valor === "") valor = "0";
+                else valor = valor.replace(/\./g, '').replace(',', '.');
+                precios.costos_fijos[id] = valor;
+            }
+        });
+
+        const sabores = ["aceituna", "caprese", "queso_azul", "cebolla", "espinaca", "calabaza", "brocoli", "original"];
+        sabores.forEach(sabor => {
+            const input = document.getElementById(`precio_${sabor}`);
+            if (input) {
+                let valor = input.value.trim();
+                if (valor === "") valor = "0";
+                else valor = valor.replace(/\./g, '').replace(',', '.');
+                precios.precios_venta[sabor] = valor;
+            }
+        });
+
+        fetch('/guardar_todos_los_costos', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(precios)
+        }).then(response => {
+            if (response.ok) {
+                alert("✅ Cambios guardados correctamente.");
+                window.location.href = "/";
+            } else {
+                alert("❌ Error al guardar en la base de datos.");
+            }
+        }).catch(error => {
+            console.error("Error:", error);
+            alert("❌ Error al conectar con el servidor.");
+        });
     }
 }
 </script>
