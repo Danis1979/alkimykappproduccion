@@ -2,8 +2,13 @@ def normalizar_importe(valor):
     try:
         if isinstance(valor, str):
             valor = valor.replace('$', '').replace(' ', '')
-            valor = valor.replace('.', '')  # eliminar puntos (separadores de miles)
-            valor = valor.replace(',', '.')  # convertir coma decimal a punto
+            if ',' in valor and '.' in valor:
+                # Si contiene ambos, asume punto como miles y coma como decimal
+                valor = valor.replace('.', '').replace(',', '.')
+            elif ',' in valor:
+                valor = valor.replace(',', '.')
+            else:
+                valor = valor.replace('.', '')  # solo si no hay coma decimal
         return float(valor)
     except ValueError:
         return 0
