@@ -213,9 +213,13 @@
 <script>
 // Función auxiliar para limpiar y parsear números en formato argentino
 function limpiarYParsear(valor) {
-    if (!valor || typeof valor !== "string") return 0;
-    valor = valor.trim().replace(/\./g, '').replace(',', '.');
-    const num = Number(valor);
+    if (valor === null || valor === undefined) return 0;
+    if (typeof valor === "number") return valor;
+    if (typeof valor !== "string") return 0;
+
+    // Reemplazar puntos por nada (para eliminar separadores de miles) y comas por punto decimal
+    const limpio = valor.trim().replace(/\./g, '').replace(',', '.');
+    const num = Number(limpio);
     return (!isNaN(num) && isFinite(num)) ? parseFloat(num.toFixed(2)) : 0;
 }
 
