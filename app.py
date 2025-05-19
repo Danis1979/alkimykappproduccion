@@ -1470,10 +1470,13 @@ def guardar_todos_los_costos():
 
     usuario_email = session['usuario']
     data = request.get_json()
-    print(data)  # Agregado para depuración
+    print("🔍 Datos recibidos en /guardar_todos_los_costos:", data)
+    precios_ingredientes = data.get('precios_ingredientes', {})
+    print("📦 Ingredientes recibidos:")
+    for ingr, val in precios_ingredientes.items():
+        print(f"  - {ingr}: {val}")
     if not data:
         return jsonify({'success': False, 'message': 'No se recibieron datos'})
-    precios_ingredientes = data.get('precios_ingredientes', {})
     costos_fijos = data.get('costos_fijos', {})
     precios_venta = data.get('precios_venta', {})
 
