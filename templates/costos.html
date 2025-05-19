@@ -152,7 +152,7 @@
                                     g
                                 {% endif %}
                             </td>
-                            <td><input id="ingrediente_{{ nombre | lower | replace(' ', '_') }}" type="text" step="0.01" placeholder="0.00" class="input-formulario" style="width: 180px;" min="0" max="10000000" value="{{ precios_ingredientes.get(nombre | lower | replace(' ', '_'), '') }}"></td>
+                            <td><input id="ingrediente_{{ nombre | lower | replace(' ', '_') }}" type="text" step="0.01" placeholder="0.00" class="input-formulario" style="width: 180px;" min="0" max="10000000" value="{{ '%.2f' % precios_ingredientes.get(nombre | lower | replace(' ', '_'), 0) }}"></td>
                             <td class="costo-total">$0.00</td>
                         </tr>
                     {% endfor %}
