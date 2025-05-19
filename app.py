@@ -1,7 +1,11 @@
 def normalizar_importe(valor):
     try:
         if isinstance(valor, str):
+            # Eliminar puntos como separador de miles
             valor = valor.replace('$', '').replace('.', '').replace(',', '.').strip()
+            if valor.count('.') > 1:
+                partes = valor.split('.')
+                valor = ''.join(partes[:-1]) + '.' + partes[-1]
         return round(float(valor), 2)
     except Exception:
         return 0
@@ -1468,12 +1472,10 @@ def guardar_todos_los_costos():
 
     usuario_email = session['usuario']
     data = request.get_json()
-    precios_ingredientes = data.get('precios_ingredientes', {}) if data else {}
-    # Agregar print para depuración si data es vacío
+    print(data)  # Agregado para depuración
     if not data:
-        print(precios_ingredientes)
         return jsonify({'success': False, 'message': 'No se recibieron datos'})
-
+    precios_ingredientes = data.get('precios_ingredientes', {})
     costos_fijos = data.get('costos_fijos', {})
     precios_venta = data.get('precios_venta', {})
 
