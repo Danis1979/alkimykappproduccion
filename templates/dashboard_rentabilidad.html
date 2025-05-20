@@ -325,6 +325,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
             console.log("Costo variable por sabor:", costoVariablePorSabor);
             window.costoVariablePorSabor = costoVariablePorSabor;
+            window.ingredientesCostosRaw = ingredientesCostosRaw;
+            window.costosFijosLimpios = costosFijosLimpios;
             contenedor.innerHTML += `
                 <h3 style="margin-top: 30px; text-align:center;">Distribución de Cajas por Sabor</h3>
                 <table style="width:100%; border-collapse: collapse; margin-top: 10px;">
