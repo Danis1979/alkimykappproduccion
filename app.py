@@ -1576,14 +1576,20 @@ def guardar_todos_los_costos():
     if not data:
         return jsonify({'success': False, 'message': 'No se recibieron datos'})
 
+    # Validar que ningún precio de ingrediente esté vacío o igual a 0 antes de guardar
+    for ingrediente, precio in precios_ingredientes.items():
+        if precio is None or str(precio).strip() == "" or normalizar_importe(precio) == 0:
+            return jsonify({'success': False, 'message': f'Debes completar un valor mayor a 0 para el ingrediente: {ingrediente}'})
+
     # Guardar precios de ingredientes con normalización robusta
     PrecioIngrediente.query.filter_by(usuario_email=usuario_email).delete()
     for ingrediente, precio in precios_ingredientes.items():
         ingrediente_limpio = slugify(ingrediente)
         precio_unitario = normalizar_importe(precio)
-        if precio_unitario > 0:
-            nuevo_precio = PrecioIngrediente(usuario_email=usuario_email, ingrediente=ingrediente_limpio, precio_unitario=precio_unitario)
-            db.session.add(nuevo_precio)
+        if precio_unitario <= 0:
+            return jsonify({'success': False, 'message': f'Debes completar un valor mayor a 0 para el ingrediente: {ingrediente}'})
+        nuevo_precio = PrecioIngrediente(usuario_email=usuario_email, ingrediente=ingrediente_limpio, precio_unitario=precio_unitario)
+        db.session.add(nuevo_precio)
 
     # Guardar costos fijos
     CostoFijo.query.filter_by(usuario_email=usuario_email).delete()
