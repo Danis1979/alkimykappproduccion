@@ -222,39 +222,6 @@
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
   <script>
     document.addEventListener('DOMContentLoaded', () => {
-      async function obtenerVerdurasDesdeWeb() {
-        try {
-          const response = await fetch('/proxy_mercado_central');
-          const text = await response.text();
-
-          const parser = new DOMParser();
-          const doc = parser.parseFromString(text, 'text/html');
-
-          const masConsumidos = [...doc.querySelectorAll('.home-category .card')][0]?.innerText || '';
-          const masCayeron = [...doc.querySelectorAll('.home-category .card')][1]?.innerText || '';
-          const masAumentaron = [...doc.querySelectorAll('.home-category .card')][2]?.innerText || '';
-
-          Swal.fire({
-            title: '📊 Tendencias del Mercado Central',
-            html: `
-              <div style="text-align: left;">
-                <strong>🥬 Más consumidos:</strong><br>${masConsumidos.replace(/\n/g, '<br>')}<br><br>
-                <strong>📉 Bajaron de precio:</strong><br>${masCayeron.replace(/\n/g, '<br>')}<br><br>
-                <strong>📈 Aumentaron de precio:</strong><br>${masAumentaron.replace(/\n/g, '<br>')}
-              </div>
-            `,
-            icon: 'info',
-            confirmButtonText: 'Entendido',
-            width: 600
-          });
-        } catch (error) {
-          console.error('Error al obtener datos del Mercado Central:', error);
-        }
-      }
-
-      obtenerVerdurasDesdeWeb();
-
-      // Verificar estacionalidad local según la fecha actual
       function mostrarEstacionalidad() {
         const mesActual = new Date().getMonth(); // 0 = enero, 11 = diciembre
 
