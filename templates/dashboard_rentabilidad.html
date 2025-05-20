@@ -268,15 +268,20 @@ document.addEventListener('DOMContentLoaded', () => {
 
             // Calcular costo variable por sabor
             const recetas = data.detalles_por_sabor || {};
-            // Limpiar y parsear todos los valores de ingredientes_costos (usando limpiarYParsear en cada valor)
-            let ingredientesCostosRaw = data.precios_ingredientes || {};
+            // Normalizar claves de ingredientes para mayor robustez
+            let ingredientesCostosRaw = {};
+            Object.entries(data.precios_ingredientes || {}).forEach(([key, value]) => {
+                const claveNormalizada = key.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\s+/g, '_');
+                ingredientesCostosRaw[claveNormalizada] = value;
+            });
             console.log("🧪 Ingredientes desde /resumen_datos:", ingredientesCostosRaw);
             // 🧪 Agregado: verificar si los costos fijos y precios por sabor llegan bien
             console.log("🧪 Costos fijos desde /resumen_datos:", data.costos_fijos);
             console.log("🧪 Precios por sabor desde /resumen_datos:", data.precios_venta);
             let ingredientesCostos = {};
             Object.entries(ingredientesCostosRaw).forEach(([k, v]) => {
-                ingredientesCostos[k] = limpiarYParsear(v);
+                const claveNormalizada = k.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\s+/g, '_');
+                ingredientesCostos[claveNormalizada] = limpiarYParsear(v);
             });
             console.log("🧪 Ingredientes parseados:", ingredientesCostos);
 
@@ -904,11 +909,12 @@ function calcularKPIs() {
 
     const recetas = window.detallesPorSabor || {};
     // Limpiar y parsear todos los valores de ingredientes_costos para KPIs
-    let ingredientesCostosRaw = window.ingredientesCostosRaw || {};
-    let ingredientesCostos = {};
-    Object.entries(ingredientesCostosRaw).forEach(([k, v]) => {
-        ingredientesCostos[k] = limpiarYParsear(v);
-    });
+            let ingredientesCostosRaw = window.ingredientesCostosRaw || {};
+            let ingredientesCostos = {};
+            Object.entries(ingredientesCostosRaw).forEach(([k, v]) => {
+                const claveNormalizada = k.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\s+/g, '_');
+                ingredientesCostos[claveNormalizada] = limpiarYParsear(v);
+            });
     const cajasPorSabor = window.cajasPorSabor || {};
     const costoVariablePorSabor = window.costoVariablePorSabor || {};
     const sabores = Object.keys(cajasPorSabor);
