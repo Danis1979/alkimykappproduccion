@@ -1509,6 +1509,9 @@ def guardar_resumen_historico():
     except Exception as e:
         return jsonify({'success': False, 'message': str(e)})
 
+def slugify(nombre):
+    return nombre.strip().lower().replace(' ', '_').replace('á', 'a').replace('é', 'e').replace('í', 'i').replace('ó', 'o').replace('ú', 'u').replace('ñ', 'n')
+
 @app.route('/guardar_todos_los_costos', methods=['POST'])
 def guardar_todos_los_costos():
     if 'usuario' not in session:
@@ -1557,7 +1560,7 @@ def guardar_todos_los_costos():
     # Guardar precios de ingredientes con normalización robusta
     PrecioIngrediente.query.filter_by(usuario_email=usuario_email).delete()
     for ingrediente, precio in precios_ingredientes.items():
-        ingrediente_limpio = ingrediente.strip()
+        ingrediente_limpio = slugify(ingrediente)
         precio_unitario = normalizar_importe(precio)
         nuevo_precio = PrecioIngrediente(usuario_email=usuario_email, ingrediente=ingrediente_limpio, precio_unitario=precio_unitario)
         db.session.add(nuevo_precio)
