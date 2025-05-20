@@ -603,7 +603,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const colores = [];
 
             costosFijos.forEach((clave, i) => {
-                const val = parseFloat(localStorage.getItem(clave) || 0);
+                const val = limpiarYParsear(costosFijosLimpios[clave] || 0);
                 if (val > 0) {
                     labelsDesglose.push(clave.replace('_', ' ').toUpperCase());
                     dataDesglose.push(val);
@@ -901,6 +901,7 @@ function descargarResumen() {
 <script>
 // --- KPIs Inteligentes ---
 function calcularKPIs() {
+    const costosFijosLimpios = window.costosFijosLimpios || {};
     if (typeof window.cajasPorSabor === "undefined" || typeof window.costoVariablePorSabor === "undefined") return;
 
     const data = {
@@ -919,12 +920,12 @@ function calcularKPIs() {
 
     const recetas = window.detallesPorSabor || {};
     // Limpiar y parsear todos los valores de ingredientes_costos para KPIs
-            let ingredientesCostosRaw = window.ingredientesCostosRaw || {};
-            let ingredientesCostos = {};
-            Object.entries(ingredientesCostosRaw).forEach(([k, v]) => {
-                const claveNormalizada = k.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/ñ/g, "n").replace(/\s+/g, '_');
-                ingredientesCostos[claveNormalizada] = limpiarYParsear(v);
-            });
+    let ingredientesCostosRaw = window.ingredientesCostosRaw || {};
+    let ingredientesCostos = {};
+    Object.entries(ingredientesCostosRaw).forEach(([k, v]) => {
+        const claveNormalizada = k.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/ñ/g, "n").replace(/\s+/g, '_');
+        ingredientesCostos[claveNormalizada] = limpiarYParsear(v);
+    });
     const cajasPorSabor = window.cajasPorSabor || {};
     const costoVariablePorSabor = window.costoVariablePorSabor || {};
     const sabores = Object.keys(cajasPorSabor);
@@ -963,7 +964,7 @@ function calcularKPIs() {
     const totalFijos = [
         'alquiler', 'edenor', 'aysa', 'gas', 'municipal', 'sueldos',
         'cargas_sociales', 'iva', 'créditos', 'flete', 'varios'
-    ].reduce((acc, id) => acc + limpiarYParsear(localStorage.getItem(id)), 0);
+    ].reduce((acc, id) => acc + limpiarYParsear(costosFijosLimpios[id]), 0);
     // Total variables: ingredientes + packaging + cajas
     let totalIngredientesGlobal = 0;
     Object.entries(recetas).forEach(([sabor, receta]) => {
