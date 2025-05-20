@@ -272,12 +272,22 @@ document.addEventListener('DOMContentLoaded', () => {
             let ingredientesCostosRaw = {};
             Object.entries(data.precios_ingredientes || {}).forEach(([key, value]) => {
                 const claveNormalizada = key.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\s+/g, '_');
-                ingredientesCostosRaw[claveNormalizada] = value;
+                ingredientesCostosRaw[claveNormalizada] = limpiarYParsear(value);
             });
             console.log("🧪 Ingredientes desde /resumen_datos:", ingredientesCostosRaw);
             // 🧪 Agregado: verificar si los costos fijos y precios por sabor llegan bien
-            console.log("🧪 Costos fijos desde /resumen_datos:", data.costos_fijos);
-            console.log("🧪 Precios por sabor desde /resumen_datos:", data.precios_venta);
+            // Procesar y limpiar los costos fijos para que sean numéricos
+            let costosFijosLimpios = {};
+            Object.entries(data.costos_fijos || {}).forEach(([key, value]) => {
+                costosFijosLimpios[key] = limpiarYParsear(value);
+            });
+            console.log("🧪 Costos fijos desde /resumen_datos:", costosFijosLimpios);
+            // Procesar y limpiar los precios de venta para que sean numéricos
+            let preciosVentaLimpios = {};
+            Object.entries(data.precios_venta || {}).forEach(([key, value]) => {
+                preciosVentaLimpios[key] = limpiarYParsear(value);
+            });
+            console.log("🧪 Precios por sabor desde /resumen_datos:", preciosVentaLimpios);
             let ingredientesCostos = {};
             Object.entries(ingredientesCostosRaw).forEach(([k, v]) => {
                 const claveNormalizada = k.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\s+/g, '_');
@@ -345,7 +355,7 @@ document.addEventListener('DOMContentLoaded', () => {
             ];
             let totalFijos = 0;
             costosFijos.forEach(id => {
-                const val = limpiarYParsear(data.costos_fijos[id]);
+                const val = limpiarYParsear(costosFijosLimpios[id]);
                 if (!isNaN(val)) totalFijos += val;
             });
             document.getElementById("sugerencias").innerHTML += `<li><strong>Total Costos Fijos:</strong> $${totalFijos.toLocaleString('es-AR', {maximumFractionDigits: 2})}</li>`;
@@ -369,10 +379,10 @@ document.addEventListener('DOMContentLoaded', () => {
             const costoFijoPorCaja = totalCajasMes > 0 ? totalFijos / totalCajasMes : 0;
 
 
-            // Recuperar precios de venta por sabor desde data.precios_venta, usando limpiarYParsear
+            // Recuperar precios de venta por sabor desde preciosVentaLimpios, ya procesados
             let precioPorSabor = {};
             ['aceituna', 'caprese', 'queso_azul', 'cebolla', 'espinaca', 'calabaza', 'brocoli', 'original'].forEach(sabor => {
-                precioPorSabor[sabor] = limpiarYParsear(data.precios_venta[sabor]);
+                precioPorSabor[sabor] = limpiarYParsear(preciosVentaLimpios[sabor]);
             });
 
             // Calcular total a facturar y total con IVA
