@@ -184,6 +184,9 @@
                     <div class="kpi-card"><strong id="kpi-mayor-ganancia">Calculando sabor con mayor ganancia total...</strong></div>
                     <div class="kpi-card"><strong id="kpi-participacion">Calculando participación de sabores en facturación...</strong></div>
                     <div class="kpi-card"><strong id="kpi-costos-fijos-ingresos">Calculando % de costos fijos sobre ingresos...</strong></div>
+                    <div class="kpi-card"><strong id="kpi-rentabilidad-promedio-caja">Calculando rentabilidad promedio por caja...</strong></div>
+                    <div class="kpi-card"><strong id="kpi-costo-total-mensual">Calculando costo total de producción mensual...</strong></div>
+                    <div class="kpi-card"><strong id="kpi-costo-promedio-unidad">Calculando costo promedio por unidad...</strong></div>
                 </div>
             </div>
             <ul id="sugerencias" style="font-size: 16px; line-height: 1.6;"></ul>
@@ -1109,9 +1112,9 @@ function calcularKPIs() {
     const porcentaje = totalFacturar > 0 ? (topParticipacion.valor / totalFacturar) * 100 : 0;
     document.getElementById("kpi-participacion").innerText = `Mayor participación en facturación: ${topParticipacion.sabor} (${porcentaje.toFixed(1)}%)`;
 
-    // KPI: % de costos fijos sobre ingresos + CF
+    // KPI: % de costos fijos sobre ingresos
     const porcentajeFijosSobreIngresos = (totalFacturar + totalFijos) > 0 ? ((totalFijos / (totalFacturar + totalFijos)) * 100) : 0;
-    document.getElementById("kpi-costos-fijos-ingresos").innerText = `Costos fijos sobre ingresos + CF: ${porcentajeFijosSobreIngresos.toFixed(1)}%`;
+    document.getElementById("kpi-costos-fijos-ingresos").innerText = `Costos fijos sobre ingresos: ${porcentajeFijosSobreIngresos.toFixed(1)}%`;
 
     // Rentabilidad baja advertencia
     const saboresRentabilidadBaja = sabores.filter(sabor => {
@@ -1126,6 +1129,23 @@ function calcularKPIs() {
         ? `Revisar rentabilidad de: ${saboresRentabilidadBaja.join(', ')}`
         : "Todos los sabores tienen buena rentabilidad.";
     document.getElementById("kpi-rentabilidad-advertencia").innerText = advertenciaTexto;
+
+    // 1. Rentabilidad total promedio por caja
+    const gananciaNetaTotal = totalFacturar - totalVariables - totalFijos;
+    const rentabilidadPromedioCaja = cajasTotales > 0 ? gananciaNetaTotal / cajasTotales : 0;
+    document.getElementById("kpi-rentabilidad-promedio-caja").innerText = `Rentabilidad neta promedio por caja: $${rentabilidadPromedioCaja.toLocaleString('es-AR', { minimumFractionDigits: 2 })}`;
+
+    // 3. Costo total de producción mensual
+    const costoTotalProduccionMensual = totalFijos + totalVariables;
+    document.getElementById("kpi-costo-total-mensual").innerText = `Costo total de producción mensual: $${costoTotalProduccionMensual.toLocaleString('es-AR', { minimumFractionDigits: 2 })}`;
+
+    // 4. Costo promedio por unidad
+    const totalUnidadesVendidas = Object.entries(cajasPorSabor).reduce((acc, [sabor, cajas]) => {
+        let unidades = sabor === 'original' ? cajas * 108 : cajas * 60;
+        return acc + unidades;
+    }, 0);
+    const costoPromUnidad = totalUnidadesVendidas > 0 ? (totalFijos + totalVariables) / totalUnidadesVendidas : 0;
+    document.getElementById("kpi-costo-promedio-unidad").innerText = `Costo promedio por unidad: $${costoPromUnidad.toLocaleString('es-AR', { minimumFractionDigits: 2 })}`;
 }
 
 // Ejecutar KPIs cuando se calcula el resumen
