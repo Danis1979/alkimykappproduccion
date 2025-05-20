@@ -1683,9 +1683,10 @@ def planificacion():
                     cantidad_final = round(cantidad_ingrediente * 1000, 2) if cantidad_ingrediente < 1 else round(cantidad_ingrediente, 2)
                 add(total_ingredientes, ingrediente, cantidad_final)
         else:
-            add(total_ingredientes, 'Soja', MASA_BASE_POR_100_CANASTOS['soja_kg'] * cantidad / MASA_BASE_CANASTOS)
-            add(total_ingredientes, 'Chimichurri', MASA_BASE_POR_100_CANASTOS['chimichurri_g'] * cantidad / MASA_BASE_CANASTOS)
-            add(total_ingredientes, 'Sal', MASA_BASE_POR_100_CANASTOS['sal_g'] * cantidad / MASA_BASE_CANASTOS)
+            # Las siguientes líneas han sido eliminadas para evitar suma duplicada:
+            # add(total_ingredientes, 'Soja', MASA_BASE_POR_100_CANASTOS['soja_kg'] * cantidad / MASA_BASE_CANASTOS)
+            # add(total_ingredientes, 'Chimichurri', MASA_BASE_POR_100_CANASTOS['chimichurri_g'] * cantidad / MASA_BASE_CANASTOS)
+            # add(total_ingredientes, 'Sal', MASA_BASE_POR_100_CANASTOS['sal_g'] * cantidad / MASA_BASE_CANASTOS)
             if sabor == 'aceituna':
                 add(total_ingredientes, 'Muzzarella', unidades * 15)
                 add(total_ingredientes, 'Aceitunas', unidades * 20)
