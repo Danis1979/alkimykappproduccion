@@ -1633,7 +1633,6 @@ def guardar_todos_los_costos():
 
 
 
-# Ruta de planificación
 @app.route('/planificacion')
 def planificacion():
     if 'usuario' not in session:
@@ -1652,44 +1651,62 @@ def planificacion():
 
     # Calcular total ingredientes
     total_ingredientes = {}
+    def add(dic, nombre, cantidad):
+        dic[nombre] = dic.get(nombre, 0) + cantidad
+
     for sabor, cantidad in canastos.items():
         unidades = cantidad * (32 if sabor == 'original' else UNIDADES_POR_CANASTO)
         if sabor == 'aceituna':
-            total_ingredientes['Muzzarella'] = total_ingredientes.get('Muzzarella', 0) + unidades * 15
-            total_ingredientes['Aceitunas'] = total_ingredientes.get('Aceitunas', 0) + unidades * 20
+            add(total_ingredientes, 'Muzzarella', unidades * 15)
+            add(total_ingredientes, 'Aceitunas', unidades * 20)
         elif sabor == 'caprese':
-            total_ingredientes['Muzzarella'] = total_ingredientes.get('Muzzarella', 0) + unidades * 15
-            total_ingredientes['Tomate'] = total_ingredientes.get('Tomate', 0) + unidades * 25
-            total_ingredientes['Albahaca'] = total_ingredientes.get('Albahaca', 0) + unidades * 2
+            add(total_ingredientes, 'Muzzarella', unidades * 15)
+            add(total_ingredientes, 'Tomate', unidades * 25)
+            add(total_ingredientes, 'Albahaca', unidades * 2)
         elif sabor == 'queso_azul':
             mezcla_total = unidades * 30
             porc_queso = 2.3 / (18 + 2.3)
-            total_ingredientes['Muzzarella'] = total_ingredientes.get('Muzzarella', 0) + mezcla_total * (1 - porc_queso)
-            total_ingredientes['Queso Azul'] = total_ingredientes.get('Queso Azul', 0) + mezcla_total * porc_queso
+            add(total_ingredientes, 'Muzzarella', mezcla_total * (1 - porc_queso))
+            add(total_ingredientes, 'Queso Azul', mezcla_total * porc_queso)
         elif sabor == 'cebolla':
             cebolla_cruda = (unidades * 40) / 0.8
-            total_ingredientes['Cebolla'] = total_ingredientes.get('Cebolla', 0) + cebolla_cruda
+            add(total_ingredientes, 'Cebolla', cebolla_cruda)
         elif sabor == 'espinaca':
             total_relleno = unidades * 40 / 0.9
-            total_ingredientes['Espinaca'] = total_ingredientes.get('Espinaca', 0) + total_relleno * 0.5 / 0.9
-            total_ingredientes['Cebolla'] = total_ingredientes.get('Cebolla', 0) + total_relleno * 0.25 / 0.8
-            total_ingredientes['Morrón'] = total_ingredientes.get('Morrón', 0) + total_relleno * 0.25 / 0.8
+            add(total_ingredientes, 'Espinaca', total_relleno * 0.5 / 0.9)
+            add(total_ingredientes, 'Cebolla', total_relleno * 0.25 / 0.8)
+            add(total_ingredientes, 'Morrón', total_relleno * 0.25 / 0.8)
         elif sabor == 'calabaza':
-            total_ingredientes['Calabaza'] = total_ingredientes.get('Calabaza', 0) + unidades * 40 / 0.8
+            add(total_ingredientes, 'Calabaza', unidades * 40 / 0.8)
         elif sabor == 'brocoli':
-            total_ingredientes['Brócoli'] = total_ingredientes.get('Brócoli', 0) + unidades * 0.6
-            total_ingredientes['Cebolla'] = total_ingredientes.get('Cebolla', 0) + unidades * 0.4 / 0.8
+            total_relleno = unidades * 40
+            add(total_ingredientes, 'Brócoli', total_relleno * 0.6)
+            add(total_ingredientes, 'Cebolla', total_relleno * 0.4 / 0.8)
         elif sabor == 'original':
-            total_ingredientes['Soja'] = total_ingredientes.get('Soja', 0) + 75 * cantidad / 85
-            total_ingredientes['Harina'] = total_ingredientes.get('Harina', 0) + 30 * cantidad / 85
-            total_ingredientes['Chimichurri'] = total_ingredientes.get('Chimichurri', 0) + 800 * cantidad / 85
-            total_ingredientes['Sal'] = total_ingredientes.get('Sal', 0) + 500 * cantidad / 85
+            add(total_ingredientes, 'Soja', 75 * cantidad / 85)
+            add(total_ingredientes, 'Harina', 30 * cantidad / 85)
+            add(total_ingredientes, 'Chimichurri', 800 * cantidad / 85)
+            add(total_ingredientes, 'Sal', 500 * cantidad / 85)
+
+    # Convertir cantidades a gramos o kilogramos según corresponda
+    total_ingredientes_fmt = {}
+    for ingr, cant in total_ingredientes.items():
+        if ingr in ['Soja', 'Harina']:
+            if cant < 1:
+                total_ingredientes_fmt[ingr] = {'cantidad': round(cant * 1000, 2), 'unidad': 'g'}
+            else:
+                total_ingredientes_fmt[ingr] = {'cantidad': round(cant, 2), 'unidad': 'kg'}
+        else:
+            if cant >= 1000:
+                total_ingredientes_fmt[ingr] = {'cantidad': round(cant / 1000, 2), 'unidad': 'kg'}
+            else:
+                total_ingredientes_fmt[ingr] = {'cantidad': round(cant, 2), 'unidad': 'g'}
 
     return render_template('planificacion.html',
                            canastos=canastos,
                            total_canastos=total_canastos,
                            total_cajas=total_cajas,
-                           total_ingredientes=total_ingredientes)
+                           total_ingredientes=total_ingredientes_fmt)
 
 if __name__ == '__main__':
     threading.Timer(1.25, abrir_navegador).start()
