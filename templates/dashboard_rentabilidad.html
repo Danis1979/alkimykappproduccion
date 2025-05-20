@@ -1060,14 +1060,15 @@ function calcularKPIs() {
         totalFacturar += cantidad * precio;
     });
 
-    // Margen promedio (ya se calculaba)
+    // Margen de contribución: calcular el costo total sin incluir costos fijos
     let sumaMargenContribucion = 0;
     sabores.forEach(sabor => {
         const precioVenta = precioPorSabor[sabor] || 0;
         const costoVariable = costoVariablePorSabor[sabor] || 0;
         const packaging = sabor === 'original' ? (precioPack * 27) + precioCaja : (precioPack * 15) + precioCaja;
-        const costoTotal = costoVariable + packaging;
-        const margen = precioVenta - costoTotal;
+        // Cálculo explícito del costo total sin fijos
+        const costoTotalSinFijos = costoVariable + packaging;
+        const margen = precioVenta - costoTotalSinFijos;
         const cantidad = cajasPorSabor[sabor] || 0;
         sumaMargenContribucion += margen * cantidad;
     });
