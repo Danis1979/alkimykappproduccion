@@ -1188,8 +1188,9 @@ def guardar_precios_ingredientes():
     for ingrediente, precio in data.items():
         ingrediente_limpio = slugify(ingrediente)
         precio_unitario = normalizar_importe(precio)
-        nuevo_precio = PrecioIngrediente(usuario_email=usuario_email, ingrediente=ingrediente_limpio, precio_unitario=precio_unitario)
-        db.session.add(nuevo_precio)
+        if precio_unitario > 0:
+            nuevo_precio = PrecioIngrediente(usuario_email=usuario_email, ingrediente=ingrediente_limpio, precio_unitario=precio_unitario)
+            db.session.add(nuevo_precio)
 
     db.session.commit()
     return jsonify({'success': True, 'message': 'Precios guardados correctamente'})
@@ -1579,8 +1580,9 @@ def guardar_todos_los_costos():
     for ingrediente, precio in precios_ingredientes.items():
         ingrediente_limpio = slugify(ingrediente)
         precio_unitario = normalizar_importe(precio)
-        nuevo_precio = PrecioIngrediente(usuario_email=usuario_email, ingrediente=ingrediente_limpio, precio_unitario=precio_unitario)
-        db.session.add(nuevo_precio)
+        if precio_unitario > 0:
+            nuevo_precio = PrecioIngrediente(usuario_email=usuario_email, ingrediente=ingrediente_limpio, precio_unitario=precio_unitario)
+            db.session.add(nuevo_precio)
 
     # Guardar costos fijos
     CostoFijo.query.filter_by(usuario_email=usuario_email).delete()
