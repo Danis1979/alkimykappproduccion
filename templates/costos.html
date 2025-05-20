@@ -338,10 +338,10 @@ document.addEventListener('DOMContentLoaded', function () {
 // }
 
 function limpiarValor(valor) {
-    if (!valor || typeof valor !== "string") return "0";
+    if (!valor || typeof valor !== "string") return 0;
     valor = valor.trim();
     const num = parseFloat(valor);
-    return (!isNaN(num) && isFinite(num)) ? num.toString() : "0";
+    return (!isNaN(num) && isFinite(num)) ? num : 0;
 }
 
 function guardarPrecios() {
