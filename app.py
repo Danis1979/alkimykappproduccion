@@ -1630,6 +1630,20 @@ def guardar_todos_los_costos():
     db.session.commit()
     return jsonify({'success': True, 'message': 'Todos los datos guardados correctamente'})
 
+
+# Ruta proxy para evitar CORS al consultar la página del Mercado Central
+import requests
+from flask import Response
+
+@app.route('/proxy_mercado_central')
+def proxy_mercado_central():
+    url = 'https://preciosdelcentral.com/buenosaires'
+    try:
+        resp = requests.get(url, timeout=5)
+        return Response(resp.content, content_type=resp.headers.get('Content-Type', 'text/html'))
+    except requests.RequestException as e:
+        return f'Error al obtener datos: {e}', 500
+
 if __name__ == '__main__':
     threading.Timer(1.25, abrir_navegador).start()
     app.run(debug=True)
