@@ -253,6 +253,40 @@
       }
 
       obtenerVerdurasDesdeWeb();
+
+      // Verificar estacionalidad local según la fecha actual
+      function mostrarEstacionalidad() {
+        const mesActual = new Date().getMonth(); // 0 = enero, 11 = diciembre
+
+        const verdurasEstacionales = {
+          0: ['espinaca', 'albahaca'],
+          1: ['espinaca', 'brocoli'],
+          2: ['brocoli', 'cebolla'],
+          3: ['cebolla', 'morrón'],
+          4: ['morrón', 'espinaca'],
+          5: ['tomate', 'calabaza'],
+          6: ['tomate', 'calabaza'],
+          7: ['tomate', 'calabaza'],
+          8: ['tomate', 'calabaza'],
+          9: ['albahaca', 'calabaza'],
+          10: ['espinaca', 'cebolla'],
+          11: ['espinaca', 'albahaca']
+        };
+
+        const verdurasDelMes = verdurasEstacionales[mesActual] || [];
+
+        if (verdurasDelMes.length > 0) {
+          Swal.fire({
+            title: '🗓️ Estacionalidad del mes',
+            html: `Las verduras más económicas en este mes son:<br><strong>${verdurasDelMes.join(', ')}</strong>`,
+            icon: 'info',
+            confirmButtonText: 'Gracias',
+            width: 500
+          });
+        }
+      }
+
+      mostrarEstacionalidad();
     });
   </script>
 </body>
