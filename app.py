@@ -1427,12 +1427,28 @@ def resumen_datos():
         for ingrediente, cantidad_por_canasto in receta_masa_por_canasto.items():
             detalles_por_sabor[sabor][ingrediente] = detalles_por_sabor[sabor].get(ingrediente, 0) + (cantidad_por_canasto * cantidad_canastos)
 
+    # Agregar datos faltantes desde la base de datos
+    usuario_email = session.get('usuario')
+    ingredientes_db = PrecioIngrediente.query.filter_by(usuario_email=usuario_email).all()
+    precios_dict = {i.ingrediente: i.precio_unitario for i in ingredientes_db}
+    
+    costos_fijos_db = CostoFijo.query.filter_by(usuario_email=usuario_email).all()
+    costos_fijos_dict = {c.nombre: c.monto for c in costos_fijos_db}
+    
+    precios_venta_db = PrecioVentaSabor.query.filter_by(usuario_email=usuario_email).all()
+    precios_venta_dict = {p.sabor: p.precio for p in precios_venta_db}
+
     return jsonify({
         'canastos': canastos,
         'total_canastos': total_canastos,
         'total_cajas': total_cajas,
         'ingredientes_totales': total_ingredientes,
-        'detalles_por_sabor': detalles_por_sabor
+        'detalles_por_sabor': detalles_por_sabor,
+        'precios_ingredientes': precios_dict,
+        'costos_fijos': costos_fijos_dict,
+        'precios_venta': precios_venta_dict,
+        'packaging': precios_dict.get("packaging", 0),
+        'cajas': precios_dict.get("cajas", 0)
     })
 
 
