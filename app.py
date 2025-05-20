@@ -1702,6 +1702,11 @@ def planificacion():
             else:
                 total_ingredientes_fmt[ingr] = {'cantidad': round(cant, 2), 'unidad': 'g'}
 
+    # Chequeo de existencia de base.html antes de renderizar la plantilla
+    import os
+    template_path = os.path.join(app.template_folder or 'templates', 'base.html')
+    if not os.path.exists(template_path):
+        return "Archivo base.html no encontrado. Verifica que exista en la carpeta templates.", 500
     return render_template('planificacion.html',
                            canastos=canastos,
                            total_canastos=total_canastos,
