@@ -1077,7 +1077,7 @@ function calcularKPIs() {
     document.getElementById("kpi-rendimiento-canasto").innerText = `Rendimiento promedio por canasto: ${rendimientoPorCanasto.toFixed(2)} cajas`;
 
     // KPI: Costo total promedio por caja
-    const costoTotalPromCaja = totalCajasMes > 0 ? (totalFijos + totalVariables) / totalCajasMes : 0;
+    const costoTotalPromCaja = totalCajasMes > 0 ? (totalIngredientesGlobal + totalPackagingYcajas + totalFijos) / totalCajasMes : 0;
     document.getElementById("kpi-costo-promedio-caja").innerText = `Costo total promedio por caja: $${costoTotalPromCaja.toLocaleString('es-AR', { minimumFractionDigits: 2 })}`;
 
     // KPI: Sabor con menor y mayor ganancia total
@@ -1105,9 +1105,9 @@ function calcularKPIs() {
     const porcentaje = totalFacturar > 0 ? (topParticipacion.valor / totalFacturar) * 100 : 0;
     document.getElementById("kpi-participacion").innerText = `Mayor participación en facturación: ${topParticipacion.sabor} (${porcentaje.toFixed(1)}%)`;
 
-    // KPI: % de costos fijos sobre ingresos
-    const porcentajeFijosSobreIngresos = totalFacturar > 0 ? (totalFijos / totalFacturar) * 100 : 0;
-    document.getElementById("kpi-costos-fijos-ingresos").innerText = `Costos fijos sobre ingresos: ${porcentajeFijosSobreIngresos.toFixed(1)}%`;
+    // KPI: % de costos fijos sobre ingresos + CF
+    const porcentajeFijosSobreIngresos = totalFacturar > 0 ? ((totalFijos / (totalFacturar + totalFijos)) * 100) : 0;
+    document.getElementById("kpi-costos-fijos-ingresos").innerText = `Costos fijos sobre ingresos + CF: ${porcentajeFijosSobreIngresos.toFixed(1)}%`;
 
     // Rentabilidad baja advertencia
     const saboresRentabilidadBaja = sabores.filter(sabor => {
