@@ -224,7 +224,7 @@
     document.addEventListener('DOMContentLoaded', () => {
       async function obtenerVerdurasDesdeWeb() {
         try {
-          const response = await fetch('https://preciosdelcentral.com/buenosaires');
+          const response = await fetch('/proxy_mercado_central');
           const text = await response.text();
 
           const parser = new DOMParser();
