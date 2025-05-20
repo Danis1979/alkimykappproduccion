@@ -109,7 +109,10 @@ def to_datetime_filter(value, format='%Y-%m-%d'):
 def formato_argentino(value):
     try:
         from babel.numbers import format_decimal
-        return format_decimal(float(value), locale='es_AR')
+        value = float(value)
+        if value.is_integer():
+            value = int(value)
+        return format_decimal(value, locale='es_AR')
     except:
         return value
 
@@ -1328,6 +1331,8 @@ def dashboard_rentabilidad():
         detalles_por_sabor=detalles_por_sabor,
         total_packaging_por_sabor=total_packaging_por_sabor,
         costos_fijos=costos_fijos,
+        precios_ingredientes=precios_ingredientes,
+        canastos=canastos,
         index=True
     )
 
