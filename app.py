@@ -1205,6 +1205,10 @@ def guardar_precios_ingredientes():
 @app.route('/dashboard_rentabilidad')
 def dashboard_rentabilidad():
     from flask import jsonify
+    # Definir slugify si no está visible
+    def slugify(nombre):
+        return nombre.strip().lower().replace(' ', '_').replace('á', 'a').replace('é', 'e').replace('í', 'i').replace('ó', 'o').replace('ú', 'u').replace('ñ', 'n')
+
     canastos = session.get('canastos', {})
     detalles_por_sabor = {}
 
@@ -1282,14 +1286,16 @@ def dashboard_rentabilidad():
                 temp['Chimichurri'] = total_relleno / 1000 * 5
                 temp['Sal'] = temp.get('Sal', 0) + total_relleno / 1000 * 5
         detalles_por_sabor[sabor] = temp
-        # Calcular el costo total por sabor
+    # Calcular el costo total por sabor usando slugify en la clave
+    for sabor in detalles_por_sabor:
         costo_total_sabor = 0
         for ingr, cant in detalles_por_sabor[sabor].items():
-            precio_unitario = precios_ingredientes.get(ingr.lower(), 0)
+            clave_limpia = slugify(ingr)
+            precio_unitario = precios_ingredientes.get(clave_limpia, 0)
             # Para cantidades >= 1000, se asume kg, si no gramos, pero el precio es por kg
             costo_total_sabor += (cant / 1000) * precio_unitario if cant >= 0 else 0
         detalles_por_sabor[sabor]['Costo Variable Total'] = costo_total_sabor
-        print(f"Receta para {sabor}: {temp}")
+        print(f"Receta para {sabor}: {detalles_por_sabor[sabor]}")
 
     # Agregar pan rallado (10 g por unidad)
     for sabor, cantidad in canastos.items():
