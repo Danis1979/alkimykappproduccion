@@ -271,7 +271,7 @@ document.addEventListener('DOMContentLoaded', () => {
             // Normalizar claves de ingredientes para mayor robustez
             let ingredientesCostosRaw = {};
             Object.entries(data.precios_ingredientes || {}).forEach(([key, value]) => {
-                const claveNormalizada = key.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\s+/g, '_');
+                const claveNormalizada = key.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/ñ/g, "n").replace(/\s+/g, '_');
                 ingredientesCostosRaw[claveNormalizada] = limpiarYParsear(value);
             });
             console.log("🧪 Ingredientes desde /resumen_datos:", ingredientesCostosRaw);
@@ -290,7 +290,7 @@ document.addEventListener('DOMContentLoaded', () => {
             console.log("🧪 Precios por sabor desde /resumen_datos:", preciosVentaLimpios);
             let ingredientesCostos = {};
             Object.entries(ingredientesCostosRaw).forEach(([k, v]) => {
-                const claveNormalizada = k.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\s+/g, '_');
+                const claveNormalizada = k.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/ñ/g, "n").replace(/\s+/g, '_');
                 ingredientesCostos[claveNormalizada] = limpiarYParsear(v);
             });
             console.log("🧪 Ingredientes parseados:", ingredientesCostos);
@@ -300,7 +300,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 const receta = recetas[sabor] || {};
                 let total = 0;
                 Object.entries(receta).forEach(([ingrediente, cantidad]) => {
-                    const claveNormalizada = ingrediente.toLowerCase().replace(/\s+/g, '_');
+                    const claveNormalizada = ingrediente.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/ñ/g, "n").replace(/\s+/g, '_');
                     if (!ingredientesCostos.hasOwnProperty(claveNormalizada)) {
                         console.warn(`Ingrediente sin precio: ${ingrediente} → Clave usada: ${claveNormalizada}`);
                     }
@@ -331,10 +331,10 @@ document.addEventListener('DOMContentLoaded', () => {
                             const receta = recetas[sabor] || {};
                             let totalIngredientes = 0;
                             Object.entries(receta).forEach(([ingrediente, cantIng]) => {
-                                const clave = ingrediente.toLowerCase().replace(/\s+/g, '_');
+                                const clave = ingrediente.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/ñ/g, "n").replace(/\s+/g, '_');
                                 const precio = limpiarYParsear(ingredientesCostos[clave]);
-                            let baseEnKg = ['soja', 'harina'];
-                            const cantidadKg = baseEnKg.includes(clave) ? cantIng : cantIng / 1000;
+                                let baseEnKg = ['soja', 'harina'];
+                                const cantidadKg = baseEnKg.includes(clave) ? cantIng : cantIng / 1000;
                                 totalIngredientes += cantidadKg * precio;
                             });
                             return `
@@ -363,7 +363,7 @@ document.addEventListener('DOMContentLoaded', () => {
             let totalIngredientesGlobal = 0;
             Object.entries(recetas).forEach(([sabor, receta]) => {
                 Object.entries(receta).forEach(([ing, cantidad]) => {
-                    const clave = ing.toLowerCase().replace(/\s+/g, '_');
+                    const clave = ing.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/ñ/g, "n").replace(/\s+/g, '_');
                     const precio = limpiarYParsear(ingredientesCostos[clave]);
                     let baseEnKg = ['soja', 'harina'];
                     const cantidadKg = baseEnKg.includes(clave) ? cantidad : cantidad / 1000;
@@ -575,8 +575,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     </thead>
                     <tbody>
                         ${Object.entries(receta).map(([ing, cantidad]) => {
-                            const clave = ing.toLowerCase().replace(/\s+/g, '_');
-                    const precio = limpiarYParsear(ingredientesCostos[clave]);
+                            const clave = ing.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/ñ/g, "n").replace(/\s+/g, '_');
+                            const precio = limpiarYParsear(ingredientesCostos[clave]);
                             let baseEnKg = ['soja', 'harina'];
                             let cantidadKg = baseEnKg.includes(clave) ? cantidad : cantidad / 1000;
                             const costoTotal = cantidadKg * precio;
@@ -626,8 +626,8 @@ document.addEventListener('DOMContentLoaded', () => {
             // Desglose real por ingrediente
             Object.entries(recetas).forEach(([sabor, receta]) => {
                 Object.entries(receta).forEach(([ing, cantidad]) => {
-                    const clave = ing.toLowerCase().replace(/\s+/g, '_');
-                            const precio = limpiarYParsear(ingredientesCostos[clave]);
+                    const clave = ing.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/ñ/g, "n").replace(/\s+/g, '_');
+                    const precio = limpiarYParsear(ingredientesCostos[clave]);
                     let baseEnKg = ['soja', 'harina'];
                     const cantidadKg = baseEnKg.includes(clave) ? cantidad : cantidad / 1000;
                     const costo = cantidadKg * precio;
@@ -702,7 +702,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 const cantidades = [];
                 let sumaIngredientes = 0;
                 Object.entries(receta).forEach(([ing, cantidad]) => {
-                    const clave = ing.toLowerCase().replace(/\s+/g, '_');
+                    const clave = ing.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/ñ/g, "n").replace(/\s+/g, '_');
                     const precio = limpiarYParsear(ingredientesCostos[clave]);
                     const baseEnKg = ['soja', 'harina'];
                     const cantidadKg = baseEnKg.includes(clave) ? cantidad : cantidad / 1000;
@@ -922,7 +922,7 @@ function calcularKPIs() {
             let ingredientesCostosRaw = window.ingredientesCostosRaw || {};
             let ingredientesCostos = {};
             Object.entries(ingredientesCostosRaw).forEach(([k, v]) => {
-                const claveNormalizada = k.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\s+/g, '_');
+                const claveNormalizada = k.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/ñ/g, "n").replace(/\s+/g, '_');
                 ingredientesCostos[claveNormalizada] = limpiarYParsear(v);
             });
     const cajasPorSabor = window.cajasPorSabor || {};
@@ -933,7 +933,7 @@ function calcularKPIs() {
     // Ingrediente más costoso
     const topIngredientes = Object.entries(recetas).flatMap(([sabor, receta]) => {
         return Object.entries(receta).map(([ing, cant]) => {
-            const clave = ing.toLowerCase().replace(/\s+/g, '_');
+            const clave = ing.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/ñ/g, "n").replace(/\s+/g, '_');
             const precio = limpiarYParsear(ingredientesCostos[clave]);
             let cantidadKg;
             if (clave === 'pan_rallado') {
@@ -968,7 +968,7 @@ function calcularKPIs() {
     let totalIngredientesGlobal = 0;
     Object.entries(recetas).forEach(([sabor, receta]) => {
         Object.entries(receta).forEach(([ing, cantidad]) => {
-            const clave = ing.toLowerCase().replace(/\s+/g, '_');
+            const clave = ing.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/ñ/g, "n").replace(/\s+/g, '_');
             const precio = limpiarYParsear(ingredientesCostos[clave]);
             let base = ['soja', 'harina'];
             const cantidadKg = base.includes(clave) ? cantidad : cantidad / 1000;
