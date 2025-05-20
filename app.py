@@ -1707,12 +1707,14 @@ def planificacion():
     template_path = os.path.join(app.template_folder or 'templates', 'base.html')
     if not os.path.exists(template_path):
         return "Archivo base.html no encontrado. Verifica que exista en la carpeta templates.", 500
+    compras = {}
     return render_template('planificacion.html',
                            canastos=canastos,
                            total_canastos=total_canastos,
                            total_cajas=total_cajas,
                            total_ingredientes=total_ingredientes_fmt,
-                           total_ingredientes_fmt=total_ingredientes_fmt)
+                           total_ingredientes_fmt=total_ingredientes_fmt,
+                           compras=compras)
 
 if __name__ == '__main__':
     threading.Timer(1.25, abrir_navegador).start()
