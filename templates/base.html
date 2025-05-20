@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Alkimyk Food{% endblock %}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    {% block head_extra %}{% endblock %}
+</head>
+<body>
+    <header>
+        <h1 style="text-align:center">Alkimyk Food</h1>
+    </header>
+
+    <main>
+        {% block content %}{% endblock %}
+    </main>
+
+    <footer style="text-align:center; margin-top:40px; font-size:12px; color:gray">
+        &copy; 2024 Alkimyk Food. Todos los derechos reservados.
+    </footer>
+
+    {% block scripts %}{% endblock %}
+</body>
+</html>
