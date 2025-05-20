@@ -456,7 +456,7 @@
             {% set unidades_rellenas = (
                 (canastos.aceituna + canastos.caprese + canastos.queso_azul + canastos.cebolla +
                  canastos.espinaca + canastos.calabaza + canastos.brocoli) * 18) %}
-            {% set total_cajas = ((unidades_originales + unidades_rellenas) // 60) %}
+            {% set total_cajas = ((unidades_rellenas // 60) + (unidades_originales // (4 * 27))) %}
             <h2>Total de ingredientes para comprar y elaborar {{ canastos.values() | sum }} canastos ({{ total_cajas }} Cajas)</h2>
             <table>
                 <tr><th>Ingrediente</th><th>Cantidad</th><th>Unidad</th></tr>
