@@ -219,5 +219,44 @@
     <div class="footer">
         © 2025 Alkimyk Food. Todos los derechos reservados.
     </div>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const mes = new Date().getMonth();
+        const verdurasEstacionales = {
+            0: ['Tomate', 'Cebolla'],
+            1: ['Tomate', 'Espinaca'],
+            2: ['Espinaca', 'Morrón'],
+            3: ['Calabaza', 'Brocoli'],
+            4: ['Calabaza', 'Brocoli', 'Cebolla'],
+            5: ['Brocoli', 'Cebolla', 'Espinaca'],
+            6: ['Calabaza', 'Espinaca', 'Cebolla'],
+            7: ['Calabaza', 'Espinaca'],
+            8: ['Espinaca', 'Morrón'],
+            9: ['Tomate', 'Albahaca'],
+            10: ['Tomate', 'Albahaca', 'Cebolla'],
+            11: ['Tomate', 'Morrón']
+        };
+        const verduras = verdurasEstacionales[mes] || [];
+
+        if (verduras.length > 0) {
+            const popup = document.createElement('div');
+            popup.style.position = 'fixed';
+            popup.style.top = '20px';
+            popup.style.right = '20px';
+            popup.style.backgroundColor = '#fff';
+            popup.style.border = '2px solid #1e1e1e';
+            popup.style.borderRadius = '10px';
+            popup.style.padding = '20px';
+            popup.style.boxShadow = '0 4px 10px rgba(0,0,0,0.2)';
+            popup.style.zIndex = '1000';
+            popup.innerHTML = `
+                <strong>🌱 Verduras de estación:</strong>
+                <ul style="margin-top: 10px;">${verduras.map(v => `<li>${v}</li>`).join('')}</ul>
+            `;
+            document.body.appendChild(popup);
+            setTimeout(() => popup.remove(), 10000);
+        }
+    });
+  </script>
 </body>
 </html>
