@@ -397,6 +397,8 @@ function guardarPrecios() {
     console.log("📦 Ingredientes:", precios.ingredientes);
     console.log("🏭 Costos Fijos:", precios.costos_fijos);
     console.log("💵 Precios de Venta:", precios.precios_venta);
+    // Log específico para verificar costos fijos antes de enviar
+    console.log("📤 Costos fijos a enviar:", precios.costos_fijos);
 
     fetch('/guardar_todos_los_costos', {
         method: 'POST',
@@ -468,6 +470,8 @@ function confirmarYVolver() {
         console.log("📦 Ingredientes:", precios.ingredientes);
         console.log("🏭 Costos Fijos:", precios.costos_fijos);
         console.log("💵 Precios de Venta:", precios.precios_venta);
+        // Log específico para verificar costos fijos antes de enviar al volver
+        console.log("📤 Costos fijos al volver:", precios.costos_fijos);
 
         fetch('/guardar_todos_los_costos', {
             method: 'POST',
