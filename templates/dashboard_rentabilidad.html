@@ -1108,12 +1108,6 @@ function calcularKPIs() {
     document.getElementById("kpi-participacion").innerText = `Mayor participación en facturación: ${topParticipacion.sabor} (${porcentaje.toFixed(1)}%)`;
 
     // KPI: % de costos fijos sobre ingresos + CF
-    // Asegurarse que totalFacturar esté definido y actualizado antes de usarse
-    let totalFacturar = 0;
-    Object.entries(cajasPorSabor).forEach(([sabor, cantidad]) => {
-        const precio = precioPorSabor[sabor] || 0;
-        totalFacturar += cantidad * precio;
-    });
     const porcentajeFijosSobreIngresos = (totalFacturar + totalFijos) > 0 ? ((totalFijos / (totalFacturar + totalFijos)) * 100) : 0;
     document.getElementById("kpi-costos-fijos-ingresos").innerText = `Costos fijos sobre ingresos + CF: ${porcentajeFijosSobreIngresos.toFixed(1)}%`;
 
