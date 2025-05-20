@@ -1186,8 +1186,9 @@ def guardar_precios_ingredientes():
     PrecioIngrediente.query.filter_by(usuario_email=usuario_email).delete()
 
     for ingrediente, precio in data.items():
+        ingrediente_limpio = slugify(ingrediente)
         precio_unitario = normalizar_importe(precio)
-        nuevo_precio = PrecioIngrediente(usuario_email=usuario_email, ingrediente=ingrediente, precio_unitario=precio_unitario)
+        nuevo_precio = PrecioIngrediente(usuario_email=usuario_email, ingrediente=ingrediente_limpio, precio_unitario=precio_unitario)
         db.session.add(nuevo_precio)
 
     db.session.commit()
