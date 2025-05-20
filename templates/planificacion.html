@@ -1,0 +1,43 @@
+{% extends 'base.html' %}
+{% block title %}Planificación de Producción{% endblock %}
+{% block content %}
+    <a href="/canastos" style="display:block; margin-bottom:20px; text-decoration:none; color:#2196F3; font-weight:bold">⬅️ Volver a Canastos</a>
+    <h1>📦 Planificación de Producción</h1>
+
+    <div class="resumen">
+        <p><strong>Total de Canastos Planificados:</strong> {{ total_canastos | round(2) }}</p>
+        <p><strong>Total de Cajas:</strong> {{ total_cajas | round(2) }}</p>
+    </div>
+
+    <h2>Ingredientes Necesarios</h2>
+    <table>
+        <tr><th>Ingrediente</th><th>Cantidad Necesaria</th></tr>
+        {% for ingr, datos in total_ingredientes_fmt.items() %}
+        <tr>
+            <td>{{ ingr }}</td>
+            <td>{{ datos.cantidad }} {{ datos.unidad }}</td>
+        </tr>
+        {% endfor %}
+    </table>
+
+    <h2>Compras Realizadas</h2>
+    <form method="post" action="/guardar_compras">
+        <table>
+            <tr><th>Ingrediente</th><th>Necesario</th><th>Comprado</th><th>Falta</th></tr>
+            {% for ingr, datos in total_ingredientes_fmt.items() %}
+            <tr>
+                <td>{{ ingr }}</td>
+                <td>{{ datos.cantidad }} {{ datos.unidad }}</td>
+                <td><input type="number" step="any" min="0" name="comprado_{{ ingr }}" value="{{ compras.get(ingr, 0) }}"></td>
+                <td>{{ (datos.cantidad - compras.get(ingr, 0)) | round(2) }} {{ datos.unidad }}</td>
+            </tr>
+            {% endfor %}
+        </table>
+        <div class="acciones">
+            <button type="submit">💾 Guardar Compras</button>
+            <button type="submit" formaction="/recalcular_faltantes">🔄 Recalcular Faltantes</button>
+            <button type="submit" formaction="/exportar_planificacion">⬇️ Exportar</button>
+            <button type="submit" formaction="/resetear_planificacion" onclick="return confirm('¿Estás seguro que querés replanificar? Se borrará todo.');">🧹 Replanificar</button>
+        </div>
+    </form>
+{% endblock %}

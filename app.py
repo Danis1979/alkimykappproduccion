@@ -1632,6 +1632,65 @@ def guardar_todos_los_costos():
 
 
 
+
+# Ruta de planificación
+@app.route('/planificacion')
+def planificacion():
+    if 'usuario' not in session:
+        flash("Debe iniciar sesión para acceder a la planificación", "warning")
+        return redirect(url_for('login_admin'))
+
+    canastos = session.get('canastos', {})
+    total_canastos = sum(canastos.values())
+
+    # Calcular total de cajas
+    total_cajas = 0
+    for sabor, cantidad in canastos.items():
+        unidades_por_canasto = 32 if sabor == 'original' else UNIDADES_POR_CANASTO
+        total_unidades = cantidad * unidades_por_canasto
+        total_cajas += round(total_unidades / (108 if sabor == 'original' else 60))
+
+    # Calcular total ingredientes
+    total_ingredientes = {}
+    for sabor, cantidad in canastos.items():
+        unidades = cantidad * (32 if sabor == 'original' else UNIDADES_POR_CANASTO)
+        if sabor == 'aceituna':
+            total_ingredientes['Muzzarella'] = total_ingredientes.get('Muzzarella', 0) + unidades * 15
+            total_ingredientes['Aceitunas'] = total_ingredientes.get('Aceitunas', 0) + unidades * 20
+        elif sabor == 'caprese':
+            total_ingredientes['Muzzarella'] = total_ingredientes.get('Muzzarella', 0) + unidades * 15
+            total_ingredientes['Tomate'] = total_ingredientes.get('Tomate', 0) + unidades * 25
+            total_ingredientes['Albahaca'] = total_ingredientes.get('Albahaca', 0) + unidades * 2
+        elif sabor == 'queso_azul':
+            mezcla_total = unidades * 30
+            porc_queso = 2.3 / (18 + 2.3)
+            total_ingredientes['Muzzarella'] = total_ingredientes.get('Muzzarella', 0) + mezcla_total * (1 - porc_queso)
+            total_ingredientes['Queso Azul'] = total_ingredientes.get('Queso Azul', 0) + mezcla_total * porc_queso
+        elif sabor == 'cebolla':
+            cebolla_cruda = (unidades * 40) / 0.8
+            total_ingredientes['Cebolla'] = total_ingredientes.get('Cebolla', 0) + cebolla_cruda
+        elif sabor == 'espinaca':
+            total_relleno = unidades * 40 / 0.9
+            total_ingredientes['Espinaca'] = total_ingredientes.get('Espinaca', 0) + total_relleno * 0.5 / 0.9
+            total_ingredientes['Cebolla'] = total_ingredientes.get('Cebolla', 0) + total_relleno * 0.25 / 0.8
+            total_ingredientes['Morrón'] = total_ingredientes.get('Morrón', 0) + total_relleno * 0.25 / 0.8
+        elif sabor == 'calabaza':
+            total_ingredientes['Calabaza'] = total_ingredientes.get('Calabaza', 0) + unidades * 40 / 0.8
+        elif sabor == 'brocoli':
+            total_ingredientes['Brócoli'] = total_ingredientes.get('Brócoli', 0) + unidades * 0.6
+            total_ingredientes['Cebolla'] = total_ingredientes.get('Cebolla', 0) + unidades * 0.4 / 0.8
+        elif sabor == 'original':
+            total_ingredientes['Soja'] = total_ingredientes.get('Soja', 0) + 75 * cantidad / 85
+            total_ingredientes['Harina'] = total_ingredientes.get('Harina', 0) + 30 * cantidad / 85
+            total_ingredientes['Chimichurri'] = total_ingredientes.get('Chimichurri', 0) + 800 * cantidad / 85
+            total_ingredientes['Sal'] = total_ingredientes.get('Sal', 0) + 500 * cantidad / 85
+
+    return render_template('planificacion.html',
+                           canastos=canastos,
+                           total_canastos=total_canastos,
+                           total_cajas=total_cajas,
+                           total_ingredientes=total_ingredientes)
+
 if __name__ == '__main__':
     threading.Timer(1.25, abrir_navegador).start()
     app.run(debug=True)

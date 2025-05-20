@@ -500,6 +500,7 @@
 
                 <button class="btn-mac-style no-print" onclick="imprimirBloque('bloque-totalizado')">🖨️ Imprimir</button>
 
+                <a href="{{ url_for('planificacion') }}" class="btn-mac-style">📋 Planificación</a>
                 {% if session.get('rol') == 'admin' %}
                   <a href="{{ url_for('costos') }}" class="btn-mac-style">💲 Ver Costos</a>
                 {% endif %}
