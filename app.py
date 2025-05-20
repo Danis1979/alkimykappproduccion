@@ -1523,20 +1523,30 @@ def guardar_resumen_historico():
         return jsonify({'success': False, 'message': 'Usuario no autenticado'})
 
     data = request.get_json()
+    print("📥 Datos recibidos para histórico:", data)
     usuario_email = session['usuario']
     try:
+        # Controlar campos opcionales
+        total_canastos = data.get('total_canastos') or 0
+        total_cajas = data.get('total_cajas') or 0
+        total_facturar = data.get('total_facturar') or 0
+        total_con_iva = data.get('total_con_iva') or 0
+        ganancia_total = data.get('ganancia_total') or 0
+        rentabilidad = data.get('rentabilidad') or 0
         nuevo = ResumenHistorico(
             usuario_email=usuario_email,
-            total_canastos=data.get('total_canastos'),
-            total_cajas=data.get('total_cajas'),
-            total_facturar=data.get('total_facturar'),
-            total_con_iva=data.get('total_con_iva'),
-            ganancia_total=data.get('ganancia_total'),
-            rentabilidad=data.get('rentabilidad')
+            total_canastos=total_canastos,
+            total_cajas=total_cajas,
+            total_facturar=total_facturar,
+            total_con_iva=total_con_iva,
+            ganancia_total=ganancia_total,
+            rentabilidad=rentabilidad
         )
         db.session.add(nuevo)
         db.session.commit()
-        return jsonify({'success': True})
+        print("✅ Histórico guardado:", nuevo)
+        # Devolver fecha para confirmación
+        return jsonify({'success': True, 'fecha': nuevo.fecha.strftime('%Y-%m-%d')})
     except Exception as e:
         return jsonify({'success': False, 'message': str(e)})
 
