@@ -219,43 +219,40 @@
     <div class="footer">
         © 2025 Alkimyk Food. Todos los derechos reservados.
     </div>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
   <script>
     document.addEventListener('DOMContentLoaded', () => {
-        const mes = new Date().getMonth();
-        const verdurasEstacionales = {
-            0: ['Tomate', 'Cebolla'],
-            1: ['Tomate', 'Espinaca'],
-            2: ['Espinaca', 'Morrón'],
-            3: ['Calabaza', 'Brocoli'],
-            4: ['Calabaza', 'Brocoli', 'Cebolla'],
-            5: ['Brocoli', 'Cebolla', 'Espinaca'],
-            6: ['Calabaza', 'Espinaca', 'Cebolla'],
-            7: ['Calabaza', 'Espinaca'],
-            8: ['Espinaca', 'Morrón'],
-            9: ['Tomate', 'Albahaca'],
-            10: ['Tomate', 'Albahaca', 'Cebolla'],
-            11: ['Tomate', 'Morrón']
-        };
-        const verduras = verdurasEstacionales[mes] || [];
+      async function obtenerVerdurasDesdeWeb() {
+        try {
+          const response = await fetch('https://preciosdelcentral.com/buenosaires');
+          const text = await response.text();
 
-        if (verduras.length > 0) {
-            const popup = document.createElement('div');
-            popup.style.position = 'fixed';
-            popup.style.top = '20px';
-            popup.style.right = '20px';
-            popup.style.backgroundColor = '#fff';
-            popup.style.border = '2px solid #1e1e1e';
-            popup.style.borderRadius = '10px';
-            popup.style.padding = '20px';
-            popup.style.boxShadow = '0 4px 10px rgba(0,0,0,0.2)';
-            popup.style.zIndex = '1000';
-            popup.innerHTML = `
-                <strong>🌱 Verduras de estación:</strong>
-                <ul style="margin-top: 10px;">${verduras.map(v => `<li>${v}</li>`).join('')}</ul>
-            `;
-            document.body.appendChild(popup);
-            setTimeout(() => popup.remove(), 10000);
+          const parser = new DOMParser();
+          const doc = parser.parseFromString(text, 'text/html');
+
+          const masConsumidos = [...doc.querySelectorAll('.home-category .card')][0]?.innerText || '';
+          const masCayeron = [...doc.querySelectorAll('.home-category .card')][1]?.innerText || '';
+          const masAumentaron = [...doc.querySelectorAll('.home-category .card')][2]?.innerText || '';
+
+          Swal.fire({
+            title: '📊 Tendencias del Mercado Central',
+            html: `
+              <div style="text-align: left;">
+                <strong>🥬 Más consumidos:</strong><br>${masConsumidos.replace(/\n/g, '<br>')}<br><br>
+                <strong>📉 Bajaron de precio:</strong><br>${masCayeron.replace(/\n/g, '<br>')}<br><br>
+                <strong>📈 Aumentaron de precio:</strong><br>${masAumentaron.replace(/\n/g, '<br>')}
+              </div>
+            `,
+            icon: 'info',
+            confirmButtonText: 'Entendido',
+            width: 600
+          });
+        } catch (error) {
+          console.error('Error al obtener datos del Mercado Central:', error);
         }
+      }
+
+      obtenerVerdurasDesdeWeb();
     });
   </script>
 </body>
