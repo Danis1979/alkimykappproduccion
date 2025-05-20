@@ -358,7 +358,7 @@ function guardarPrecios() {
 
     // Guardar ingredientes
     document.querySelectorAll('input[id^="ingrediente_"]').forEach(input => {
-        const nombre = input.id.replace("ingrediente_", "").toLowerCase();
+        const nombre = input.id.replace("ingrediente_", "");
         precios.ingredientes[nombre] = limpiarValor(input.value.trim());
     });
 
@@ -433,7 +433,7 @@ function confirmarYVolver() {
         };
 
         document.querySelectorAll('input[id^="ingrediente_"]').forEach(input => {
-            const nombre = input.id.replace("ingrediente_", "").toLowerCase();
+            const nombre = input.id.replace("ingrediente_", "");
             precios.ingredientes[nombre] = limpiarValor(input.value.trim());
         });
 
