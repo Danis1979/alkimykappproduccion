@@ -1143,13 +1143,14 @@ def costos():
         costos_fijos_query = CostoFijo.query.filter_by(usuario_email=usuario_email).all()
         costos_fijos = {c.nombre: c.monto for c in costos_fijos_query}
 
-    # Obtener precios de ingredientes previos si existen
+    # Obtener precios de ingredientes previos si existen (claves normalizadas)
     precios_ingredientes = {}
     if 'usuario' in session:
         usuario_email = session['usuario']
         precios = PrecioIngrediente.query.filter_by(usuario_email=usuario_email).all()
         for p in precios:
-            precios_ingredientes[p.ingrediente] = p.precio_unitario
+            clave_limpia = slugify(p.ingrediente)
+            precios_ingredientes[clave_limpia] = p.precio_unitario
 
     # Obtener precios de venta por sabor desde la base si están disponibles
     precios_venta_por_sabor = {}
