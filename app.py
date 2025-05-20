@@ -1711,7 +1711,8 @@ def planificacion():
                            canastos=canastos,
                            total_canastos=total_canastos,
                            total_cajas=total_cajas,
-                           total_ingredientes=total_ingredientes_fmt)
+                           total_ingredientes=total_ingredientes_fmt,
+                           total_ingredientes_fmt=total_ingredientes_fmt)
 
 if __name__ == '__main__':
     threading.Timer(1.25, abrir_navegador).start()
