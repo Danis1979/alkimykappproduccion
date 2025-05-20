@@ -261,50 +261,8 @@
     </div>
 <script>
 document.addEventListener('DOMContentLoaded', function () {
-    // Formato visual: sólo aplicar formato en blur, no en focus
-    document.querySelectorAll('input.input-formulario').forEach(input => {
-        if (input.id) {
-            input.addEventListener('focus', () => {
-                // No formatear en focus, dejar el valor tal cual (evita multiplicación de ceros)
-            });
-            input.addEventListener('blur', () => {
-                let raw = input.value.trim().replace(/\./g, '').replace(',', '.');
-                let value = parseFloat(raw);
-                if (!isNaN(value)) {
-                    input.value = value.toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-                } else {
-                    input.value = '';
-                }
-            });
-        }
-    });
+    // Inputs: NO aplicar formateo visual ni validación de borde rojo en tiempo real ni en blur
 
-    // Validación en tiempo real: permite escribir libremente sin formatear en tiempo real
-    document.querySelectorAll('input.input-formulario').forEach(input => {
-        input.addEventListener('input', () => {
-            // Permitir que el usuario escriba libremente sin reformatear en tiempo real
-            let raw = input.value.trim().replace(/\./g, '').replace(',', '.');
-            if (!isNaN(parseFloat(raw))) {
-                input.style.border = ''; // sin borde rojo si es válido
-            } else {
-                input.style.border = '2px solid red';
-            }
-        });
-    });
-
-    // // Formateo en tiempo real para packaging y cajas (asegura formateo visual y guardado correcto)
-    // ['precio_packaging', 'precio_cajas'].forEach(id => {
-    //     const input = document.getElementById(id);
-    //     if (input) {
-    //         input.addEventListener('input', () => {
-    //             let raw = input.value.trim().replace(/\./g, '').replace(',', '.');
-    //             let parsed = parseFloat(raw);
-    //             if (!isNaN(parsed)) {
-    //                 input.value = parsed.toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-    //             }
-    //         });
-    //     }
-    // });
 
     // Actualización de costos totales para inputs de ingredientes y packaging/cajas
     const rows = document.querySelectorAll('table tbody tr');
@@ -318,7 +276,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
         precioInput.addEventListener('input', () => {
             if (!row || row.children.length < 3) return;
-            let raw = precioInput.value.trim().replace(/\./g, '').replace(',', '.');
+            let raw = precioInput.value.trim();
             const precio = parseFloat(raw);
             let cantidad = parseFloat(cantidadText);
             // --- Corrección específica para Soja y Harina ---
@@ -337,7 +295,7 @@ document.addEventListener('DOMContentLoaded', function () {
         });
 
         // Al cargar la página, actualizar el costo total si hay valor guardado
-        let raw = precioInput.value.trim().replace(/\./g, '').replace(',', '.');
+        let raw = precioInput.value.trim();
         const precio = parseFloat(raw);
         let cantidad = parseFloat(cantidadText);
         const nombreIngrediente = row.children[0].innerText.trim().toLowerCase();
@@ -381,7 +339,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
 function limpiarValor(valor) {
     if (!valor || typeof valor !== "string") return "0";
-    valor = valor.trim().replace(/\./g, '').replace(',', '.');
+    valor = valor.trim();
     const num = parseFloat(valor);
     return (!isNaN(num) && isFinite(num)) ? num.toString() : "0";
 }

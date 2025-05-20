@@ -1,12 +1,7 @@
 def normalizar_importe(valor):
     try:
         if isinstance(valor, str):
-            # Eliminar símbolo de $ y espacios
-            valor = valor.replace('$', '').strip()
-            # Eliminar puntos (separadores de miles)
-            valor = valor.replace('.', '')
-            # Reemplazar coma decimal por punto
-            valor = valor.replace(',', '.')
+            valor = valor.strip().replace('$', '')
             if valor == '':
                 return 0
         # Convertir a float y devolver sin redondear ni formatear con ceros
