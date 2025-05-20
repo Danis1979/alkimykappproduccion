@@ -11,11 +11,14 @@
 
     <h2>Ingredientes Necesarios</h2>
     <table>
-        <tr><th>Ingrediente</th><th>Cantidad Necesaria</th></tr>
+        <tr><th>Ingrediente</th><th>Cantidad Necesaria</th><th></th></tr>
         {% for ingr, datos in total_ingredientes_fmt.items() %}
         <tr>
             <td>{{ ingr }}</td>
             <td>{{ datos.cantidad }} {{ datos.unidad }}</td>
+            <td>
+                <button type="button" class="btn-comprar" style="background:#2196F3; color:white; border:none; padding:6px 14px; border-radius:4px; cursor:pointer;" onclick="abrirPopup('{{ ingr }}', '{{ datos.cantidad }}', '{{ datos.unidad }}')">🛒 Comprar</button>
+            </td>
         </tr>
         {% endfor %}
     </table>
@@ -40,4 +43,36 @@
             <button type="submit" formaction="/resetear_planificacion" onclick="return confirm('¿Estás seguro que querés replanificar? Se borrará todo.');">🧹 Replanificar</button>
         </div>
     </form>
+    <div id="popup-compra" style="display:none; position:fixed; top:20%; left:50%; transform:translateX(-50%); background:#fff; border:2px solid #2196F3; padding:20px; z-index:1000; border-radius:8px; box-shadow:0 4px 16px rgba(0,0,0,0.15); min-width:320px;">
+        <h3 style="margin-top:0;">🛒 Registrar Compra</h3>
+        <p><strong>Ingrediente:</strong> <span id="popup-ingrediente"></span></p>
+        <p><strong>Cantidad:</strong> <span id="popup-cantidad"></span> <span id="popup-unidad"></span></p>
+        <form method="post" action="/registrar_compra_flujo">
+            <input type="hidden" name="ingrediente" id="input-ingrediente">
+            <input type="hidden" name="cantidad" id="input-cantidad">
+            <input type="hidden" name="unidad" id="input-unidad">
+            <label>Proveedor: <input type="text" name="proveedor" required style="margin-bottom:6px;"></label><br>
+            <label>Forma de pago:
+                <select name="forma_pago" style="margin-bottom:6px;">
+                    <option value="Efectivo">Efectivo</option>
+                    <option value="Transferencia">Transferencia</option>
+                    <option value="Cheque">Cheque</option>
+                </select>
+            </label><br>
+            <label>Fecha de pago: <input type="date" name="fecha_pago" required style="margin-bottom:12px;"></label><br>
+            <button type="submit" style="background:#2196F3; color:white; border:none; padding:6px 14px; border-radius:4px; cursor:pointer; margin-right:8px;">💾 Confirmar</button>
+            <button type="button" style="background:#f44336; color:white; border:none; padding:6px 14px; border-radius:4px; cursor:pointer;" onclick="document.getElementById('popup-compra').style.display='none'">❌ Cancelar</button>
+        </form>
+    </div>
+    <script>
+    function abrirPopup(ingrediente, cantidad, unidad) {
+        document.getElementById('popup-ingrediente').textContent = ingrediente;
+        document.getElementById('popup-cantidad').textContent = cantidad;
+        document.getElementById('popup-unidad').textContent = unidad;
+        document.getElementById('input-ingrediente').value = ingrediente;
+        document.getElementById('input-cantidad').value = cantidad;
+        document.getElementById('input-unidad').value = unidad;
+        document.getElementById('popup-compra').style.display = 'block';
+    }
+    </script>
 {% endblock %}
