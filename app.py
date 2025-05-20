@@ -104,6 +104,7 @@ def to_datetime_filter(value, format='%Y-%m-%d'):
     from datetime import datetime
     return datetime.strptime(value, format)
 
+
 # Filtro de plantilla para formatear números con formato argentino (1.234,56)
 @app.template_filter('formato_argentino')
 def formato_argentino(value):
@@ -115,6 +116,11 @@ def formato_argentino(value):
         return format_decimal(value, locale='es_AR')
     except:
         return value
+
+# Filtro de plantilla para slugify en Jinja templates
+@app.template_filter('slugify')
+def slugify_filter(nombre):
+    return nombre.strip().lower().replace(' ', '_').replace('á', 'a').replace('é', 'e').replace('í', 'i').replace('ó', 'o').replace('ú', 'u').replace('ñ', 'n')
 
 UNIDADES_POR_CANASTO = 18
 MASA_BASE_POR_100_CANASTOS = {
