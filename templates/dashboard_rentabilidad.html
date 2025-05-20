@@ -295,6 +295,7 @@ document.addEventListener('DOMContentLoaded', () => {
             let preciosVentaLimpios = {};
             Object.entries(data.precios_venta || {}).forEach(([key, value]) => {
                 preciosVentaLimpios[key] = limpiarYParsear(value);
+                localStorage.setItem(`precio_${key}`, preciosVentaLimpios[key]);  // Fuerza actualización de localStorage
             });
             console.log("🧪 Precios por sabor desde /resumen_datos:", preciosVentaLimpios);
             let ingredientesCostos = {};
