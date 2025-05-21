@@ -97,14 +97,10 @@ class Proveedor(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     nombre = db.Column(db.String(100), nullable=False)
 
-#
-# MODELO COMPRA
-
-# Modelo para registrar compras de ingredientes
+# Modelo Compra para registrar compras de ingredientes
 class Compra(db.Model):
     __tablename__ = 'compras'
     id = db.Column(db.Integer, primary_key=True)
-    usuario_email = db.Column(db.String(100), nullable=False)
     ingrediente = db.Column(db.String(100), nullable=False)
     cantidad = db.Column(db.Float, nullable=False)
     proveedor = db.Column(db.String(100), nullable=False)
@@ -112,40 +108,6 @@ class Compra(db.Model):
     fecha_pago = db.Column(db.Date, nullable=False)
 
 # Filtro de plantilla para formatear fechas en los templates Jinja2
-
-# Ruta para guardar compras de ingredientes
-@app.route('/guardar_compra', methods=['POST'])
-def guardar_compra():
-    if 'usuario' not in session:
-        return jsonify({'success': False, 'message': 'No autenticado'})
-
-    ingrediente = request.form.get('ingrediente')
-    cantidad = request.form.get('cantidad')
-    proveedor = request.form.get('proveedor')
-    forma_pago = request.form.get('forma_pago')
-    fecha_pago = request.form.get('fecha_pago')
-
-    if not all([ingrediente, cantidad, proveedor, forma_pago, fecha_pago]):
-        return jsonify({'success': False, 'message': 'Todos los campos son obligatorios'})
-
-    try:
-        cantidad_float = float(cantidad)
-        if cantidad_float <= 0:
-            raise ValueError
-    except:
-        return jsonify({'success': False, 'message': 'La cantidad debe ser válida'})
-
-    nueva = Compra(
-        usuario_email=session['usuario'],
-        ingrediente=ingrediente,
-        cantidad=cantidad_float,
-        proveedor=proveedor,
-        forma_pago=forma_pago,
-        fecha_pago=datetime.strptime(fecha_pago, '%Y-%m-%d')
-    )
-    db.session.add(nueva)
-    db.session.commit()
-    return jsonify({'success': True, 'message': 'Compra ingresada con éxito'})
 @app.template_filter('datetimeformat')
 def datetimeformat(value, format='%A'):
     from datetime import datetime
@@ -1795,17 +1757,30 @@ def planificacion():
             else:
                 total_ingredientes_fmt[ingr] = {'cantidad': round(cant, 2), 'unidad': 'g'}
 
-    # --- AGREGAR BLOQUE PARA CARGAR Y APLICAR COMPRAS ---
-    compras = {}
-    compras_bd = Compra.query.filter_by(usuario_email=session['usuario']).all()
-    for compra in compras_bd:
-        compras[compra.ingrediente] = compras.get(compra.ingrediente, 0) + compra.cantidad
+    # Añadir valores de compra desde base (si existen)
+    from sqlalchemy import func
+
+    class Compra(db.Model):
+        __tablename__ = 'compras'
+        id = db.Column(db.Integer, primary_key=True)
+        ingrediente = db.Column(db.String(100), nullable=False)
+        cantidad = db.Column(db.Float, nullable=False)
+        proveedor = db.Column(db.String(100), nullable=False)
+        forma_pago = db.Column(db.String(50), nullable=False)
+        fecha_pago = db.Column(db.Date, nullable=False)
+
+    compras_agrupadas = db.session.query(
+        Compra.ingrediente,
+        func.sum(Compra.cantidad).label('total_comprado')
+    ).group_by(Compra.ingrediente).all()
+
+    map_compras = {c.ingrediente: c.total_comprado for c in compras_agrupadas}
 
     for ingr, data in total_ingredientes_fmt.items():
-        comprada = compras.get(ingr, 0)
-        data['comprada'] = round(comprada, 2)
-        data['faltante'] = round(max(0, data['cantidad'] - comprada), 2)
-    # --- FIN BLOQUE COMPRAS ---
+        comprado = map_compras.get(ingr, 0)
+        faltante = max(0, data['cantidad'] - comprado)
+        data['comprada'] = round(comprado, 2)
+        data['faltante'] = round(faltante, 2)
 
     # Asegura que la tabla 'proveedores' exista antes de la consulta
     db.create_all()  # Asegura que la tabla 'proveedores' exista antes de la consulta
@@ -1830,6 +1805,7 @@ def planificacion():
             'canastos': cantidad,
             'cajas': cajas
         }
+    compras = {}
     return render_template('planificacion.html',
                            canastos=canastos,
                            total_canastos=total_canastos,
@@ -1839,6 +1815,39 @@ def planificacion():
                            compras=compras,
                            proveedores=proveedores,
                            planificacion=planificacion)
+
+
+
+# Nueva ruta para guardar compra
+@app.route('/guardar_compra', methods=['POST'])
+def guardar_compra():
+    if 'usuario' not in session:
+        return jsonify({'success': False, 'message': 'Usuario no autenticado'})
+
+    ingrediente = request.form.get('ingrediente')
+    cantidad = request.form.get('cantidad')
+    proveedor = request.form.get('proveedor')
+    forma_pago = request.form.get('forma_pago')
+    fecha_pago = request.form.get('fecha_pago')
+
+    if not all([ingrediente, cantidad, proveedor, forma_pago, fecha_pago]):
+        return jsonify({'success': False, 'message': 'Todos los campos son obligatorios.'})
+
+    try:
+        cantidad = float(cantidad)
+    except:
+        return jsonify({'success': False, 'message': 'La cantidad debe ser válida.'})
+
+    compra = Compra(
+        ingrediente=ingrediente,
+        cantidad=cantidad,
+        proveedor=proveedor,
+        forma_pago=forma_pago,
+        fecha_pago=datetime.strptime(fecha_pago, '%Y-%m-%d')
+    )
+    db.session.add(compra)
+    db.session.commit()
+    return jsonify({'success': True, 'message': 'Compra ingresada con éxito'})
 
 @app.route('/agregar_proveedor', methods=['POST'])
 def agregar_proveedor():
@@ -1861,4 +1870,4 @@ def agregar_proveedor():
         db.session.commit()
         return jsonify({'success': True, 'message': 'Proveedor guardado'})
     except Exception as e:
-        return jsonify({'success': False, 'message': f'Error inesperado: {str(e)}'})
+        return jsonify({'success': False, 'message': f'Error al guardar el proveedor: {str(e)}'})
