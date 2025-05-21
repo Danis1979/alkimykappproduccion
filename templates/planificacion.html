@@ -14,31 +14,11 @@
       <div class="popup-content">
         <span class="close" onclick="document.getElementById('popupProveedor').style.display='none'">&times;</span>
         <h3>Agregar nuevo proveedor</h3>
-        <form id="formProveedor">
+        <form id="formProveedor" method="POST" action="/agregar_proveedor">
           <input type="text" id="nuevoProveedor" name="nombre" placeholder="Nombre del proveedor" required>
           <button type="submit">Guardar</button>
         </form>
       </div>
     </div>
-    <script>
-      document.getElementById('formProveedor').addEventListener('submit', function(e) {
-        e.preventDefault();
-        const nombre = document.getElementById('nuevoProveedor').value;
-        fetch('/agregar_proveedor', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ nombre: nombre })
-        })
-        .then(res => res.json())
-        .then(data => {
-          alert(data.message || 'Proveedor guardado');
-          location.reload();
-        })
-        .catch(err => {
-          alert('Error al guardar proveedor');
-          console.error(err);
-        });
-      });
-    </script>
 </body>
 </html>
