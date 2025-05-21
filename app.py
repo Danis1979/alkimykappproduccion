@@ -1747,6 +1747,8 @@ def planificacion():
             else:
                 total_ingredientes_fmt[ingr] = {'cantidad': round(cant, 2), 'unidad': 'g'}
 
+    # Asegura que la tabla 'proveedores' exista antes de la consulta
+    db.create_all()  # Asegura que la tabla 'proveedores' exista antes de la consulta
     # Cargar proveedores existentes
     proveedores = [p.nombre for p in Proveedor.query.all()]
 
@@ -1775,6 +1777,7 @@ def agregar_proveedor():
         return jsonify({'success': False, 'message': 'Nombre vacío'})
 
     nombre = nombre.strip()
+    db.create_all()  # Asegura que la tabla 'proveedores' exista
     existente = Proveedor.query.filter_by(nombre=nombre).first()
     if not existente:
         nuevo = Proveedor(nombre=nombre)
