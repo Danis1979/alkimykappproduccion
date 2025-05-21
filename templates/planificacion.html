@@ -50,13 +50,17 @@
         <!-- Panel de planificación mensual -->
         <div class="panel">
             <div class="titulo-panel">Planificación Mensual</div>
-            {% for sabor, datos in planificacion.items() %}
-                <div class="linea-dato">
-                    <span><strong>{{ sabor | capitalize }}</strong></span>
-                    <span>Canastos: {{ datos['canastos'] }}</span>
-                    <span>Cajas: {{ datos['cajas'] }}</span>
-                </div>
-            {% endfor %}
+            {% if planificacion %}
+                {% for sabor, datos in planificacion.items() %}
+                    <div class="linea-dato">
+                        <span><strong>{{ sabor | capitalize }}</strong></span>
+                        <span>Canastos: {{ datos['canastos'] }}</span>
+                        <span>Cajas: {{ datos['cajas'] }}</span>
+                    </div>
+                {% endfor %}
+            {% else %}
+                <p>No hay datos de planificación disponibles.</p>
+            {% endif %}
         </div>
 
         <!-- Panel de compras -->
