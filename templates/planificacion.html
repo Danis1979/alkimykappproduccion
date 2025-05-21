@@ -136,8 +136,14 @@
         .then(response => response.json())
         .then(data => {
           if (data.success) {
-            Swal.fire('Compra ingresada con éxito', 'La compra fue registrada correctamente.', 'success').then(() => {
-              location.reload();
+            Swal.fire('✅ Compra ingresada con éxito', 'La compra fue registrada correctamente.', 'success').then(() => {
+              // Actualizar en pantalla la cantidad restante sin recargar
+              const restanteSpan = document.querySelector(`button[onclick*="${ingrediente}"]`).previousElementSibling;
+              const textoActual = restanteSpan.innerText;
+              const partes = textoActual.split(":");
+              const unidad = partes[1].trim().split(" ").slice(-1)[0];
+              const nuevaCantidad = parseFloat(partes[1]) - result.value.cantidad_comprar;
+              restanteSpan.innerText = `${ingrediente.charAt(0).toUpperCase() + ingrediente.slice(1)}: ${nuevaCantidad.toFixed(2)} ${unidad}`;
             });
           } else {
             Swal.fire('Error', data.message || 'Hubo un problema al guardar.', 'error');
