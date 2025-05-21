@@ -1792,4 +1792,11 @@ def agregar_proveedor():
 
     nombre = nombre.strip()
     db.create_all()  # Asegura que la tabla 'proveedores' exista
-    existente = Proveedor.query.<truncated__content/>
+    existente = Proveedor.query.filter_by(nombre=nombre).first()
+    if existente:
+    return jsonify({'success': False, 'message': 'El proveedor ya existe'})
+
+nuevo = Proveedor(nombre=nombre)
+db.session.add(nuevo)
+db.session.commit()
+return jsonify({'success': True, 'message': 'Proveedor guardado'})
