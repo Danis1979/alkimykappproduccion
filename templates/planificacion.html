@@ -32,23 +32,25 @@
     Swal.fire({
       title: '🛒 Comprar ' + ingrediente,
       html:
-        '<p><strong>Necesario:</strong> ' + cantidad + '</p>' +
-        '<input id="cantidad_comprar" class="swal2-input" placeholder="Cantidad a comprar">' +
-        '<select id="proveedor_existente" class="swal2-input">' +
-          '<option value="">Seleccionar proveedor</option>' +
-          '{% for proveedor in proveedores %}' +
-            '<option value="{{ proveedor }}">{{ proveedor }}</option>' +
-          '{% endfor %}' +
-        '</select>' +
-        '<button id="abrir_popup_nuevo_proveedor" class="swal2-confirm swal2-styled" style="margin: 5px auto 10px auto; background-color: #3085d6;">Agregar nuevo proveedor</button>' +
-        '<select id="forma_pago" class="swal2-input">' +
-          '<option value="">Forma de pago</option>' +
-          '<option value="Efectivo">Efectivo</option>' +
-          '<option value="Transferencia">Transferencia</option>' +
-          '<option value="Cheque">Cheque</option>' +
-        '</select>' +
-        '<label for="fecha_pago" style="display:block; margin-top:10px; font-weight:bold;">Fecha de pago</label>' +
-        '<input id="fecha_pago" type="date" class="swal2-input" style="margin-top:5px;">',
+        '<div style="display:flex; flex-direction:column; align-items:center;">' +
+          '<p style="font-size: 16px; font-weight: bold;"><strong>Necesario:</strong> ' + cantidad + '</p>' +
+          '<input id="cantidad_comprar" class="swal2-input" placeholder="Cantidad a comprar" style="width: 300px;">' +
+          '<select id="proveedor_existente" class="swal2-input" style="width: 300px;">' +
+            '<option value="">Seleccionar proveedor</option>' +
+            '{% for proveedor in proveedores %}' +
+              '<option value="{{ proveedor }}">{{ proveedor }}</option>' +
+            '{% endfor %}' +
+          '</select>' +
+          '<button id="abrir_popup_nuevo_proveedor" class="swal2-confirm swal2-styled" style="margin: 5px auto 10px auto; background-color: #3085d6;">Agregar nuevo proveedor</button>' +
+          '<select id="forma_pago" class="swal2-input" style="width: 300px;">' +
+            '<option value="">Forma de pago</option>' +
+            '<option value="Efectivo">Efectivo</option>' +
+            '<option value="Transferencia">Transferencia</option>' +
+            '<option value="Cheque">Cheque</option>' +
+          '</select>' +
+          '<label for="fecha_pago" style="margin-top:10px; font-weight:bold;">Fecha de pago</label>' +
+          '<input id="fecha_pago" type="date" class="swal2-input" style="width: 300px;">' +
+        '</div>',
       didOpen: () => {
         document.getElementById('abrir_popup_nuevo_proveedor').onclick = function () {
           Swal.fire({
@@ -72,8 +74,10 @@
               .then(data => {
                 if (data.success) {
                   Swal.fire('Proveedor agregado', 'Ya podés seleccionarlo.', 'success').then(() => location.reload());
+                  return true;
                 } else {
                   Swal.fire('Error', 'No se pudo agregar el proveedor.', 'error');
+                  return false;
                 }
               });
             }
