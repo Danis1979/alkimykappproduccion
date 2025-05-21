@@ -107,7 +107,11 @@
         document.getElementById('input-ingrediente').value = ingrediente;
         document.getElementById('input-cantidad').value = cantidad;
         document.getElementById('input-unidad').value = unidad;
-        document.getElementById('popup-compra').style.display = 'block';
+
+        // Asegurar que el popup esté visible
+        const popup = document.getElementById('popup-compra');
+        popup.style.display = 'block';
+        popup.scrollIntoView({ behavior: 'smooth' });
     }
 
     function mostrarNuevoProveedor() {
