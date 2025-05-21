@@ -92,6 +92,11 @@ class PrecioVentaSabor(db.Model):
     sabor = db.Column(db.String(100), nullable=False)
     precio = db.Column(db.Float, nullable=False)
 
+class Proveedor(db.Model):
+    __tablename__ = 'proveedores'
+    id = db.Column(db.Integer, primary_key=True)
+    nombre = db.Column(db.String(100), nullable=False)
+
 # Filtro de plantilla para formatear fechas en los templates Jinja2
 @app.template_filter('datetimeformat')
 def datetimeformat(value, format='%A'):
@@ -1743,11 +1748,6 @@ def planificacion():
                 total_ingredientes_fmt[ingr] = {'cantidad': round(cant, 2), 'unidad': 'g'}
 
     # Cargar proveedores existentes
-    class Proveedor(db.Model):
-        __tablename__ = 'proveedores'
-        id = db.Column(db.Integer, primary_key=True)
-        nombre = db.Column(db.String(100), nullable=False)
-
     proveedores = [p.nombre for p in Proveedor.query.all()]
 
     # Chequeo de existencia de base.html antes de renderizar la plantilla
@@ -1764,6 +1764,24 @@ def planificacion():
                            total_ingredientes_fmt=total_ingredientes_fmt,
                            compras=compras,
                            proveedores=proveedores)
+
+@app.route('/agregar_proveedor', methods=['POST'])
+def agregar_proveedor():
+    if 'usuario' not in session:
+        return jsonify({'success': False, 'message': 'No autenticado'})
+
+    nombre = request.form.get('nombre')
+    if not nombre:
+        return jsonify({'success': False, 'message': 'Nombre vacío'})
+
+    nombre = nombre.strip()
+    existente = Proveedor.query.filter_by(nombre=nombre).first()
+    if not existente:
+        nuevo = Proveedor(nombre=nombre)
+        db.session.add(nuevo)
+        db.session.commit()
+
+    return jsonify({'success': True, 'message': 'Proveedor guardado'})
 
 if __name__ == '__main__':
     threading.Timer(1.25, abrir_navegador).start()

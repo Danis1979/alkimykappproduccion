@@ -1,8 +1,44 @@
-with app.app_context():
-    db.session.execute(db.text("""
-        CREATE TABLE IF NOT EXISTS proveedores (
-            id SERIAL PRIMARY KEY,
-            nombre TEXT UNIQUE
-        )
-    """))
-    db.session.commit()
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Planificación</title>
+</head>
+<body>
+    <div id="main-content">
+        <button onclick="document.getElementById('popupProveedor').style.display='block'">+ Proveedor</button>
+        <!-- resto del contenido principal -->
+    </div>
+
+    <div id="popupProveedor" class="popup" style="display:none;">
+      <div class="popup-content">
+        <span class="close" onclick="document.getElementById('popupProveedor').style.display='none'">&times;</span>
+        <h3>Agregar nuevo proveedor</h3>
+        <form id="formProveedor">
+          <input type="text" id="nuevoProveedor" placeholder="Nombre del proveedor" required>
+          <button type="submit">Guardar</button>
+        </form>
+      </div>
+    </div>
+    <script>
+      document.getElementById('formProveedor').addEventListener('submit', function(e) {
+        e.preventDefault();
+        const nombre = document.getElementById('nuevoProveedor').value;
+        fetch('/agregar_proveedor', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ nombre: nombre })
+        })
+        .then(res => res.json())
+        .then(data => {
+          alert(data.message || 'Proveedor guardado');
+          location.reload();
+        })
+        .catch(err => {
+          alert('Error al guardar proveedor');
+          console.error(err);
+        });
+      });
+    </script>
+</body>
+</html>
