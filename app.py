@@ -1683,10 +1683,6 @@ def planificacion():
                     cantidad_final = round(cantidad_ingrediente * 1000, 2) if cantidad_ingrediente < 1 else round(cantidad_ingrediente, 2)
                 add(total_ingredientes, ingrediente, cantidad_final)
         else:
-            # Las siguientes líneas han sido eliminadas para evitar suma duplicada:
-            # add(total_ingredientes, 'Soja', MASA_BASE_POR_100_CANASTOS['soja_kg'] * cantidad / MASA_BASE_CANASTOS)
-            # add(total_ingredientes, 'Chimichurri', MASA_BASE_POR_100_CANASTOS['chimichurri_g'] * cantidad / MASA_BASE_CANASTOS)
-            # add(total_ingredientes, 'Sal', MASA_BASE_POR_100_CANASTOS['sal_g'] * cantidad / MASA_BASE_CANASTOS)
             if sabor == 'aceituna':
                 add(total_ingredientes, 'Muzzarella', unidades * 15)
                 add(total_ingredientes, 'Aceitunas', unidades * 20)
@@ -1746,6 +1742,14 @@ def planificacion():
             else:
                 total_ingredientes_fmt[ingr] = {'cantidad': round(cant, 2), 'unidad': 'g'}
 
+    # Cargar proveedores existentes
+    class Proveedor(db.Model):
+        __tablename__ = 'proveedores'
+        id = db.Column(db.Integer, primary_key=True)
+        nombre = db.Column(db.String(100), nullable=False)
+
+    proveedores = [p.nombre for p in Proveedor.query.all()]
+
     # Chequeo de existencia de base.html antes de renderizar la plantilla
     import os
     template_path = os.path.join(app.template_folder or 'templates', 'base.html')
@@ -1759,7 +1763,7 @@ def planificacion():
                            total_ingredientes=total_ingredientes_fmt,
                            total_ingredientes_fmt=total_ingredientes_fmt,
                            compras=compras,
-                           proveedores=[])
+                           proveedores=proveedores)
 
 if __name__ == '__main__':
     threading.Timer(1.25, abrir_navegador).start()
