@@ -1,3 +1,56 @@
+# Ruta para registrar compras de ingredientes y devolver cantidad faltante
+@app.route('/registrar_compra', methods=['POST'])
+def registrar_compra():
+    if 'usuario' not in session:
+        return jsonify({'success': False, 'message': 'No autenticado'})
+
+    ingrediente = request.form.get('ingrediente')
+    cantidad = request.form.get('cantidad')
+    proveedor = request.form.get('proveedor')
+    forma_pago = request.form.get('forma_pago')
+    fecha_pago = request.form.get('fecha_pago')
+
+    if not ingrediente or not cantidad or not proveedor or not forma_pago or not fecha_pago:
+        return jsonify({'success': False, 'message': 'Todos los campos son obligatorios'})
+
+    try:
+        cantidad = float(cantidad)
+        if cantidad <= 0:
+            raise ValueError
+    except:
+        return jsonify({'success': False, 'message': 'La cantidad debe ser válida'})
+
+    nueva = Compra(
+        ingrediente=ingrediente,
+        cantidad=cantidad,
+        proveedor=proveedor,
+        forma_pago=forma_pago,
+        fecha_pago=datetime.strptime(fecha_pago, '%Y-%m-%d')
+    )
+    db.session.add(nueva)
+    db.session.commit()
+
+    # Calcular cantidad restante actual
+    from sqlalchemy import func
+    total_comprado = db.session.query(func.sum(Compra.cantidad)).filter_by(ingrediente=ingrediente).scalar() or 0
+
+    canastos = session.get('canastos', {})
+    total_ingredientes = {}
+
+    # Lógica mínima para sumar lo necesario para el ingrediente
+    # Reutiliza código según lo usado en `planificacion`
+    unidades_por_canasto = 32 if ingrediente.lower() == 'pan rallado' else UNIDADES_POR_CANASTO
+    for sabor, cantidad_sabor in canastos.items():
+        unidades = cantidad_sabor * unidades_por_canasto
+        if ingrediente.lower() == 'pan rallado':
+            total_ingredientes[ingrediente] = total_ingredientes.get(ingrediente, 0) + unidades * 10
+
+    requerido = total_ingredientes.get(ingrediente, 0)
+    if ingrediente not in ['Soja', 'Harina']:
+        requerido = requerido / 1000 if requerido >= 1000 else requerido
+    restante = max(0, round(requerido - total_comprado, 2))
+
+    return jsonify({'success': True, 'message': 'Compra guardada', 'restante': restante})
 def normalizar_importe(valor):
     try:
         if isinstance(valor, str):

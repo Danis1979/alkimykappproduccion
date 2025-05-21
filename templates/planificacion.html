@@ -140,19 +140,18 @@
               icon: 'success',
               title: data.message || '✅ Compra ingresada con éxito',
               showConfirmButton: false,
-              timer: 1500
+              timer: 2000
             }).then(() => {
-              // Actualizar la cantidad restante directamente
               const boton = document.querySelector(`button[onclick*="${ingrediente}"]`);
               if (boton) {
                 const span = boton.previousElementSibling;
                 const texto = span.innerText;
                 const partes = texto.split(':');
-                const cantidadActualTexto = partes[1].trim().split(' ')[0];
-                const unidad = partes[1].trim().split(' ')[1];
-                const cantidadActual = parseFloat(cantidadActualTexto);
-                const nuevaCantidad = cantidadActual - result.value.cantidad_comprar;
-                span.innerText = `${ingrediente.charAt(0).toUpperCase() + ingrediente.slice(1)}: ${nuevaCantidad.toFixed(2)} ${unidad}`;
+                if (partes.length > 1) {
+                  const unidad = partes[1].trim().split(' ')[1];
+                  const nuevaCantidad = (parseFloat(data.restante) || 0).toFixed(2);
+                  span.innerText = `${ingrediente.charAt(0).toUpperCase() + ingrediente.slice(1)}: ${nuevaCantidad} ${unidad}`;
+                }
               }
             });
           } else {
