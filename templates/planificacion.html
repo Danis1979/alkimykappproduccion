@@ -98,17 +98,18 @@
         const proveedor = proveedorExistente;
         const forma_pago = document.getElementById('forma_pago').value;
         const fecha_pago = document.getElementById('fecha_pago').value;
-        if (!cantidad_comprar || cantidad_comprar.trim() === '' ||
+        const cantidad_comprar_valor = parseFloat(cantidad_comprar);
+        if (isNaN(cantidad_comprar_valor) || cantidad_comprar_valor <= 0 ||
             !proveedor || proveedor.trim() === '' ||
             !forma_pago || forma_pago.trim() === '' ||
             !fecha_pago || fecha_pago.trim() === '') {
-          Swal.showValidationMessage('Todos los campos son obligatorios');
+          Swal.showValidationMessage('Todos los campos son obligatorios y la cantidad debe ser válida');
           return false;
         }
         return {
           ingrediente,
           cantidad_total: cantidad,
-          cantidad_comprar: cantidad_comprar.trim(),
+          cantidad_comprar: cantidad_comprar_valor,
           proveedor: proveedor.trim(),
           forma_pago: forma_pago.trim(),
           fecha_pago: fecha_pago.trim()
