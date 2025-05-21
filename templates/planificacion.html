@@ -136,11 +136,11 @@
         .then(response => response.json())
         .then(data => {
           if (data.success) {
-            Swal.fire('Guardado', 'La compra fue registrada.', 'success').then(() => {
+            Swal.fire('Compra ingresada con éxito', 'La compra fue registrada correctamente.', 'success').then(() => {
               location.reload();
             });
           } else {
-            Swal.fire('Error', 'Hubo un problema al guardar.', 'error');
+            Swal.fire('Error', data.message || 'Hubo un problema al guardar.', 'error');
           }
         });
       }
