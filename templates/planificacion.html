@@ -99,11 +99,20 @@
         const forma_pago = document.getElementById('forma_pago').value;
         const fecha_pago = document.getElementById('fecha_pago').value;
         const cantidad_comprar_valor = parseFloat(cantidad_comprar);
-        if (isNaN(cantidad_comprar_valor) || cantidad_comprar_valor <= 0 ||
-            !proveedor || proveedor.trim() === '' ||
-            !forma_pago || forma_pago.trim() === '' ||
-            !fecha_pago || fecha_pago.trim() === '') {
-          Swal.showValidationMessage('Todos los campos son obligatorios y la cantidad debe ser válida');
+        if (!cantidad_comprar || isNaN(cantidad_comprar_valor) || cantidad_comprar_valor <= 0) {
+          Swal.showValidationMessage('La cantidad debe ser un número válido mayor a 0');
+          return false;
+        }
+        if (!proveedor || proveedor.trim() === '') {
+          Swal.showValidationMessage('Debe seleccionar un proveedor');
+          return false;
+        }
+        if (!forma_pago || forma_pago.trim() === '') {
+          Swal.showValidationMessage('Debe seleccionar una forma de pago');
+          return false;
+        }
+        if (!fecha_pago || fecha_pago.trim() === '') {
+          Swal.showValidationMessage('Debe ingresar una fecha de pago');
           return false;
         }
         return {
