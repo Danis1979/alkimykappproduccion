@@ -20,7 +20,7 @@
         <div class="titulo-panel">🛒 Ingredientes para Comprar</div>
         {% for ingrediente, cantidad in total_ingredientes_fmt.items() %}
             <div class="linea-dato">
-                <span><strong>{{ ingrediente | capitalize }}</strong>: {{ cantidad.cantidad }} {{ cantidad.unidad }}</span>
+                <span><strong>{{ ingrediente | capitalize }}</strong>: {{ cantidad.cantidad - compras.get(ingrediente, 0) }} {{ cantidad.unidad }}</span>
                 <button class="boton-comprar" onclick="abrirPopupCompra('{{ ingrediente }}', '{{ cantidad.cantidad }} {{ cantidad.unidad }}')">Comprar</button>
             </div>
         {% endfor %}
