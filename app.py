@@ -107,16 +107,6 @@ class Compra(db.Model):
     forma_pago = db.Column(db.String(50), nullable=False)
     fecha_pago = db.Column(db.Date, nullable=False)
 
-# Modelo Compra para registrar compras de ingredientes
-class Compra(db.Model):
-    __tablename__ = 'compras'
-    id = db.Column(db.Integer, primary_key=True)
-    ingrediente = db.Column(db.String(100), nullable=False)
-    cantidad = db.Column(db.Float, nullable=False)
-    proveedor = db.Column(db.String(100), nullable=False)
-    forma_pago = db.Column(db.String(50), nullable=False)
-    fecha_pago = db.Column(db.Date, nullable=False)
-
 # Filtro de plantilla para formatear fechas en los templates Jinja2
 @app.template_filter('datetimeformat')
 def datetimeformat(value, format='%A'):
