@@ -40,7 +40,8 @@
             '<option value="{{ proveedor }}">{{ proveedor }}</option>' +
           '{% endfor %}' +
         '</select>' +
-        '<input id="proveedor_nuevo" class="swal2-input" placeholder="Agregar nuevo proveedor">' +
+        '<input id="proveedor_nuevo" class="swal2-input" placeholder="Nuevo proveedor">' +
+        '<button id="boton_agregar_proveedor" class="swal2-confirm swal2-styled" style="margin: 5px auto 10px auto; background-color: #3085d6;">Agregar proveedor</button>' +
         '<select id="forma_pago" class="swal2-input">' +
           '<option value="">Forma de pago</option>' +
           '<option value="Efectivo">Efectivo</option>' +
@@ -48,6 +49,28 @@
           '<option value="Cheque">Cheque</option>' +
         '</select>' +
         '<input id="fecha_pago" type="date" class="swal2-input" placeholder="Fecha de pago">',
+      didOpen: () => {
+        document.getElementById('boton_agregar_proveedor').onclick = function () {
+          const nuevoProveedor = document.getElementById('proveedor_nuevo').value;
+          if (!nuevoProveedor) {
+            Swal.showValidationMessage('El nombre del proveedor es obligatorio');
+            return;
+          }
+          fetch('/agregar_proveedor', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ nombre: nuevoProveedor })
+          })
+          .then(resp => resp.json())
+          .then(data => {
+            if (data.success) {
+              Swal.fire('Proveedor agregado', 'Ya podés seleccionarlo.', 'success').then(() => location.reload());
+            } else {
+              Swal.fire('Error', 'No se pudo agregar el proveedor.', 'error');
+            }
+          });
+        };
+      },
       confirmButtonText: 'Guardar compra',
       focusConfirm: false,
       preConfirm: () => {
