@@ -70,15 +70,21 @@
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ nombre: nuevoProveedor })
               })
-              .then(resp => resp.json())
+              .then(resp => {
+                if (!resp.ok) {
+                  throw new Error('Error de red');
+                }
+                return resp.json();
+              })
               .then(data => {
                 if (data.success) {
                   Swal.fire('Proveedor agregado', 'Ya podés seleccionarlo.', 'success').then(() => location.reload());
-                  return true;
                 } else {
-                  Swal.fire('Error', 'No se pudo agregar el proveedor.', 'error');
-                  return false;
+                  Swal.fire('Error', data.message || 'No se pudo agregar el proveedor.', 'error');
                 }
+              })
+              .catch(err => {
+                Swal.fire('Error', 'No se pudo agregar el proveedor.', 'error');
               });
             }
           });
@@ -92,7 +98,7 @@
         const proveedor = proveedorExistente;
         const forma_pago = document.getElementById('forma_pago').value;
         const fecha_pago = document.getElementById('fecha_pago').value;
-        if (!cantidad_comprar || !proveedor || !forma_pago || !fecha_pago) {
+        if (!cantidad_comprar.trim() || !proveedor.trim() || !forma_pago.trim() || !fecha_pago.trim()) {
           Swal.showValidationMessage('Todos los campos son obligatorios');
           return false;
         }
