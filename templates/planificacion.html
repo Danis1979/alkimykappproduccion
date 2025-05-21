@@ -32,14 +32,15 @@
     Swal.fire({
       title: '🛒 Comprar ' + ingrediente,
       html:
-        '<p><strong>Cantidad necesaria:</strong> ' + cantidad + '</p>' +
+        '<p><strong>Necesario:</strong> ' + cantidad + '</p>' +
+        '<input id="cantidad_comprar" class="swal2-input" placeholder="Cantidad a comprar">' +
         '<select id="proveedor_existente" class="swal2-input">' +
           '<option value="">Seleccionar proveedor</option>' +
           '{% for proveedor in proveedores %}' +
             '<option value="{{ proveedor }}">{{ proveedor }}</option>' +
           '{% endfor %}' +
         '</select>' +
-        '<input id="proveedor_nuevo" class="swal2-input" placeholder="Agregar nuevo proveedor (opcional)">' +
+        '<input id="proveedor_nuevo" class="swal2-input" placeholder="Agregar nuevo proveedor">' +
         '<select id="forma_pago" class="swal2-input">' +
           '<option value="">Forma de pago</option>' +
           '<option value="Efectivo">Efectivo</option>' +
@@ -50,16 +51,17 @@
       confirmButtonText: 'Guardar compra',
       focusConfirm: false,
       preConfirm: () => {
+        const cantidad_comprar = document.getElementById('cantidad_comprar').value;
         const proveedorExistente = document.getElementById('proveedor_existente').value;
         const proveedorNuevo = document.getElementById('proveedor_nuevo').value;
         const proveedor = proveedorNuevo || proveedorExistente;
         const forma_pago = document.getElementById('forma_pago').value;
         const fecha_pago = document.getElementById('fecha_pago').value;
-        if (!proveedor || !forma_pago || !fecha_pago) {
+        if (!cantidad_comprar || !proveedor || !forma_pago || !fecha_pago) {
           Swal.showValidationMessage('Todos los campos son obligatorios');
           return false;
         }
-        return { proveedor, forma_pago, fecha_pago, ingrediente, cantidad };
+        return { ingrediente, cantidad_total: cantidad, cantidad_comprar, proveedor, forma_pago, fecha_pago };
       }
     }).then((result) => {
       if (result.isConfirmed) {
