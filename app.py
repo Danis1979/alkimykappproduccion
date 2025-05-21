@@ -97,6 +97,16 @@ class Proveedor(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     nombre = db.Column(db.String(100), nullable=False)
 
+# Modelo para guardar compras de ingredientes
+class Compra(db.Model):
+    __tablename__ = 'compras'
+    id = db.Column(db.Integer, primary_key=True)
+    ingrediente = db.Column(db.String(100), nullable=False)
+    cantidad = db.Column(db.Float, nullable=False)
+    proveedor = db.Column(db.String(100), nullable=False)
+    forma_pago = db.Column(db.String(50), nullable=False)
+    fecha_pago = db.Column(db.Date, nullable=False)
+
 # Modelo Compra para registrar compras de ingredientes
 class Compra(db.Model):
     __tablename__ = 'compras'
@@ -1759,15 +1769,6 @@ def planificacion():
 
     # Añadir valores de compra desde base (si existen)
     from sqlalchemy import func
-
-    class Compra(db.Model):
-        __tablename__ = 'compras'
-        id = db.Column(db.Integer, primary_key=True)
-        ingrediente = db.Column(db.String(100), nullable=False)
-        cantidad = db.Column(db.Float, nullable=False)
-        proveedor = db.Column(db.String(100), nullable=False)
-        forma_pago = db.Column(db.String(50), nullable=False)
-        fecha_pago = db.Column(db.Date, nullable=False)
 
     compras_agrupadas = db.session.query(
         Compra.ingrediente,
