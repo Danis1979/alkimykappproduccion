@@ -1,30 +1,36 @@
-<div class="container" style="display: flex; flex-wrap: wrap; justify-content: space-between; gap: 30px; padding: 20px;">
-    <!-- Panel de planificación mensual -->
-    <div class="panel" style="flex: 1 1 48%; background: #ffffff; border-radius: 15px; padding: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
-        <div class="titulo-panel" style="font-size: 22px; font-weight: bold; margin-bottom: 20px; color: #333;">📦 Planificación Mensual</div>
-        {% if planificacion %}
-            {% for sabor, datos in planificacion.items() %}
-                <div class="linea-dato" style="display: flex; justify-content: space-between; margin-bottom: 10px; font-size: 16px;">
-                    <span><strong>{{ sabor | capitalize }}</strong></span>
-                    <span>Canastos: {{ datos['canastos'] }}</span>
-                    <span>Cajas: {{ datos['cajas'] }}</span>
-                </div>
-            {% endfor %}
-        {% else %}
-            <p style="font-style: italic; color: #777;">No hay datos de planificación disponibles.</p>
-        {% endif %}
-    </div>
-
-    <!-- Panel de compras -->
-    <div class="panel" style="flex: 1 1 48%; background: #ffffff; border-radius: 15px; padding: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
-        <div class="titulo-panel" style="font-size: 22px; font-weight: bold; margin-bottom: 20px; color: #333;">🛒 Ingredientes para Comprar</div>
-        {% for ingrediente, cantidad in total_ingredientes_fmt.items() %}
-            <div class="linea-dato" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; font-size: 16px;">
-                <span><strong>{{ ingrediente | capitalize }}</strong>: {{ cantidad.cantidad - compras.get(ingrediente, 0) }} {{ cantidad.unidad }}</span>
-                <button class="boton-comprar" onclick="abrirPopupCompra('{{ ingrediente }}', '{{ cantidad.cantidad }} {{ cantidad.unidad }}')" style="background: linear-gradient(to right, #007aff, #00c6ff); border: none; color: white; padding: 8px 16px; border-radius: 8px; font-size: 14px; cursor: pointer; transition: 0.3s;">
-                    Comprar
-                </button>
+<div class="container-fluid py-4">
+    <div class="row">
+        <!-- Panel de planificación mensual -->
+        <div class="col-md-6 mb-4">
+            <div class="card shadow-sm rounded-4 p-4">
+                <h4 class="mb-4 text-primary fw-bold">📦 Planificación Mensual</h4>
+                {% if planificacion %}
+                    {% for sabor, datos in planificacion.items() %}
+                        <div class="d-flex justify-content-between mb-2 fs-6">
+                            <span><strong>{{ sabor | capitalize }}</strong></span>
+                            <span>Canastos: {{ datos['canastos'] }}</span>
+                            <span>Cajas: {{ datos['cajas'] }}</span>
+                        </div>
+                    {% endfor %}
+                {% else %}
+                    <p class="fst-italic text-muted">No hay datos de planificación disponibles.</p>
+                {% endif %}
             </div>
-        {% endfor %}
+        </div>
+
+        <!-- Panel de compras -->
+        <div class="col-md-6 mb-4">
+            <div class="card shadow-sm rounded-4 p-4">
+                <h4 class="mb-4 text-success fw-bold">🛒 Ingredientes para Comprar</h4>
+                {% for ingrediente, cantidad in total_ingredientes_fmt.items() %}
+                    <div class="d-flex justify-content-between align-items-center mb-3 fs-6">
+                        <span><strong>{{ ingrediente | capitalize }}</strong>: {{ cantidad.cantidad - compras.get(ingrediente, 0) }} {{ cantidad.unidad }}</span>
+                        <button class="btn btn-primary px-3 py-1" onclick="abrirPopupCompra('{{ ingrediente }}', '{{ cantidad.cantidad }} {{ cantidad.unidad }}')">
+                            Comprar
+                        </button>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
     </div>
 </div>
