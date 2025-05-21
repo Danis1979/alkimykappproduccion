@@ -1,68 +1,84 @@
 {% extends 'base.html' %}
 {% block title %}Planificación de Producción{% endblock %}
 {% block content %}
-    <a href="/canastos" style="display:block; margin-bottom:20px; text-decoration:none; color:#2196F3; font-weight:bold">⬅️ Volver a Canastos</a>
-    <h1>📦 Planificación de Producción</h1>
+    <a href="/canastos" class="btn-secundario" style="margin-bottom:20px; display:inline-block;">⬅️ Volver a Canastos</a>
+    <h1 class="titulo-principal">📦 Planificación de Producción</h1>
 
-    <div class="resumen">
+    <section class="resumen">
         <p><strong>Total de Canastos Planificados:</strong> {{ total_canastos | round(2) }}</p>
         <p><strong>Total de Cajas:</strong> {{ total_cajas | round(2) }}</p>
-    </div>
+    </section>
 
-    <h2>Ingredientes Necesarios</h2>
-    <table>
-        <tr><th>Ingrediente</th><th>Cantidad Necesaria</th><th></th></tr>
-        {% for ingr, datos in total_ingredientes_fmt.items() %}
-        <tr>
-            <td>{{ ingr }}</td>
-            <td>{{ datos.cantidad }} {{ datos.unidad }}</td>
-            <td>
-                <button type="button" class="btn-comprar" style="background:#2196F3; color:white; border:none; padding:6px 14px; border-radius:4px; cursor:pointer;" onclick="abrirPopup('{{ ingr }}', '{{ datos.cantidad }}', '{{ datos.unidad }}')">🛒 Comprar</button>
-            </td>
-        </tr>
-        {% endfor %}
-    </table>
-
-    <h2>Compras Realizadas</h2>
-    <form method="post" action="/guardar_compras">
+    <h2 class="subtitulo">Ingredientes Necesarios</h2>
+    <div class="tabla">
         <table>
-            <tr><th>Ingrediente</th><th>Necesario</th><th>Comprado</th><th>Falta</th></tr>
+            <thead>
+                <tr><th>Ingrediente</th><th>Cantidad Necesaria</th><th></th></tr>
+            </thead>
+            <tbody>
             {% for ingr, datos in total_ingredientes_fmt.items() %}
             <tr>
                 <td>{{ ingr }}</td>
                 <td>{{ datos.cantidad }} {{ datos.unidad }}</td>
-                <td><input type="number" step="any" min="0" name="comprado_{{ ingr }}" value="{{ compras.get(ingr, 0) }}"></td>
-                <td>{{ (datos.cantidad - compras.get(ingr, 0)) | round(2) }} {{ datos.unidad }}</td>
+                <td>
+                    <button type="button" class="btn-principal" onclick="abrirPopup('{{ ingr }}', '{{ datos.cantidad }}', '{{ datos.unidad }}')">🛒 Comprar</button>
+                </td>
             </tr>
             {% endfor %}
+            </tbody>
         </table>
+    </div>
+
+    <h2 class="subtitulo">Compras Realizadas</h2>
+    <form method="post" action="/guardar_compras">
+        <div class="tabla">
+            <table>
+                <thead>
+                    <tr><th>Ingrediente</th><th>Necesario</th><th>Comprado</th><th>Falta</th></tr>
+                </thead>
+                <tbody>
+                {% for ingr, datos in total_ingredientes_fmt.items() %}
+                <tr>
+                    <td>{{ ingr }}</td>
+                    <td>{{ datos.cantidad }} {{ datos.unidad }}</td>
+                    <td><input type="number" step="any" min="0" name="comprado_{{ ingr }}" value="{{ compras.get(ingr, 0) }}" class="input-cantidad"></td>
+                    <td>{{ (datos.cantidad - compras.get(ingr, 0)) | round(2) }} {{ datos.unidad }}</td>
+                </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
         <div class="acciones">
-            <button type="submit">💾 Guardar Compras</button>
-            <button type="submit" formaction="/recalcular_faltantes">🔄 Recalcular Faltantes</button>
-            <button type="submit" formaction="/exportar_planificacion">⬇️ Exportar</button>
-            <button type="submit" formaction="/resetear_planificacion" onclick="return confirm('¿Estás seguro que querés replanificar? Se borrará todo.');">🧹 Replanificar</button>
+            <button type="submit" class="btn-principal">💾 Guardar Compras</button>
+            <button type="submit" formaction="/recalcular_faltantes" class="btn-secundario">🔄 Recalcular Faltantes</button>
+            <button type="submit" formaction="/exportar_planificacion" class="btn-secundario">⬇️ Exportar</button>
+            <button type="submit" formaction="/resetear_planificacion" class="btn-peligro" onclick="return confirm('¿Estás seguro que querés replanificar? Se borrará todo.');">🧹 Replanificar</button>
         </div>
     </form>
-    <div id="popup-compra" style="display:none; position:fixed; top:20%; left:50%; transform:translateX(-50%); background:#fff; border:2px solid #2196F3; padding:20px; z-index:1000; border-radius:8px; box-shadow:0 4px 16px rgba(0,0,0,0.15); min-width:320px;">
-        <h3 style="margin-top:0;">🛒 Registrar Compra</h3>
-        <p><strong>Ingrediente:</strong> <span id="popup-ingrediente"></span></p>
-        <p><strong>Cantidad:</strong> <span id="popup-cantidad"></span> <span id="popup-unidad"></span></p>
-        <form method="post" action="/registrar_compra_flujo">
-            <input type="hidden" name="ingrediente" id="input-ingrediente">
-            <input type="hidden" name="cantidad" id="input-cantidad">
-            <input type="hidden" name="unidad" id="input-unidad">
-            <label>Proveedor: <input type="text" name="proveedor" required style="margin-bottom:6px;"></label><br>
-            <label>Forma de pago:
-                <select name="forma_pago" style="margin-bottom:6px;">
-                    <option value="Efectivo">Efectivo</option>
-                    <option value="Transferencia">Transferencia</option>
-                    <option value="Cheque">Cheque</option>
-                </select>
-            </label><br>
-            <label>Fecha de pago: <input type="date" name="fecha_pago" required style="margin-bottom:12px;"></label><br>
-            <button type="submit" style="background:#2196F3; color:white; border:none; padding:6px 14px; border-radius:4px; cursor:pointer; margin-right:8px;">💾 Confirmar</button>
-            <button type="button" style="background:#f44336; color:white; border:none; padding:6px 14px; border-radius:4px; cursor:pointer;" onclick="document.getElementById('popup-compra').style.display='none'">❌ Cancelar</button>
-        </form>
+    <div id="popup-compra" class="popup" style="display:none;">
+        <div class="popup-contenido">
+            <h3 class="popup-titulo">🛒 Registrar Compra</h3>
+            <p><strong>Ingrediente:</strong> <span id="popup-ingrediente"></span></p>
+            <p><strong>Cantidad:</strong> <span id="popup-cantidad"></span> <span id="popup-unidad"></span></p>
+            <form method="post" action="/registrar_compra_flujo" class="form-popup">
+                <input type="hidden" name="ingrediente" id="input-ingrediente">
+                <input type="hidden" name="cantidad" id="input-cantidad">
+                <input type="hidden" name="unidad" id="input-unidad">
+                <label class="label-popup">Proveedor: <input type="text" name="proveedor" required class="input-text"></label><br>
+                <label class="label-popup">Forma de pago:
+                    <select name="forma_pago" class="input-select">
+                        <option value="Efectivo">Efectivo</option>
+                        <option value="Transferencia">Transferencia</option>
+                        <option value="Cheque">Cheque</option>
+                    </select>
+                </label><br>
+                <label class="label-popup">Fecha de pago: <input type="date" name="fecha_pago" required class="input-text"></label><br>
+                <div class="acciones-popup">
+                    <button type="submit" class="btn-principal">💾 Confirmar</button>
+                    <button type="button" class="btn-peligro" onclick="document.getElementById('popup-compra').style.display='none'">❌ Cancelar</button>
+                </div>
+            </form>
+        </div>
     </div>
     <script>
     function abrirPopup(ingrediente, cantidad, unidad) {
