@@ -67,8 +67,8 @@
               }
               return fetch('/agregar_proveedor', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ nombre: nuevoProveedor })
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: new URLSearchParams({ 'nombre': nuevoProveedor.trim() })
               })
               .then(resp => {
                 if (!resp.ok) {
