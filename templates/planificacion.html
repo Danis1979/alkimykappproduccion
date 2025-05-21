@@ -3,6 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <title>Planificación</title>
+    <script>
+        const proveedoresDisponibles = {{ proveedores | tojson | safe }};
+    </script>
 </head>
 <body>
     <div id="main-content">
@@ -20,5 +23,18 @@
         </form>
       </div>
     </div>
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+      document.querySelectorAll(".select-proveedor").forEach(select => {
+          select.innerHTML = ""; // Limpiar opciones anteriores
+          proveedoresDisponibles.forEach(nombre => {
+              const option = document.createElement("option");
+              option.value = nombre;
+              option.textContent = nombre;
+              select.appendChild(option);
+          });
+      });
+  });
+</script>
 </body>
 </html>
