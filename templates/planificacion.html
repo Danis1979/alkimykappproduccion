@@ -1,124 +1,28 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <title>Planificación</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
-    <script>
-        const proveedoresDisponibles = {{ proveedores | tojson | safe }};
-    </script>
-    <style>
-        .container {
-            display: flex;
-            justify-content: space-between;
-            padding: 20px;
-            gap: 20px;
-        }
-        .panel {
-            flex: 1;
-            padding: 20px;
-            background-color: #f9f9f9;
-            border-radius: 8px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-        }
-        .titulo-panel {
-            font-weight: bold;
-            margin-bottom: 15px;
-            font-size: 20px;
-        }
-        .linea-dato {
-            display: flex;
-            justify-content: space-between;
-            margin-bottom: 10px;
-            align-items: center;
-        }
-        .linea-dato span {
-            flex: 1;
-        }
-        .boton-comprar {
-            padding: 5px 10px;
-            background-color: #4CAF50;
-            color: white;
-            border: none;
-            cursor: pointer;
-            border-radius: 5px;
-        }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <!-- Panel de planificación mensual -->
-        <div class="panel">
-            <div class="titulo-panel">Planificación Mensual</div>
-            {% if planificacion %}
-                {% for sabor, datos in planificacion.items() %}
-                    <div class="linea-dato">
-                        <span><strong>{{ sabor | capitalize }}</strong></span>
-                        <span>Canastos: {{ datos['canastos'] }}</span>
-                        <span>Cajas: {{ datos['cajas'] }}</span>
-                    </div>
-                {% endfor %}
-            {% else %}
-                <p>No hay datos de planificación disponibles.</p>
-            {% endif %}
-        </div>
-
-        <!-- Panel de compras -->
-        <div class="panel">
-            <div class="titulo-panel">Compras</div>
-            {% for ingrediente, cantidad in total_ingredientes_fmt.items() %}
+<div class="container">
+    <!-- Panel de planificación mensual -->
+    <div class="panel">
+        <div class="titulo-panel">📦 Planificación Mensual</div>
+        {% if planificacion %}
+            {% for sabor, datos in planificacion.items() %}
                 <div class="linea-dato">
-                    <span><strong>{{ ingrediente | capitalize }}</strong>: {{ cantidad }}</span>
-                    <button class="boton-comprar" onclick="abrirPopupCompra('{{ ingrediente }}', '{{ cantidad }}')">Comprar</button>
+                    <span><strong>{{ sabor | capitalize }}</strong></span>
+                    <span>Canastos: {{ datos['canastos'] }}</span>
+                    <span>Cajas: {{ datos['cajas'] }}</span>
                 </div>
             {% endfor %}
-        </div>
+        {% else %}
+            <p>No hay datos de planificación disponibles.</p>
+        {% endif %}
     </div>
 
-    <!-- Popup agregar proveedor -->
-    <div id="popupCompra" class="popup" style="display:none;">
-      <div class="popup-content">
-        <span class="close" onclick="document.getElementById('popupCompra').style.display='none'">&times;</span>
-        <h3>Registrar Compra</h3>
-        <form method="POST" action="/guardar_compra">
-          <input type="hidden" id="ingredienteCompra" name="ingrediente">
-          <label>Cantidad necesaria:</label>
-          <input type="text" id="cantidadCompra" name="cantidad" readonly><br><br>
-          <label>Proveedor:</label>
-          <select name="proveedor" class="select-proveedor" required></select><br><br>
-          <label>Forma de pago:</label>
-          <select name="forma_pago" required>
-            <option value="efectivo">Efectivo</option>
-            <option value="transferencia">Transferencia</option>
-            <option value="cheque">Cheque</option>
-          </select><br><br>
-          <label>Fecha de compra:</label>
-          <input type="date" name="fecha_compra" required><br><br>
-          <label>Fecha de pago:</label>
-          <input type="date" name="fecha_pago" required><br><br>
-          <button type="submit">Guardar compra</button>
-        </form>
-      </div>
+    <!-- Panel de compras -->
+    <div class="panel">
+        <div class="titulo-panel">🛒 Ingredientes para Comprar</div>
+        {% for ingrediente, cantidad in total_ingredientes_fmt.items() %}
+            <div class="linea-dato">
+                <span><strong>{{ ingrediente | capitalize }}</strong>: {{ cantidad['cantidad'] }} {{ cantidad['unidad'] }}</span>
+                <button class="boton-comprar" onclick="abrirPopupCompra('{{ ingrediente }}', '{{ cantidad['cantidad'] }} {{ cantidad['unidad'] }}')">Comprar</button>
+            </div>
+        {% endfor %}
     </div>
-
-    <script>
-      function abrirPopupCompra(ingrediente, cantidad) {
-          document.getElementById('ingredienteCompra').value = ingrediente;
-          document.getElementById('cantidadCompra').value = cantidad;
-          document.getElementById('popupCompra').style.display = 'block';
-      }
-
-      document.addEventListener("DOMContentLoaded", function () {
-          document.querySelectorAll(".select-proveedor").forEach(select => {
-              select.innerHTML = "";
-              proveedoresDisponibles.forEach(nombre => {
-                  const option = document.createElement("option");
-                  option.value = nombre;
-                  option.textContent = nombre;
-                  select.appendChild(option);
-              });
-          });
-      });
-    </script>
-</body>
-</html>
+</div>
