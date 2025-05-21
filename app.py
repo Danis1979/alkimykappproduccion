@@ -1758,7 +1758,8 @@ def planificacion():
                            total_cajas=total_cajas,
                            total_ingredientes=total_ingredientes_fmt,
                            total_ingredientes_fmt=total_ingredientes_fmt,
-                           compras=compras)
+                           compras=compras,
+                           proveedores=[])
 
 if __name__ == '__main__':
     threading.Timer(1.25, abrir_navegador).start()

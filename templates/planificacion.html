@@ -1,61 +1,69 @@
 {% extends 'base.html' %}
+{# Estilo adaptado para unificar con dashboard y canastos #}
 {% block title %}Planificación de Producción{% endblock %}
 {% block content %}
+<div class="contenedor">
     <a href="/canastos" class="btn-secundario" style="margin-bottom:20px; display:inline-block;">⬅️ Volver a Canastos</a>
-    <h1 class="titulo-principal">📦 Planificación de Producción</h1>
+    <h1 class="titulo-principal">📊 Planificación de Producción</h1>
 
-    <section class="resumen">
-        <p><strong>Total de Canastos Planificados:</strong> {{ total_canastos | round(2) }}</p>
-        <p><strong>Total de Cajas:</strong> {{ total_cajas | round(2) }}</p>
-    </section>
-
-    <h2 class="subtitulo">Ingredientes Necesarios</h2>
-    <div class="tabla">
-        <table>
-            <thead>
-                <tr><th>Ingrediente</th><th>Cantidad Necesaria</th><th></th></tr>
-            </thead>
-            <tbody>
-            {% for ingr, datos in total_ingredientes_fmt.items() %}
-            <tr>
-                <td>{{ ingr }}</td>
-                <td>{{ datos.cantidad }} {{ datos.unidad }}</td>
-                <td>
-                    <button type="button" class="btn-principal" onclick="abrirPopup('{{ ingr }}', '{{ datos.cantidad }}', '{{ datos.unidad }}')">🛒 Comprar</button>
-                </td>
-            </tr>
-            {% endfor %}
-            </tbody>
-        </table>
+    <div class="bloque-contenido">
+        <section class="resumen">
+            <p><strong>Total de Canastos Planificados:</strong> {{ total_canastos | round(2) }}</p>
+            <p><strong>Total de Cajas:</strong> {{ total_cajas | round(2) }}</p>
+        </section>
     </div>
 
-    <h2 class="subtitulo">Compras Realizadas</h2>
-    <form method="post" action="/guardar_compras">
+    <h2 class="subtitulo">Ingredientes Necesarios</h2>
+    <div class="bloque-contenido">
         <div class="tabla">
             <table>
                 <thead>
-                    <tr><th>Ingrediente</th><th>Necesario</th><th>Comprado</th><th>Falta</th></tr>
+                    <tr><th>Ingrediente</th><th>Cantidad Necesaria</th><th></th></tr>
                 </thead>
                 <tbody>
                 {% for ingr, datos in total_ingredientes_fmt.items() %}
                 <tr>
                     <td>{{ ingr }}</td>
                     <td>{{ datos.cantidad }} {{ datos.unidad }}</td>
-                    <td><input type="number" step="any" min="0" name="comprado_{{ ingr }}" value="{{ compras.get(ingr, 0) }}" class="input-cantidad"></td>
-                    <td>{{ (datos.cantidad - compras.get(ingr, 0)) | round(2) }} {{ datos.unidad }}</td>
+                    <td>
+                        <button type="button" class="btn-principal btn-secundario" onclick="abrirPopup('{{ ingr }}', '{{ datos.cantidad }}', '{{ datos.unidad }}')">🛒 Comprar</button>
+                    </td>
                 </tr>
                 {% endfor %}
                 </tbody>
             </table>
         </div>
+    </div>
+
+    <h2 class="subtitulo">Compras Realizadas</h2>
+    <form method="post" action="/guardar_compras">
+        <div class="bloque-contenido">
+            <div class="tabla">
+                <table>
+                    <thead>
+                        <tr><th>Ingrediente</th><th>Necesario</th><th>Comprado</th><th>Falta</th></tr>
+                    </thead>
+                    <tbody>
+                    {% for ingr, datos in total_ingredientes_fmt.items() %}
+                    <tr>
+                        <td>{{ ingr }}</td>
+                        <td>{{ datos.cantidad }} {{ datos.unidad }}</td>
+                        <td><input type="number" step="any" min="0" name="comprado_{{ ingr }}" value="{{ compras.get(ingr, 0) }}" class="input-formulario"></td>
+                        <td>{{ (datos.cantidad - compras.get(ingr, 0)) | round(2) }} {{ datos.unidad }}</td>
+                    </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
         <div class="acciones">
-            <button type="submit" class="btn-principal">💾 Guardar Compras</button>
-            <button type="submit" formaction="/recalcular_faltantes" class="btn-secundario">🔄 Recalcular Faltantes</button>
-            <button type="submit" formaction="/exportar_planificacion" class="btn-secundario">⬇️ Exportar</button>
-            <button type="submit" formaction="/resetear_planificacion" class="btn-peligro" onclick="return confirm('¿Estás seguro que querés replanificar? Se borrará todo.');">🧹 Replanificar</button>
+            <button type="submit" class="btn-principal btn-secundario">💾 Guardar Compras</button>
+            <button type="submit" formaction="/recalcular_faltantes" class="btn-secundario btn-secundario">🔄 Recalcular Faltantes</button>
+            <button type="submit" formaction="/exportar_planificacion" class="btn-secundario btn-secundario">⬇️ Exportar</button>
+            <button type="submit" formaction="/resetear_planificacion" class="btn-peligro btn-secundario" onclick="return confirm('¿Estás seguro que querés replanificar? Se borrará todo.');">🧹 Replanificar</button>
         </div>
     </form>
-    <div id="popup-compra" class="popup" style="display:none;">
+    <div id="popup-compra" class="popup" style="display:none; border-radius: 10px; padding: 20px; background-color: #f8f9fa;">
         <div class="popup-contenido">
             <h3 class="popup-titulo">🛒 Registrar Compra</h3>
             <p><strong>Ingrediente:</strong> <span id="popup-ingrediente"></span></p>
@@ -64,18 +72,29 @@
                 <input type="hidden" name="ingrediente" id="input-ingrediente">
                 <input type="hidden" name="cantidad" id="input-cantidad">
                 <input type="hidden" name="unidad" id="input-unidad">
-                <label class="label-popup">Proveedor: <input type="text" name="proveedor" required class="input-text"></label><br>
+                <label class="label-popup">Proveedor:
+                  <select name="proveedor" class="input-formulario" required id="proveedor-select">
+                    {% for proveedor in proveedores %}
+                    <option value="{{ proveedor }}">{{ proveedor }}</option>
+                    {% endfor %}
+                  </select>
+                  <button type="button" onclick="mostrarNuevoProveedor()" class="btn-secundario" style="margin-left:10px;">➕</button>
+                </label>
+                <div id="nuevo-proveedor-div" style="display:none; margin-top:10px;">
+                  <input type="text" id="nuevo-proveedor-input" class="input-formulario" placeholder="Nuevo proveedor">
+                  <button type="button" onclick="agregarProveedor()" class="btn-principal btn-secundario">Agregar</button>
+                </div>
                 <label class="label-popup">Forma de pago:
-                    <select name="forma_pago" class="input-select">
+                    <select name="forma_pago" class="input-formulario">
                         <option value="Efectivo">Efectivo</option>
                         <option value="Transferencia">Transferencia</option>
                         <option value="Cheque">Cheque</option>
                     </select>
                 </label><br>
-                <label class="label-popup">Fecha de pago: <input type="date" name="fecha_pago" required class="input-text"></label><br>
+                <label class="label-popup">Fecha de pago: <input type="date" name="fecha_pago" required class="input-formulario"></label><br>
                 <div class="acciones-popup">
-                    <button type="submit" class="btn-principal">💾 Confirmar</button>
-                    <button type="button" class="btn-peligro" onclick="document.getElementById('popup-compra').style.display='none'">❌ Cancelar</button>
+                    <button type="submit" class="btn-principal btn-secundario">💾 Confirmar</button>
+                    <button type="button" class="btn-peligro btn-secundario" onclick="document.getElementById('popup-compra').style.display='none'">❌ Cancelar</button>
                 </div>
             </form>
         </div>
@@ -90,5 +109,24 @@
         document.getElementById('input-unidad').value = unidad;
         document.getElementById('popup-compra').style.display = 'block';
     }
+
+    function mostrarNuevoProveedor() {
+        document.getElementById('nuevo-proveedor-div').style.display = 'block';
+    }
+
+    function agregarProveedor() {
+        const nuevoProveedor = document.getElementById('nuevo-proveedor-input').value.trim();
+        if (nuevoProveedor) {
+            const select = document.getElementById('proveedor-select');
+            const option = document.createElement('option');
+            option.value = nuevoProveedor;
+            option.text = nuevoProveedor;
+            option.selected = true;
+            select.appendChild(option);
+            document.getElementById('nuevo-proveedor-div').style.display = 'none';
+            document.getElementById('nuevo-proveedor-input').value = '';
+        }
+    }
     </script>
+</div>
 {% endblock %}
