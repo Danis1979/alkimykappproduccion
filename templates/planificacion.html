@@ -61,7 +61,7 @@
             showCancelButton: true,
             confirmButtonText: 'Agregar',
             preConfirm: (nuevoProveedor) => {
-              if (!nuevoProveedor) {
+              if (!nuevoProveedor || nuevoProveedor.trim() === "") {
                 Swal.showValidationMessage('El nombre del proveedor es obligatorio');
                 return false;
               }
