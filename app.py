@@ -1757,6 +1757,19 @@ def planificacion():
     template_path = os.path.join(app.template_folder or 'templates', 'base.html')
     if not os.path.exists(template_path):
         return "Archivo base.html no encontrado. Verifica que exista en la carpeta templates.", 500
+    # Crear resumen por sabor para mostrar en "Planificación Mensual"
+    planificacion = {}
+    for sabor, cantidad in canastos.items():
+        unidades_por_canasto = 32 if sabor == 'original' else UNIDADES_POR_CANASTO
+        total_unidades = cantidad * unidades_por_canasto
+        if sabor == 'original':
+            cajas = round(total_unidades / 108)
+        else:
+            cajas = round(total_unidades / (15 * 4))
+        planificacion[sabor] = {
+            'canastos': cantidad,
+            'cajas': cajas
+        }
     compras = {}
     return render_template('planificacion.html',
                            canastos=canastos,
@@ -1765,7 +1778,8 @@ def planificacion():
                            total_ingredientes=total_ingredientes_fmt,
                            total_ingredientes_fmt=total_ingredientes_fmt,
                            compras=compras,
-                           proveedores=proveedores)
+                           proveedores=proveedores,
+                           planificacion=planificacion)
 
 @app.route('/agregar_proveedor', methods=['POST'])
 def agregar_proveedor():
