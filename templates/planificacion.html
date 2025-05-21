@@ -6,7 +6,7 @@
 </head>
 <body>
     <div id="main-content">
-        <button onclick="document.getElementById('popupProveedor').style.display='block'">+ Proveedor</button>
+        <button onclick="document.getElementById('popupProveedor').style.display='block'" class="boton-principal">Agregar Proveedor</button>
         <!-- resto del contenido principal -->
     </div>
 
@@ -15,7 +15,7 @@
         <span class="close" onclick="document.getElementById('popupProveedor').style.display='none'">&times;</span>
         <h3>Agregar nuevo proveedor</h3>
         <form id="formProveedor">
-          <input type="text" id="nuevoProveedor" placeholder="Nombre del proveedor" required>
+          <input type="text" id="nuevoProveedor" name="nombre" placeholder="Nombre del proveedor" required>
           <button type="submit">Guardar</button>
         </form>
       </div>
