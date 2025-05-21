@@ -1,5 +1,6 @@
+from flask import Flask
+app = Flask(__name__)
 # Ruta para registrar compras de ingredientes y devolver cantidad faltante
-@app.route('/registrar_compra', methods=['POST'])
 def registrar_compra():
     if 'usuario' not in session:
         return jsonify({'success': False, 'message': 'No autenticado'})
