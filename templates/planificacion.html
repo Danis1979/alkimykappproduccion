@@ -26,3 +26,53 @@
         {% endfor %}
     </div>
 </div>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+  function abrirPopupCompra(ingrediente, cantidad) {
+    Swal.fire({
+      title: '🛒 Comprar ' + ingrediente,
+      html:
+        '<p><strong>Cantidad necesaria:</strong> ' + cantidad + '</p>' +
+        '<input id="proveedor" class="swal2-input" placeholder="Proveedor">' +
+        '<select id="forma_pago" class="swal2-input">' +
+          '<option value="">Forma de pago</option>' +
+          '<option value="Efectivo">Efectivo</option>' +
+          '<option value="Transferencia">Transferencia</option>' +
+          '<option value="Cheque">Cheque</option>' +
+        '</select>' +
+        '<input id="fecha_pago" type="date" class="swal2-input" placeholder="Fecha de pago">',
+      confirmButtonText: 'Guardar compra',
+      focusConfirm: false,
+      preConfirm: () => {
+        const proveedor = document.getElementById('proveedor').value;
+        const forma_pago = document.getElementById('forma_pago').value;
+        const fecha_pago = document.getElementById('fecha_pago').value;
+        if (!proveedor || !forma_pago || !fecha_pago) {
+          Swal.showValidationMessage('Todos los campos son obligatorios');
+          return false;
+        }
+        return { proveedor, forma_pago, fecha_pago, ingrediente, cantidad };
+      }
+    }).then((result) => {
+      if (result.isConfirmed) {
+        fetch('/registrar_compra', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(result.value)
+        })
+        .then(response => response.json())
+        .then(data => {
+          if (data.success) {
+            Swal.fire('Guardado', 'La compra fue registrada.', 'success').then(() => {
+              location.reload();
+            });
+          } else {
+            Swal.fire('Error', 'Hubo un problema al guardar.', 'error');
+          }
+        });
+      }
+    });
+  }
+</script>
