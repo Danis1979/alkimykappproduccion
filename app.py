@@ -1787,19 +1787,9 @@ def agregar_proveedor():
         return jsonify({'success': False, 'message': 'No autenticado'})
 
     nombre = request.form.get('nombre')
-    if not nombre:
+    if not nombre or not nombre.strip():
         return jsonify({'success': False, 'message': 'Nombre vacío'})
 
     nombre = nombre.strip()
     db.create_all()  # Asegura que la tabla 'proveedores' exista
-    existente = Proveedor.query.filter_by(nombre=nombre).first()
-    if not existente:
-        nuevo = Proveedor(nombre=nombre)
-        db.session.add(nuevo)
-        db.session.commit()
-
-    return jsonify({'success': True, 'message': 'Proveedor guardado'})
-
-if __name__ == '__main__':
-    threading.Timer(1.25, abrir_navegador).start()
-    app.run(debug=True)
+    existente = Proveedor.query.<truncated__content/>
