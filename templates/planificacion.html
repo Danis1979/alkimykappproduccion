@@ -1,36 +1,43 @@
-<div class="container-fluid py-4">
-    <div class="row">
-        <!-- Panel de planificación mensual -->
-        <div class="col-md-6 mb-4">
-            <div class="card shadow-sm rounded-4 p-4">
-                <h4 class="mb-4 text-primary fw-bold">📦 Planificación Mensual</h4>
-                {% if planificacion %}
-                    {% for sabor, datos in planificacion.items() %}
-                        <div class="d-flex justify-content-between mb-2 fs-6">
-                            <span><strong>{{ sabor | capitalize }}</strong></span>
-                            <span>Canastos: {{ datos['canastos'] }}</span>
-                            <span>Cajas: {{ datos['cajas'] }}</span>
-                        </div>
-                    {% endfor %}
-                {% else %}
-                    <p class="fst-italic text-muted">No hay datos de planificación disponibles.</p>
-                {% endif %}
+<div class="container-fluid py-5" style="background-color: #f8f9fa;">
+  <div class="row">
+    <!-- Panel de planificación mensual -->
+    <div class="col-md-6 mb-4">
+      <div class="card shadow-sm rounded-4 p-4">
+        <h3 class="mb-4 text-center text-primary fw-bold">
+          <i class="bi bi-box-seam"></i> Planificación Mensual
+        </h3>
+        {% if planificacion %}
+          {% for sabor, datos in planificacion.items() %}
+            <div class="d-flex justify-content-between align-items-center mb-2">
+              <span class="fw-semibold text-capitalize">{{ sabor }}</span>
+              <span class="badge bg-info text-dark">Canastos: {{ datos['canastos'] }}</span>
+              <span class="badge bg-secondary text-light">Cajas: {{ datos['cajas'] }}</span>
             </div>
-        </div>
-
-        <!-- Panel de compras -->
-        <div class="col-md-6 mb-4">
-            <div class="card shadow-sm rounded-4 p-4">
-                <h4 class="mb-4 text-success fw-bold">🛒 Ingredientes para Comprar</h4>
-                {% for ingrediente, cantidad in total_ingredientes_fmt.items() %}
-                    <div class="d-flex justify-content-between align-items-center mb-3 fs-6">
-                        <span><strong>{{ ingrediente | capitalize }}</strong>: {{ cantidad.cantidad - compras.get(ingrediente, 0) }} {{ cantidad.unidad }}</span>
-                        <button class="btn btn-primary px-3 py-1" onclick="abrirPopupCompra('{{ ingrediente }}', '{{ cantidad.cantidad }} {{ cantidad.unidad }}')">
-                            Comprar
-                        </button>
-                    </div>
-                {% endfor %}
-            </div>
-        </div>
+          {% endfor %}
+        {% else %}
+          <p class="text-muted fst-italic text-center">No hay datos de planificación disponibles.</p>
+        {% endif %}
+      </div>
     </div>
+
+    <!-- Panel de compras -->
+    <div class="col-md-6 mb-4">
+      <div class="card shadow-sm rounded-4 p-4">
+        <h3 class="mb-4 text-center text-success fw-bold">
+          <i class="bi bi-cart4"></i> Ingredientes para Comprar
+        </h3>
+        {% for ingrediente, cantidad in total_ingredientes_fmt.items() %}
+          <div class="d-flex justify-content-between align-items-center mb-3 border-bottom pb-2">
+            <div>
+              <span class="fw-bold text-capitalize">{{ ingrediente }}</span>:
+              <span class="text-muted">{{ (cantidad.cantidad - compras.get(ingrediente, 0)) | round(2) }} {{ cantidad.unidad }}</span>
+            </div>
+            <button class="btn btn-outline-primary btn-sm" onclick="abrirPopupCompra('{{ ingrediente }}', '{{ cantidad.cantidad }} {{ cantidad.unidad }}')">
+              Comprar
+            </button>
+          </div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
 </div>
