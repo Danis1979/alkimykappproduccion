@@ -2,6 +2,33 @@
 {# Estilo adaptado para unificar con dashboard y canastos #}
 {% block title %}Planificación de Producción{% endblock %}
 {% block content %}
+<style>
+  .popup {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      z-index: 1000;
+      background-color: white;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+      padding: 30px;
+      border-radius: 10px;
+      display: none;
+  }
+  .popup-contenido {
+      max-width: 400px;
+  }
+  .popup-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background-color: rgba(0, 0, 0, 0.5);
+      z-index: 999;
+      display: none;
+  }
+</style>
 <div class="contenedor">
     <a href="/canastos" class="btn-secundario" style="margin-bottom:20px; display:inline-block;">⬅️ Volver a Canastos</a>
     <h1 class="titulo-principal">📊 Planificación de Producción</h1>
@@ -63,7 +90,8 @@
             <button type="submit" formaction="/resetear_planificacion" class="btn-peligro btn-secundario" onclick="return confirm('¿Estás seguro que querés replanificar? Se borrará todo.');">🧹 Replanificar</button>
         </div>
     </form>
-    <div id="popup-compra" class="popup" style="display:none; border-radius: 10px; padding: 20px; background-color: #f8f9fa;">
+    <div id="popup-overlay" class="popup-overlay" onclick="cerrarPopup()"></div>
+    <div id="popup-compra" class="popup" style="border-radius: 10px; padding: 20px; background-color: #f8f9fa;">
         <div class="popup-contenido">
             <h3 class="popup-titulo">🛒 Registrar Compra</h3>
             <p><strong>Ingrediente:</strong> <span id="popup-ingrediente"></span></p>
@@ -94,7 +122,7 @@
                 <label class="label-popup">Fecha de pago: <input type="date" name="fecha_pago" required class="input-formulario"></label><br>
                 <div class="acciones-popup">
                     <button type="submit" class="btn-principal btn-secundario">💾 Confirmar</button>
-                    <button type="button" class="btn-peligro btn-secundario" onclick="document.getElementById('popup-compra').style.display='none'">❌ Cancelar</button>
+                    <button type="button" class="btn-peligro btn-secundario" onclick="cerrarPopup()">❌ Cancelar</button>
                 </div>
             </form>
         </div>
@@ -108,10 +136,13 @@
         document.getElementById('input-cantidad').value = cantidad;
         document.getElementById('input-unidad').value = unidad;
 
-        // Asegurar que el popup esté visible
-        const popup = document.getElementById('popup-compra');
-        popup.style.display = 'block';
-        popup.scrollIntoView({ behavior: 'smooth' });
+        document.getElementById('popup-compra').style.display = 'block';
+        document.getElementById('popup-overlay').style.display = 'block';
+    }
+
+    function cerrarPopup() {
+        document.getElementById('popup-compra').style.display = 'none';
+        document.getElementById('popup-overlay').style.display = 'none';
     }
 
     function mostrarNuevoProveedor() {
