@@ -14,11 +14,14 @@
         <h5>Detalle por sabor</h5>
         <ul class="list-group">
           {% for sabor, cantidad in canastos.items() %}
-            <li class="list-group-item d-flex justify-content-between align-items-center">
-              {{ sabor|capitalize }}:
-              <span class="badge bg-primary">{{ cantidad }} canastos</span>
-              <span class="badge bg-info text-dark">{{ cajas_por_sabor[sabor] }} cajas</span>
-            </li>
+            {% set nombre_limpio = sabor|lower|trim %}
+            {% if not nombre_limpio.startswith('incluir_') %}
+              <li class="list-group-item d-flex justify-content-between align-items-center">
+                {{ sabor|capitalize }}:
+                <span class="badge bg-primary">{{ cantidad }} canastos</span>
+                <span class="badge bg-info text-dark">{{ cajas_por_sabor[sabor] }} cajas</span>
+              </li>
+            {% endif %}
           {% endfor %}
         </ul>
       </div>
