@@ -1,0 +1,136 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="row">
+  <!-- Columna izquierda: Planificación -->
+  <div class="col-md-6">
+    <div class="card shadow p-4 mb-4">
+      <h4 class="card-title mb-3">Planificación Mensual</h4>
+
+      <p><strong>Total de Canastos:</strong> {{ total_canastos }}</p>
+      <p><strong>Total de Cajas:</strong> {{ total_cajas }}</p>
+
+      <div class="mt-4">
+        <h5>Detalle por sabor</h5>
+        <ul class="list-group">
+          {% for sabor, cantidad in canastos.items() %}
+            <li class="list-group-item d-flex justify-content-between align-items-center">
+              {{ sabor|capitalize }}:
+              <span class="badge bg-primary">{{ cantidad }} canastos</span>
+              <span class="badge bg-info text-dark">{{ cajas_por_sabor[sabor] }} cajas</span>
+            </li>
+          {% endfor %}
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- Columna derecha: Ingredientes -->
+  <div class="col-md-6">
+    <div class="card shadow p-4">
+      <h4 class="card-title mb-4">Total de Ingredientes</h4>
+      {% if total_ingredientes_fmt and total_ingredientes_fmt|length > 0 %}
+        <table class="table table-striped table-bordered align-middle">
+          <thead class="table-dark">
+            <tr>
+              <th>Ingrediente</th>
+              <th class="text-end">Cantidad</th>
+              <th class="text-center">Acción</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for ingrediente, datos in total_ingredientes_fmt|dictsort %}
+              <tr>
+                <td>{{ ingrediente }}</td>
+                <td class="text-end">{{ datos.cantidad }} {{ datos.unidad }}</td>
+                <td class="text-center">
+                  <button class="btn btn-sm btn-outline-success" onclick="abrirCompra('{{ ingrediente }}', {{ datos.cantidad }})">Comprar</button>
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      {% else %}
+        <div class="alert alert-warning">No hay ingredientes cargados.</div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+<!-- Modal de Compra -->
+<div class="modal fade" id="modalCompraIngrediente" tabindex="-1" aria-labelledby="modalCompraLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <form id="formCompraIngrediente">
+        <div class="modal-header">
+          <h5 class="modal-title" id="modalIngredienteLabel">Registrar Compra</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+        </div>
+        <div class="modal-body">
+          <input type="hidden" id="modalIngrediente">
+
+          <div class="mb-3">
+            <label class="form-label">Cantidad Necesaria</label>
+            <input type="text" class="form-control" id="modalCantidadNecesaria" readonly>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label">Cantidad a Comprar</label>
+            <input type="number" class="form-control" id="modalCantidadComprar" required>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label">Proveedor</label>
+            <div class="input-group">
+              <select class="form-select" id="modalProveedor" required>
+                <!-- Se llenará dinámicamente -->
+              </select>
+              <button class="btn btn-outline-primary" type="button" data-bs-toggle="modal" data-bs-target="#modalAgregarProveedor">+</button>
+            </div>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label">Forma de Pago</label>
+            <select class="form-select" id="modalFormaPago" required>
+              <option value="efectivo">Efectivo</option>
+              <option value="transferencia">Transferencia</option>
+              <option value="cheque">Cheque</option>
+            </select>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label">Fecha de Pago</label>
+            <input type="date" class="form-control" id="modalFechaPago" required>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="submit" class="btn btn-success">Guardar Compra</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Agregar Proveedor -->
+<div class="modal fade" id="modalAgregarProveedor" tabindex="-1" aria-labelledby="modalAgregarProveedorLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <form id="formNuevoProveedor">
+        <div class="modal-header">
+          <h5 class="modal-title">Agregar Proveedor</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+        </div>
+        <div class="modal-body">
+          <input type="text" class="form-control" id="nuevoProveedorNombre" placeholder="Nombre del proveedor" required>
+        </div>
+        <div class="modal-footer">
+          <button type="submit" class="btn btn-primary">Guardar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+<div class="mt-4 text-center">
+  <a href="{{ url_for('canastos') }}" class="btn btn-outline-secondary me-2">← Volver a Canastos</a>
+  <a href="{{ url_for('home') }}" class="btn btn-outline-dark">🏠 Volver al Menú Principal</a>
+</div>
+{% endblock %}

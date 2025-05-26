@@ -1,67 +1,7 @@
-from flask import Flask
-app = Flask(__name__)
-# Ruta para registrar compras de ingredientes y devolver cantidad faltante
-def registrar_compra():
-    if 'usuario' not in session:
-        return jsonify({'success': False, 'message': 'No autenticado'})
 
-    ingrediente = request.form.get('ingrediente')
-    cantidad = request.form.get('cantidad')
-    proveedor = request.form.get('proveedor')
-    forma_pago = request.form.get('forma_pago')
-    fecha_pago = request.form.get('fecha_pago')
-
-    if not ingrediente or not cantidad or not proveedor or not forma_pago or not fecha_pago:
-        return jsonify({'success': False, 'message': 'Todos los campos son obligatorios'})
-
-    try:
-        cantidad = float(cantidad)
-        if cantidad <= 0:
-            raise ValueError
-    except:
-        return jsonify({'success': False, 'message': 'La cantidad debe ser válida'})
-
-    nueva = Compra(
-        ingrediente=ingrediente,
-        cantidad=cantidad,
-        proveedor=proveedor,
-        forma_pago=forma_pago,
-        fecha_pago=datetime.strptime(fecha_pago, '%Y-%m-%d')
-    )
-    db.session.add(nueva)
-    db.session.commit()
-
-    # Calcular cantidad restante actual
-    from sqlalchemy import func
-    total_comprado = db.session.query(func.sum(Compra.cantidad)).filter_by(ingrediente=ingrediente).scalar() or 0
-
-    canastos = session.get('canastos', {})
-    total_ingredientes = {}
-
-    # Lógica mínima para sumar lo necesario para el ingrediente
-    # Reutiliza código según lo usado en `planificacion`
-    unidades_por_canasto = 32 if ingrediente.lower() == 'pan rallado' else UNIDADES_POR_CANASTO
-    for sabor, cantidad_sabor in canastos.items():
-        unidades = cantidad_sabor * unidades_por_canasto
-        if ingrediente.lower() == 'pan rallado':
-            total_ingredientes[ingrediente] = total_ingredientes.get(ingrediente, 0) + unidades * 10
-
-    requerido = total_ingredientes.get(ingrediente, 0)
-    if ingrediente not in ['Soja', 'Harina']:
-        requerido = requerido / 1000 if requerido >= 1000 else requerido
-    restante = max(0, round(requerido - total_comprado, 2))
-
-    return jsonify({'success': True, 'message': 'Compra guardada', 'restante': restante})
-def normalizar_importe(valor):
-    try:
-        if isinstance(valor, str):
-            valor = valor.strip().replace('$', '')
-            if valor == '':
-                return 0
-        # Convertir a float y devolver sin redondear ni formatear con ceros
-        return float(valor)
-    except Exception:
-        return 0
+# =========================
+# IMPORTACIONES
+# =========================
 from flask import Flask, render_template, request, send_file, session, redirect, url_for, jsonify, flash
 from flask_sqlalchemy import SQLAlchemy
 import os
@@ -72,10 +12,13 @@ from openpyxl import Workbook
 from reportlab.lib.pagesizes import letter
 from reportlab.pdfgen import canvas
 import webbrowser
+from datetime import datetime, timedelta
 import threading
 from datetime import datetime, timedelta
 
-
+# =========================
+# CONSTANTES Y CONFIGURACIONES
+# =========================
 # Definición de constantes globales para masas base por 94 canastos
 MASA_POR_94_CANASTOS = {
     'soja_kg': 50,
@@ -85,12 +28,66 @@ MASA_POR_94_CANASTOS = {
 }
 CANASTOS_BASE = 94
 
+UNIDADES_POR_CANASTO = 18
+MASA_BASE_POR_100_CANASTOS = {
+    'soja_kg': 50,
+    'chimichurri_g': 600,
+    'sal_g': 500
+}
+MASA_BASE_CANASTOS = 100
+
+MASA_ORIGINALES_POR_85_CANASTOS = {
+    'soja_kg': 75,
+    'harina_kg': 30,
+    'chimichurri_g': 800,
+    'sal_g': 500
+}
+MASA_ORIGINALES_CANASTOS = 85
+
+# =========================
+# INICIALIZACIÓN DE FLASK Y SQLALCHEMY
+# =========================
 app = Flask(__name__)
 app.secret_key = 'alkimyk_clave_segura'
 app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://alkimyk_db_user:7vP5jvsKt9KEM8f9JZsd2dSdWGjiCphv@dpg-d0kfn13uibrs739gn9bg-a.oregon-postgres.render.com/alkimyk_db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
 
+# =========================
+# FILTROS JINJA2
+# =========================
+# Filtro de plantilla para formatear fechas en los templates Jinja2
+@app.template_filter('datetimeformat')
+def datetimeformat(value, format='%A'):
+    from datetime import datetime
+    return datetime.strptime(value, '%Y-%m-%d').strftime(format)
+
+# Filtro de plantilla para convertir strings de fecha a objetos datetime
+@app.template_filter('to_datetime')
+def to_datetime_filter(value, format='%Y-%m-%d'):
+    from datetime import datetime
+    return datetime.strptime(value, format)
+
+# Filtro de plantilla para formatear números con formato argentino (1.234,56)
+@app.template_filter('formato_argentino')
+def formato_argentino(value):
+    try:
+        from babel.numbers import format_decimal
+        value = float(value)
+        if value.is_integer():
+            value = int(value)
+        return format_decimal(value, locale='es_AR')
+    except:
+        return value
+
+# Filtro de plantilla para slugify en Jinja templates
+@app.template_filter('slugify')
+def slugify_filter(nombre):
+    return nombre.strip().lower().replace(' ', '_').replace('á', 'a').replace('é', 'e').replace('í', 'i').replace('ó', 'o').replace('ú', 'u').replace('ñ', 'n')
+
+# =========================
+# MODELOS DE BASE DE DATOS
+# =========================
 # Modelo de usuario
 class Usuario(db.Model):
     __tablename__ = 'usuarios'
@@ -161,51 +158,215 @@ class Compra(db.Model):
     forma_pago = db.Column(db.String(50), nullable=False)
     fecha_pago = db.Column(db.Date, nullable=False)
 
-# Filtro de plantilla para formatear fechas en los templates Jinja2
-@app.template_filter('datetimeformat')
-def datetimeformat(value, format='%A'):
-    from datetime import datetime
-    return datetime.strptime(value, '%Y-%m-%d').strftime(format)
+# =========================
+# FUNCIONES AUXILIARES
+# =========================
+# -----------------------------------------------------------
+# Función para calcular el total de ingredientes (para planificación)
+# -----------------------------------------------------------
+def calcular_total_ingredientes(canastos):
+    total_ingredientes = {}
 
-# Filtro de plantilla para convertir strings de fecha a objetos datetime
-@app.template_filter('to_datetime')
-def to_datetime_filter(value, format='%Y-%m-%d'):
-    from datetime import datetime
-    return datetime.strptime(value, format)
+    def add(dic, nombre, cantidad_g):
+        dic[nombre] = dic.get(nombre, 0) + cantidad_g
 
+    non_original_canastos = sum(c for s, c in canastos.items() if s != 'original')
+    if non_original_canastos > 0:
+        add(total_ingredientes, 'Soja', MASA_BASE_POR_100_CANASTOS['soja_kg'] * non_original_canastos / MASA_BASE_CANASTOS)
+        add(total_ingredientes, 'Chimichurri', MASA_BASE_POR_100_CANASTOS['chimichurri_g'] * non_original_canastos / MASA_BASE_CANASTOS)
+        add(total_ingredientes, 'Sal', MASA_BASE_POR_100_CANASTOS['sal_g'] * non_original_canastos / MASA_BASE_CANASTOS)
 
-# Filtro de plantilla para formatear números con formato argentino (1.234,56)
-@app.template_filter('formato_argentino')
-def formato_argentino(value):
+    for sabor, cantidad in canastos.items():
+        if cantidad == 0:
+            continue
+        unidades = cantidad * (32 if sabor == 'original' else UNIDADES_POR_CANASTO)
+        if sabor == 'original':
+            receta_originales = {
+                'Soja': 75,
+                'Harina': 30,
+                'Sal': 0.5,
+                'Chimichurri': 0.8
+            }
+            for ingrediente, total_base in receta_originales.items():
+                cantidad_ingrediente = (total_base / 85) * cantidad
+                if ingrediente in ['Soja', 'Harina']:
+                    cantidad_final = round(cantidad_ingrediente, 2)
+                else:
+                    cantidad_final = round(cantidad_ingrediente * 1000, 2) if cantidad_ingrediente < 1 else round(cantidad_ingrediente, 2)
+                add(total_ingredientes, ingrediente, cantidad_final)
+        else:
+            if sabor == 'aceituna':
+                add(total_ingredientes, 'Muzzarella', unidades * 15)
+                add(total_ingredientes, 'Aceitunas', unidades * 20)
+            elif sabor == 'caprese':
+                tomate_total = unidades * 25
+                add(total_ingredientes, 'Muzzarella', unidades * 15)
+                add(total_ingredientes, 'Tomate', tomate_total)
+                add(total_ingredientes, 'Albahaca', unidades * 2)
+                add(total_ingredientes, 'Sal', (tomate_total / 1000) * 4)
+            elif sabor == 'queso_azul':
+                mezcla_total = unidades * 30
+                porc_queso = 2.3 / (18 + 2.3)
+                porc_muzza = 1 - porc_queso
+                add(total_ingredientes, 'Muzzarella', mezcla_total * porc_muzza)
+                add(total_ingredientes, 'Queso Azul', mezcla_total * porc_queso)
+            elif sabor == 'cebolla':
+                cebolla_cruda = (unidades * 40) / 0.8
+                add(total_ingredientes, 'Cebolla', cebolla_cruda)
+                add(total_ingredientes, 'Orégano', (cebolla_cruda / 1000) * 2)
+                add(total_ingredientes, 'Sal', (cebolla_cruda / 1000) * 5)
+            elif sabor == 'espinaca':
+                total_relleno = unidades * 40 / 0.9
+                espinaca = total_relleno * 0.5 / 0.9
+                cebolla = total_relleno * 0.25 / 0.8
+                morron = total_relleno * 0.25 / 0.8
+                add(total_ingredientes, 'Espinaca', espinaca)
+                add(total_ingredientes, 'Cebolla', cebolla)
+                add(total_ingredientes, 'Morrón', morron)
+                add(total_ingredientes, 'Nuez Moscada', total_relleno / 1000 * 1)
+                add(total_ingredientes, 'Pimienta Negra', total_relleno / 1000 * 1)
+                add(total_ingredientes, 'Sal', total_relleno / 1000 * 5)
+            elif sabor == 'calabaza':
+                total_relleno = unidades * 40 / 0.8
+                add(total_ingredientes, 'Calabaza', total_relleno)
+                add(total_ingredientes, 'Cúrcuma', total_relleno / 1000 * 5)
+                add(total_ingredientes, 'Sal', total_relleno / 1000 * 5)
+            elif sabor == 'brocoli':
+                total_relleno = unidades * 40
+                add(total_ingredientes, 'Brócoli', total_relleno * 0.6)
+                add(total_ingredientes, 'Cebolla', total_relleno * 0.4 / 0.8)
+                add(total_ingredientes, 'Chimichurri', total_relleno / 1000 * 5)
+                add(total_ingredientes, 'Sal', total_relleno / 1000 * 5)
+
+    for sabor, cantidad in canastos.items():
+        if cantidad == 0:
+            continue
+        unidades_por_canasto = 32 if sabor == 'original' else UNIDADES_POR_CANASTO
+        total_unidades = cantidad * unidades_por_canasto
+        gramos_pan_rallado = total_unidades * 10
+        add(total_ingredientes, 'Pan Rallado', gramos_pan_rallado)
+
+    return total_ingredientes
+
+def normalizar_importe(valor):
     try:
-        from babel.numbers import format_decimal
-        value = float(value)
-        if value.is_integer():
-            value = int(value)
-        return format_decimal(value, locale='es_AR')
+        if isinstance(valor, str):
+            valor = valor.strip().replace('$', '')
+            if valor == '':
+                return 0
+        # Convertir a float y devolver sin redondear ni formatear con ceros
+        return float(valor)
+    except Exception:
+        return 0
+
+
+
+# =========================
+# RUTAS FLASK
+# =========================
+
+
+
+@app.route('/agregar_proveedor', methods=['POST'])
+def agregar_proveedor():
+    data = request.get_json()
+    nombre = data.get('nombre')
+    if not nombre:
+        return jsonify({'success': False, 'message': 'Falta el nombre del proveedor'}), 400
+
+    nuevo = Proveedor(nombre=nombre)
+    db.session.add(nuevo)
+    db.session.commit()
+
+    return jsonify({'success': True, 'id': nuevo.id, 'nombre': nuevo.nombre, 'message': 'Proveedor guardado con éxito'})
+
+# Ruta para registrar compras de ingredientes y devolver cantidad faltante
+def registrar_compra():
+    if 'usuario' not in session:
+        return jsonify({'success': False, 'message': 'No autenticado'})
+
+    ingrediente = request.form.get('ingrediente')
+    cantidad = request.form.get('cantidad')
+    proveedor = request.form.get('proveedor')
+    forma_pago = request.form.get('forma_pago')
+    fecha_pago = request.form.get('fecha_pago')
+
+    if not ingrediente or not cantidad or not proveedor or not forma_pago or not fecha_pago:
+        return jsonify({'success': False, 'message': 'Todos los campos son obligatorios'})
+
+    try:
+        cantidad = float(cantidad)
+        if cantidad <= 0:
+            raise ValueError
     except:
-        return value
+        return jsonify({'success': False, 'message': 'La cantidad debe ser válida'})
 
-# Filtro de plantilla para slugify en Jinja templates
-@app.template_filter('slugify')
-def slugify_filter(nombre):
-    return nombre.strip().lower().replace(' ', '_').replace('á', 'a').replace('é', 'e').replace('í', 'i').replace('ó', 'o').replace('ú', 'u').replace('ñ', 'n')
+    nueva = Compra(
+        ingrediente=ingrediente,
+        cantidad=cantidad,
+        proveedor=proveedor,
+        forma_pago=forma_pago,
+        fecha_pago=datetime.strptime(fecha_pago, '%Y-%m-%d')
+    )
+    db.session.add(nueva)
+    db.session.commit()
 
-UNIDADES_POR_CANASTO = 18
-MASA_BASE_POR_100_CANASTOS = {
-    'soja_kg': 50,
-    'chimichurri_g': 600,
-    'sal_g': 500
-}
-MASA_BASE_CANASTOS = 100
+    # Calcular cantidad restante actual
+    from sqlalchemy import func
+    total_comprado = db.session.query(func.sum(Compra.cantidad)).filter_by(ingrediente=ingrediente).scalar() or 0
 
-MASA_ORIGINALES_POR_85_CANASTOS = {
-    'soja_kg': 75,
-    'harina_kg': 30,
-    'chimichurri_g': 800,
-    'sal_g': 500
-}
-MASA_ORIGINALES_CANASTOS = 85
+    canastos = session.get('canastos', {})
+    total_ingredientes = {}
+
+    # Lógica mínima para sumar lo necesario para el ingrediente
+    # Reutiliza código según lo usado en `planificacion`
+    unidades_por_canasto = 32 if ingrediente.lower() == 'pan rallado' else UNIDADES_POR_CANASTO
+    for sabor, cantidad_sabor in canastos.items():
+        unidades = cantidad_sabor * unidades_por_canasto
+        if ingrediente.lower() == 'pan rallado':
+            total_ingredientes[ingrediente] = total_ingredientes.get(ingrediente, 0) + unidades * 10
+
+    requerido = total_ingredientes.get(ingrediente, 0)
+    if ingrediente not in ['Soja', 'Harina']:
+        requerido = requerido / 1000 if requerido >= 1000 else requerido
+    restante = max(0, round(requerido - total_comprado, 2))
+
+    return jsonify({'success': True, 'message': 'Compra guardada', 'restante': restante})
+
+# Nueva ruta para guardar compras completas desde el popup de planificación
+@app.route('/guardar_compra', methods=['POST'])
+def guardar_compra():
+    if 'usuario' not in session:
+        return jsonify({'success': False, 'message': 'No autenticado'})
+
+    data = request.get_json()
+    ingrediente = data.get('ingrediente')
+    cantidad = data.get('cantidad')
+    proveedor = data.get('proveedor')
+    forma_pago = data.get('forma_pago')
+    fecha_pago = data.get('fecha_pago')
+
+    if not ingrediente or not cantidad or not proveedor or not forma_pago or not fecha_pago:
+        return jsonify({'success': False, 'message': 'Todos los campos son obligatorios'})
+
+    try:
+        cantidad = float(cantidad)
+        if cantidad <= 0:
+            raise ValueError
+    except:
+        return jsonify({'success': False, 'message': 'La cantidad debe ser válida'})
+
+    nueva = Compra(
+        ingrediente=ingrediente,
+        cantidad=cantidad,
+        proveedor=proveedor,
+        forma_pago=forma_pago,
+        fecha_pago=datetime.strptime(fecha_pago, '%Y-%m-%d')
+    )
+    db.session.add(nueva)
+    db.session.commit()
+
+    return jsonify({'success': True, 'message': 'Compra registrada correctamente'})
 
 @app.route('/')
 def home():
@@ -297,6 +458,8 @@ def canastos():
             add(total_ingredientes, 'Soja', soja_no_original)
             add(total_ingredientes, 'Chimichurri', chimi_no_original)
             add(total_ingredientes, 'Sal', sal_no_original)
+            harina_no_original = MASA_POR_94_CANASTOS['harina_kg'] * non_original_canastos / CANASTOS_BASE
+            add(total_ingredientes, 'Harina', harina_no_original)
 
         # Agregar receta de Original si existe
         if 'original' in canastos and canastos['original'] > 0:
@@ -427,10 +590,31 @@ def canastos():
         detalles_por_sabor.setdefault(sabor, {})
         detalles_por_sabor[sabor]['Pan Rallado'] = gramos_pan_rallado
         ingredientes['Pan Rallado'] = ingredientes.get('Pan Rallado', 0) + gramos_pan_rallado
+     
 
     # Obtener los días seleccionados de la configuración para mostrar en la plantilla
     dias_seleccionados = session.get('dias_habilitados', ['lunes', 'martes', 'miércoles', 'jueves', 'viernes'])
     mostrar_boton_costos = 'usuario' in session and session.get('rol') == 'admin' and bool(ingredientes)
+    # --- Agregar prints para debug de datos totalizados ---
+    print("📦 Canastos finales:", canastos)
+    print("🧮 Ingredientes totales:", ingredientes)
+    print("📋 Detalles por sabor:", detalles_por_sabor)
+    print("📦 Total de cajas:", total_cajas)
+    print("📅 Días de producción:", dias_produccion)
+    # ------------------------------------------------------
+    # Guardar datos de planificación en la sesión (para /planificacion y otros)
+    session['planificacion'] = True
+    session['total_ingredientes_fmt'] = {
+    k: {
+    'cantidad': round(v, 2) if k in ['Soja', 'Harina'] else (round(v / 1000, 2) if v >= 1000 else round(v, 2)),
+    'unidad': 'kg' if k in ['Soja', 'Harina'] or v >= 1000 else 'g'
+    }
+    for k, v in ingredientes.items()
+    }
+    session['total_canastos'] = sum(canastos.values())
+    session['total_cajas'] = total_cajas
+    # --- AGREGADO: guardar canastos en sesión para planificación ---
+    session['canastos'] = canastos
     return render_template('canastos.html',
                            ingredientes=ingredientes,
                            mostrar=mostrar,
@@ -542,44 +726,31 @@ def generar_calendario():
 # Ruta para generación y visualización del calendario de producción
 @app.route('/calendario', methods=['GET', 'POST'])
 def calendario():
-    import datetime
-    from flask import jsonify
+    from datetime import datetime, timedelta
 
     if request.method == 'POST':
         canastos = session.get('canastos', {})
         if not canastos:
             return redirect(url_for('canastos'))
 
-        # Recuperar cupo_diario del formulario o de la sesión
-        cupo_diario = request.form.get('cupo_diario', None)
-        if cupo_diario is not None:
-            try:
-                cupo_diario = int(cupo_diario)
-            except ValueError:
-                cupo_diario = 110
-            session['cupo_diario'] = cupo_diario
-        else:
+        cupo_diario = request.form.get('cupo_diario')
+        try:
+            cupo_diario = int(cupo_diario)
+        except (TypeError, ValueError):
             cupo_diario = session.get('cupo_diario', 110)
-
-        total_canastos = sum(canastos.values())
-        canastos_por_dia = session.get('cupo_diario', 120)
-        # Usar el último valor de cupo_diario para canastos_por_dia
-        canastos_por_dia = cupo_diario
+        session['cupo_diario'] = cupo_diario
 
         fecha_inicio_str = request.form.get('fecha_inicio')
         if not fecha_inicio_str:
             return redirect(url_for('canastos'))
 
-        fecha_actual = datetime.datetime.strptime(fecha_inicio_str, '%Y-%m-%d').date()
+        fecha_actual = datetime.strptime(fecha_inicio_str, '%Y-%m-%d').date()
         calendario = []
-        canastos_restantes = total_canastos
+        canastos_restantes = sum(canastos.values())
         canastos_sabores = canastos.copy()
-        dias_habilitados = session.get('dias_habilitados')
-        if not dias_habilitados:
-            dias_habilitados = ['lunes', 'martes', 'miércoles', 'jueves', 'viernes']
-        else:
-            dias_habilitados = [d.lower() for d in dias_habilitados]
 
+        dias_habilitados = session.get('dias_habilitados', ['lunes', 'martes', 'miércoles', 'jueves', 'viernes'])
+        dias_habilitados = [d.lower() for d in dias_habilitados]
         dias_traducidos = {
             'monday': 'lunes',
             'tuesday': 'martes',
@@ -589,16 +760,24 @@ def calendario():
             'saturday': 'sábado',
             'sunday': 'domingo'
         }
-        while canastos_restantes > 0:
-            sabores_distribuidos = {}
-            # Traducir nombre del día a español en minúscula
-            dia_semana_en = fecha_actual.strftime('%A').lower()
-            dia_semana_es = dias_traducidos.get(dia_semana_en, '').lower()
 
-            # Solo agregar días si están habilitados
-            if dia_semana_es in dias_habilitados:
-                restantes = min(canastos_restantes, canastos_por_dia)
+        # Generar 30 días de calendario, sin asignar producción los lunes
+        for _ in range(30):
+            dia_semana_en = fecha_actual.strftime('%A').lower()
+            dia_semana_es = dias_traducidos.get(dia_semana_en, '')
+
+            dia_info = {
+                'fecha': fecha_actual.strftime('%Y-%m-%d'),
+                'dia_semana': dia_semana_es,
+                'canastos': 0,
+                'sabores': {}
+            }
+
+            if dia_semana_es != 'lunes' and dia_semana_es in dias_habilitados and canastos_restantes > 0:
+                sabores_distribuidos = {}
+                restantes = min(canastos_restantes, cupo_diario)
                 ranking_sabores = ['caprese', 'queso_azul', 'espinaca', 'aceituna', 'calabaza', 'brocoli', 'cebolla']
+
                 for sabor in ranking_sabores:
                     cantidad = canastos_sabores.get(sabor, 0)
                     if cantidad <= 0:
@@ -610,29 +789,47 @@ def calendario():
                         restantes -= asignar
                     if restantes == 0:
                         break
-                # Asegura que haya al menos un sabor asignado si quedan canastos de algún sabor
+
                 if not sabores_distribuidos and any(c > 0 for c in canastos_sabores.values()):
                     for sabor in ranking_sabores:
                         if canastos_sabores.get(sabor, 0) > 0:
                             sabores_distribuidos[sabor] = 1
                             canastos_sabores[sabor] -= 1
                             break
+
                 if sabores_distribuidos:
-                    produccion_real = sum(sabores_distribuidos.values())
-                    calendario.append({
-                        'fecha': fecha_actual.strftime('%Y-%m-%d'),
-                        'dia_semana': dia_semana_es,
-                        'canastos': produccion_real,
-                        'sabores': sabores_distribuidos
-                    })
-                    canastos_restantes -= produccion_real
-            # Avanzar la fecha
-            fecha_actual += datetime.timedelta(days=1)
+                    dia_info['canastos'] = sum(sabores_distribuidos.values())
+                    dia_info['sabores'] = sabores_distribuidos
+                    canastos_restantes -= dia_info['canastos']
 
-        return render_template('calendario.html', calendario=calendario)
+            calendario.append(dia_info)
+            fecha_actual += timedelta(days=1)
 
-    return render_template('calendario.html', calendario=[])
+        cards = []
+        for dia in calendario:
+            fecha = dia['fecha']
+            for sabor, cantidad in dia['sabores'].items():
+                cards.append({
+                    'sabor': sabor.capitalize(),
+                    'cantidad': cantidad,
+                    'fecha': fecha
+                })
 
+        return render_template('calendario.html', calendario=calendario, fecha_inicio=fecha_inicio_str, timedelta=timedelta, cards=cards)
+
+    # Si es GET
+    hoy = datetime.today().strftime('%Y-%m-%d')
+    canastos = session.get('canastos', {})
+    cards = []
+    for sabor, cantidad in canastos.items():
+        if cantidad > 0:
+            cards.append({
+                'sabor': sabor.capitalize(),
+                'cantidad': cantidad,
+                'fecha': hoy  # fallback
+            })
+
+    return render_template('calendario.html', calendario=[], fecha_inicio=hoy, timedelta=timedelta, cards=cards)
 @app.route('/stock', methods=['GET', 'POST'])
 def stock():
     cajas = {}
@@ -1711,208 +1908,26 @@ def planificacion():
     canastos = session.get('canastos', {})
     total_canastos = sum(canastos.values())
 
-    # Calcular total de cajas
+    # Calcular total de cajas y cajas por sabor
     total_cajas = 0
+    cajas_por_sabor = {}
     for sabor, cantidad in canastos.items():
         unidades_por_canasto = 32 if sabor == 'original' else UNIDADES_POR_CANASTO
         total_unidades = cantidad * unidades_por_canasto
-        total_cajas += round(total_unidades / (108 if sabor == 'original' else 60))
+        cajas = round(total_unidades / (108 if sabor == 'original' else (15 * 4)))
+        total_cajas += cajas
+        cajas_por_sabor[sabor] = cajas
 
-    # Calcular total ingredientes usando la lógica de exportar (como en /canastos)
-    detalles_por_sabor = {}
-    total_ingredientes = {}
+    # Verificar si se cargó previamente total_ingredientes_fmt desde /canastos
+    if 'total_ingredientes_fmt' not in session:
+        flash("Faltan datos de ingredientes. Por favor completá los canastos primero.", "warning")
+        return redirect(url_for('canastos'))
 
-    # Utilizar una sola función add para sumar ingredientes (como en /canastos)
-    def add(dic, nombre, cantidad_g):
-        dic[nombre] = dic.get(nombre, 0) + cantidad_g
+    total_ingredientes_fmt = session['total_ingredientes_fmt']
 
-    # Masa base para no-original
-    non_original_canastos = sum(c for s, c in canastos.items() if s != 'original')
-    if non_original_canastos > 0:
-        add(total_ingredientes, 'Soja', MASA_BASE_POR_100_CANASTOS['soja_kg'] * non_original_canastos / MASA_BASE_CANASTOS)
-        add(total_ingredientes, 'Chimichurri', MASA_BASE_POR_100_CANASTOS['chimichurri_g'] * non_original_canastos / MASA_BASE_CANASTOS)
-        add(total_ingredientes, 'Sal', MASA_BASE_POR_100_CANASTOS['sal_g'] * non_original_canastos / MASA_BASE_CANASTOS)
-
-    for sabor, cantidad in canastos.items():
-        if cantidad == 0:
-            continue
-        unidades = cantidad * (32 if sabor == 'original' else UNIDADES_POR_CANASTO)
-        if sabor == 'original':
-            receta_originales = {
-                'Soja': 75,
-                'Harina': 30,
-                'Sal': 0.5,
-                'Chimichurri': 0.8
-            }
-            for ingrediente, total_base in receta_originales.items():
-                cantidad_ingrediente = (total_base / 85) * cantidad
-                if ingrediente in ['Soja', 'Harina']:
-                    cantidad_final = round(cantidad_ingrediente, 2)
-                else:
-                    cantidad_final = round(cantidad_ingrediente * 1000, 2) if cantidad_ingrediente < 1 else round(cantidad_ingrediente, 2)
-                add(total_ingredientes, ingrediente, cantidad_final)
-        else:
-            if sabor == 'aceituna':
-                add(total_ingredientes, 'Muzzarella', unidades * 15)
-                add(total_ingredientes, 'Aceitunas', unidades * 20)
-            elif sabor == 'caprese':
-                tomate_total = unidades * 25
-                add(total_ingredientes, 'Muzzarella', unidades * 15)
-                add(total_ingredientes, 'Tomate', tomate_total)
-                add(total_ingredientes, 'Albahaca', unidades * 2)
-                add(total_ingredientes, 'Sal', (tomate_total / 1000) * 4)
-            elif sabor == 'queso_azul':
-                mezcla_total = unidades * 30
-                porc_queso = 2.3 / (18 + 2.3)
-                porc_muzza = 1 - porc_queso
-                add(total_ingredientes, 'Muzzarella', mezcla_total * porc_muzza)
-                add(total_ingredientes, 'Queso Azul', mezcla_total * porc_queso)
-            elif sabor == 'cebolla':
-                cebolla_cruda = (unidades * 40) / 0.8
-                add(total_ingredientes, 'Cebolla', cebolla_cruda)
-                add(total_ingredientes, 'Orégano', (cebolla_cruda / 1000) * 2)
-                add(total_ingredientes, 'Sal', (cebolla_cruda / 1000) * 5)
-            elif sabor == 'espinaca':
-                total_relleno = unidades * 40 / 0.9
-                espinaca = total_relleno * 0.5 / 0.9
-                cebolla = total_relleno * 0.25 / 0.8
-                morron = total_relleno * 0.25 / 0.8
-                add(total_ingredientes, 'Espinaca', espinaca)
-                add(total_ingredientes, 'Cebolla', cebolla)
-                add(total_ingredientes, 'Morrón', morron)
-                add(total_ingredientes, 'Nuez Moscada', total_relleno / 1000 * 1)
-                add(total_ingredientes, 'Pimienta Negra', total_relleno / 1000 * 1)
-                add(total_ingredientes, 'Sal', total_relleno / 1000 * 5)
-            elif sabor == 'calabaza':
-                total_relleno = unidades * 40 / 0.8
-                add(total_ingredientes, 'Calabaza', total_relleno)
-                add(total_ingredientes, 'Cúrcuma', total_relleno / 1000 * 5)
-                add(total_ingredientes, 'Sal', total_relleno / 1000 * 5)
-            elif sabor == 'brocoli':
-                total_relleno = unidades * 40
-                add(total_ingredientes, 'Brócoli', total_relleno * 0.6)
-                add(total_ingredientes, 'Cebolla', total_relleno * 0.4 / 0.8)
-                add(total_ingredientes, 'Chimichurri', total_relleno / 1000 * 5)
-                add(total_ingredientes, 'Sal', total_relleno / 1000 * 5)
-
-    # Agregar pan rallado
-    for sabor, cantidad in canastos.items():
-        unidades = cantidad * (32 if sabor == 'original' else UNIDADES_POR_CANASTO)
-        add(total_ingredientes, 'Pan Rallado', unidades * 10)
-
-    # Convertir a gramos o kilos
-    total_ingredientes_fmt = {}
-    for ingr, cant in total_ingredientes.items():
-        if ingr in ['Soja', 'Harina']:
-            total_ingredientes_fmt[ingr] = {'cantidad': round(cant, 2), 'unidad': 'kg'}
-        else:
-            if cant >= 1000:
-                total_ingredientes_fmt[ingr] = {'cantidad': round(cant / 1000, 2), 'unidad': 'kg'}
-            else:
-                total_ingredientes_fmt[ingr] = {'cantidad': round(cant, 2), 'unidad': 'g'}
-
-    # Añadir valores de compra desde base (si existen)
-    from sqlalchemy import func
-
-    compras_agrupadas = db.session.query(
-        Compra.ingrediente,
-        func.sum(Compra.cantidad).label('total_comprado')
-    ).group_by(Compra.ingrediente).all()
-
-    map_compras = {c.ingrediente: c.total_comprado for c in compras_agrupadas}
-
-    for ingr, data in total_ingredientes_fmt.items():
-        comprado = map_compras.get(ingr, 0)
-        faltante = max(0, data['cantidad'] - comprado)
-        data['comprada'] = round(comprado, 2)
-        data['faltante'] = round(faltante, 2)
-
-    # Asegura que la tabla 'proveedores' exista antes de la consulta
-    db.create_all()  # Asegura que la tabla 'proveedores' exista antes de la consulta
-    # Cargar proveedores existentes
-    proveedores = [p.nombre for p in Proveedor.query.all()]
-
-    # Chequeo de existencia de base.html antes de renderizar la plantilla
-    import os
-    template_path = os.path.join(app.template_folder or 'templates', 'base.html')
-    if not os.path.exists(template_path):
-        return "Archivo base.html no encontrado. Verifica que exista en la carpeta templates.", 500
-    # Crear resumen por sabor para mostrar en "Planificación Mensual"
-    planificacion = {}
-    for sabor, cantidad in canastos.items():
-        unidades_por_canasto = 32 if sabor == 'original' else UNIDADES_POR_CANASTO
-        total_unidades = cantidad * unidades_por_canasto
-        if sabor == 'original':
-            cajas = round(total_unidades / 108)
-        else:
-            cajas = round(total_unidades / (15 * 4))
-        planificacion[sabor] = {
-            'canastos': cantidad,
-            'cajas': cajas
-        }
-    compras = {}
     return render_template('planificacion.html',
                            canastos=canastos,
                            total_canastos=total_canastos,
                            total_cajas=total_cajas,
-                           total_ingredientes=total_ingredientes_fmt,
-                           total_ingredientes_fmt=total_ingredientes_fmt,
-                           compras=compras,
-                           proveedores=proveedores,
-                           planificacion=planificacion)
-
-
-
-# Nueva ruta para guardar compra
-@app.route('/guardar_compra', methods=['POST'])
-def guardar_compra():
-    if 'usuario' not in session:
-        return jsonify({'success': False, 'message': 'Usuario no autenticado'})
-
-    ingrediente = request.form.get('ingrediente')
-    cantidad = request.form.get('cantidad')
-    proveedor = request.form.get('proveedor')
-    forma_pago = request.form.get('forma_pago')
-    fecha_pago = request.form.get('fecha_pago')
-
-    if not all([ingrediente, cantidad, proveedor, forma_pago, fecha_pago]):
-        return jsonify({'success': False, 'message': 'Todos los campos son obligatorios.'})
-
-    try:
-        cantidad = float(cantidad)
-    except:
-        return jsonify({'success': False, 'message': 'La cantidad debe ser válida.'})
-
-    compra = Compra(
-        ingrediente=ingrediente,
-        cantidad=cantidad,
-        proveedor=proveedor,
-        forma_pago=forma_pago,
-        fecha_pago=datetime.strptime(fecha_pago, '%Y-%m-%d')
-    )
-    db.session.add(compra)
-    db.session.commit()
-    return jsonify({'success': True, 'message': 'Compra ingresada con éxito'})
-
-@app.route('/agregar_proveedor', methods=['POST'])
-def agregar_proveedor():
-    if 'usuario' not in session:
-        return jsonify({'success': False, 'message': 'No autenticado'})
-
-    nombre = request.form.get('nombre')
-    if not nombre or not nombre.strip():
-        return jsonify({'success': False, 'message': 'Nombre vacío'})
-
-    nombre = nombre.strip()
-    try:
-        db.create_all()  # Asegura que la tabla 'proveedores' exista
-        existente = Proveedor.query.filter_by(nombre=nombre).first()
-        if existente:
-            return jsonify({'success': False, 'message': 'El proveedor ya existe'})
-
-        nuevo = Proveedor(nombre=nombre)
-        db.session.add(nuevo)
-        db.session.commit()
-        return jsonify({'success': True, 'message': 'Proveedor guardado'})
-    except Exception as e:
-        return jsonify({'success': False, 'message': f'Error al guardar el proveedor: {str(e)}'})
+                           cajas_por_sabor=cajas_por_sabor,
+                           total_ingredientes_fmt=total_ingredientes_fmt)

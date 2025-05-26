@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Calendario de Producción</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+  <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f4f4f4;
+      margin: 0;
+      padding: 0;
+    }
+    .top-bar {
+      display: flex;
+      justify-content: space-between;
+      padding: 15px;
+      background-color: #fff;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    .top-bar a, .top-bar button {
+      background-color: #eee;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      padding: 8px 12px;
+      text-decoration: none;
+      color: #333;
+      font-weight: bold;
+    }
+    .contenedor-principal {
+      display: flex;
+      padding: 20px;
+    }
+    .zona-especial {
+      width: 220px;
+      margin-right: 20px;
+    }
+    .zona-especial h3 {
+      text-align: center;
+    }
+    .dropzone {
+      background-color: #fefefe;
+      border: 1px dashed #ccc;
+      border-radius: 8px;
+      min-height: 100px;
+      padding: 10px;
+      margin-bottom: 20px;
+    }
+    .calendario {
+      flex: 1;
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 20px;
+    }
+    .dia {
+      border-radius: 10px;
+      padding: 10px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
+    .dia h4 {
+      text-align: center;
+      margin-bottom: 10px;
+    }
+    .card-item {
+      background-color: #e6f4ea;
+      padding: 8px;
+      margin: 5px 0;
+      border-radius: 6px;
+      text-align: center;
+      font-weight: bold;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+      cursor: grab;
+    }
+    .card-cocina {
+      background-color: #ffa726 !important;
+    }
+
+    /* Colores personalizados por día */
+    .lunes {
+      background-color: #ffecb3 !important;
+    }
+    .martes, .miércoles, .jueves, .viernes {
+      background-color: #e8f5e9 !important;
+    }
+    .sabado {
+      background-color: #ffe5e5 !important;
+    }
+    .domingo {
+      background-color: #ffcccc !important;
+    }
+
+    /* Ocultar en impresión */
+    @media print {
+      .top-bar,
+      .zona-especial {
+        display: none !important;
+      }
+      .dia {
+        display: none;
+      }
+      .dia:has(.card-item) {
+        display: block !important;
+        page-break-inside: avoid;
+      }
+      .calendario {
+        display: block;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="top-bar">
+    <a href="/">🏠 Menú Principal</a>
+    <button onclick="window.print()">🖨️ Imprimir</button>
+  </div>
+
+  <div class="contenedor-principal">
+    <div class="zona-especial">
+      <h3>Pendientes</h3>
+      <div class="dropzone" id="pendientes"></div>
+
+      <h3>Cocina</h3>
+      <div class="dropzone" id="cocina">
+        <div class="card-item card-cocina" data-sabor="Cortar Tomate" data-cantidad="1" data-tipo="cocina">Cortar Tomate</div>
+        <div class="card-item card-cocina" data-sabor="Bollitos de Muzzarella" data-cantidad="1" data-tipo="cocina">Bollitos de Muzzarella</div>
+        <div class="card-item card-cocina" data-sabor="Cocinar Calabaza" data-cantidad="1" data-tipo="cocina">Cocinar Calabaza</div>
+        <div class="card-item card-cocina" data-sabor="Cocinar Cebolla" data-cantidad="1" data-tipo="cocina">Cocinar Cebolla</div>
+        <div class="card-item card-cocina" data-sabor="Cocinar Morrón" data-cantidad="1" data-tipo="cocina">Cocinar Morrón</div>
+        <div class="card-item card-cocina" data-sabor="Cocinar Brócoli" data-cantidad="1" data-tipo="cocina">Cocinar Brócoli</div>
+        <div class="card-item card-cocina" data-sabor="Lavar Aceitunas" data-cantidad="1" data-tipo="cocina">Lavar Aceitunas</div>
+        <div class="card-item card-cocina" data-sabor="Preparar Espinaca" data-cantidad="1" data-tipo="cocina">Preparar Espinaca</div>
+      </div>
+    </div>
+
+    <div class="calendario">
+      {% for dia in calendario %}
+        {% set clase_dia = dia.dia_semana.lower() %}
+        <div class="dia {{ clase_dia }}">
+          <h4>{{ dia.fecha }}<br>{{ dia.dia_semana | capitalize }}</h4>
+          <div class="dropzone" id="dia-{{ loop.index0 }}"></div>
+        </div>
+      {% endfor %}
+    </div>
+  </div>
+
+  <script>
+    const cards = {{ cards | tojson }};
+    const cupoDiario = {{ session.get('cupo_diario', 150) }};
+
+    function agregarCard(zone, sabor, cantidad, tipo = "produccion") {
+      const existentes = Array.from(zone.children);
+      for (let card of existentes) {
+        if (card.dataset.sabor === sabor && card.dataset.tipo === tipo) {
+          if (tipo === "cocina") return;
+          let actual = parseInt(card.dataset.cantidad);
+          actual += cantidad;
+          card.innerText = `${sabor} (${actual})`;
+          card.dataset.cantidad = actual;
+          return;
+        }
+      }
+
+      const div = document.createElement("div");
+      div.className = "card-item";
+      if (tipo === "cocina") div.classList.add("card-cocina");
+      div.dataset.sabor = sabor;
+      div.dataset.cantidad = cantidad;
+      div.dataset.tipo = tipo;
+      div.innerText = tipo === "cocina" ? sabor : `${sabor} (${cantidad})`;
+      zone.appendChild(div);
+    }
+
+    cards.forEach(card => {
+      const tipo = card.tipo || "produccion";
+      if (tipo === "cocina") return;
+      let zona = document.getElementById("pendientes");
+      if (card.fecha) {
+        zona = Array.from(document.querySelectorAll(".calendario .dia")).find(d => {
+          const fecha = d.querySelector("h4").innerText.split('\n')[0].trim();
+          return fecha === card.fecha;
+        })?.querySelector(".dropzone") || zona;
+      }
+      agregarCard(zona, card.sabor, card.cantidad, tipo);
+    });
+
+    new Sortable(document.getElementById("cocina"), {
+      group: {
+        name: "shared",
+        pull: "clone",
+        put: function (to, from, dragged) {
+          return dragged.dataset.tipo === "cocina";
+        }
+      },
+      sort: false,
+      animation: 150,
+      onAdd: function (evt) {
+        const item = evt.item;
+        const sabor = item.dataset.sabor;
+        const tipo = item.dataset.tipo;
+        item.remove();
+        agregarCard(document.getElementById("cocina"), sabor, 1, tipo);
+      }
+    });
+
+    document.querySelectorAll(".dropzone:not(#cocina)").forEach(zone => {
+      new Sortable(zone, {
+        group: "shared",
+        animation: 150,
+        onAdd: function (evt) {
+          const item = evt.item;
+          const sabor = item.dataset.sabor;
+          const cantidad = parseInt(item.dataset.cantidad);
+          const tipo = item.dataset.tipo || "produccion";
+
+          item.remove();
+
+          if (tipo === "cocina") {
+            agregarCard(zone, sabor, 1, tipo);
+            return;
+          }
+
+          if (zone.id.startsWith("dia-") && tipo === "produccion") {
+            const total = Array.from(zone.children).reduce((sum, el) => {
+              return el.dataset.tipo === "produccion" ? sum + parseInt(el.dataset.cantidad) : sum;
+            }, 0);
+            const restante = cupoDiario - total;
+
+            if (restante <= 0) {
+              alert("⚠️ Ya se alcanzó el cupo máximo diario.");
+              agregarCard(document.getElementById("pendientes"), sabor, cantidad);
+              return;
+            } else if (cantidad > restante) {
+              agregarCard(zone, sabor, restante);
+              agregarCard(document.getElementById("pendientes"), sabor, cantidad - restante);
+              return;
+            }
+          }
+
+          agregarCard(zone, sabor, cantidad, tipo);
+        },
+        onRemove: function(evt) {
+          const item = evt.item;
+          const sabor = item.dataset.sabor;
+          const tipo = item.dataset.tipo;
+          if (tipo === "cocina") {
+            agregarCard(document.getElementById("cocina"), sabor, 1, "cocina");
+          }
+        }
+      });
+    });
+  </script>
+</body>
+</html>
