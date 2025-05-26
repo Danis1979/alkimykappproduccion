@@ -97,6 +97,7 @@ class Usuario(db.Model):
     password = db.Column(db.String(200), nullable=False)
     rol = db.Column(db.String(50), nullable=False)
 
+
 # Modelo Produccion para guardar canastos por usuario
 class Produccion(db.Model):
     __tablename__ = 'produccion'
@@ -157,6 +158,14 @@ class Compra(db.Model):
     proveedor = db.Column(db.String(100), nullable=False)
     forma_pago = db.Column(db.String(50), nullable=False)
     fecha_pago = db.Column(db.Date, nullable=False)
+
+    # Modelo para guardar producción diaria
+class ProduccionDiaria(db.Model):
+    __tablename__ = 'produccion_diaria'
+    id = db.Column(db.Integer, primary_key=True)
+    fecha = db.Column(db.Date, nullable=False)
+    sabor = db.Column(db.String(100), nullable=False)
+    cantidad_canastos = db.Column(db.Integer, nullable=False)
 
 # =========================
 # FUNCIONES AUXILIARES
@@ -1931,3 +1940,58 @@ def planificacion():
                            total_cajas=total_cajas,
                            cajas_por_sabor=cajas_por_sabor,
                            total_ingredientes_fmt=total_ingredientes_fmt)
+from flask import render_template, request, redirect, url_for, flash
+from app import app, db  # asegurate que app y db estén importados correctamente
+from datetime import datetime
+
+
+# Lista fija de sabores disponibles
+SABORES_DISPONIBLES = [
+    'Caprese',
+    'Aceituna',
+    'Queso Azul',
+    'Cebolla',
+    'Espinaca',
+    'Calabaza',
+    'Brócoli',
+    'Original'
+]
+
+@app.route('/produccion_diaria', methods=['GET', 'POST'])
+def produccion_diaria():
+    if request.method == 'POST':
+        try:
+            fecha = datetime.strptime(request.form['fecha'], '%Y-%m-%d').date()
+            sabor = request.form['sabor']
+            cantidad = int(request.form['cantidad'])
+
+            nueva = ProduccionDiaria(fecha=fecha, sabor=sabor, cantidad_canastos=cantidad)
+            db.session.add(nueva)
+            db.session.commit()
+            flash("✅ Producción guardada correctamente.", "success")
+        except Exception as e:
+            db.session.rollback()
+            flash(f"❌ Error al guardar: {str(e)}", "danger")
+
+        return redirect(url_for('produccion_diaria'))
+
+    # Filtro por fechas
+    fecha_inicio = request.args.get('fecha_inicio')
+    fecha_fin = request.args.get('fecha_fin')
+    producciones = []
+
+    if fecha_inicio and fecha_fin:
+        try:
+            f1 = datetime.strptime(fecha_inicio, '%Y-%m-%d').date()
+            f2 = datetime.strptime(fecha_fin, '%Y-%m-%d').date()
+            producciones = ProduccionDiaria.query.filter(
+                ProduccionDiaria.fecha.between(f1, f2)
+            ).order_by(ProduccionDiaria.fecha).all()
+        except Exception:
+            flash("❗Formato de fecha inválido", "warning")
+
+    return render_template(
+        'produccion_diaria.html',
+        producciones=producciones,
+        sabores=SABORES_DISPONIBLES
+    )

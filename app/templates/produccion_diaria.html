@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Producción Diaria</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+  <style>
+    .formulario {
+      max-width: 600px;
+      margin: auto;
+      padding: 20px;
+      background-color: #fff;
+      border-radius: 8px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+    .formulario h2 {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+    .formulario label {
+      display: block;
+      margin-top: 10px;
+    }
+    .formulario input, .formulario select {
+      width: 100%;
+      padding: 8px;
+      margin-top: 5px;
+      border-radius: 4px;
+      border: 1px solid #ccc;
+    }
+    .formulario button {
+      margin-top: 20px;
+      width: 100%;
+      padding: 10px;
+      background-color: #4CAF50;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      font-size: 16px;
+      cursor: pointer;
+    }
+    .formulario .alert {
+      margin-top: 15px;
+      padding: 10px;
+      border-radius: 5px;
+    }
+    .success {
+      background-color: #d4edda;
+      color: #155724;
+    }
+    .danger {
+      background-color: #f8d7da;
+      color: #721c24;
+    }
+    .volver {
+      margin-top: 30px;
+      text-align: center;
+    }
+    .volver a {
+      background-color: #999;
+      color: white;
+      padding: 10px 20px;
+      text-decoration: none;
+      border-radius: 6px;
+      display: inline-block;
+    }
+  </style>
+</head>
+<body>
+  <div class="formulario">
+    <h2>Cargar Producción Diaria</h2>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        {% for category, message in messages %}
+          <div class="alert {{ category }}">{{ message }}</div>
+        {% endfor %}
+      {% endif %}
+    {% endwith %}
+
+    <form method="POST" action="{{ url_for('produccion_diaria') }}">
+      <label for="fecha">Fecha:</label>
+      <input type="date" id="fecha" name="fecha" required>
+
+      <label for="sabor">Sabor:</label>
+      <select name="sabor" id="sabor" required>
+        <option value="" disabled selected>Seleccionar sabor</option>
+        {% for sabor in sabores %}
+          <option value="{{ sabor }}">{{ sabor }}</option>
+        {% endfor %}
+      </select>
+
+      <label for="cantidad">Cantidad de Canastos:</label>
+      <input type="number" id="cantidad" name="cantidad" required min="1">
+
+      <button type="submit">Guardar Producción</button>
+    </form>
+
+    <hr>
+
+    <h3>Buscar por Fechas</h3>
+    <form method="GET" action="{{ url_for('produccion_diaria') }}">
+      <label for="fecha_inicio">Desde:</label>
+      <input type="date" id="fecha_inicio" name="fecha_inicio" required>
+
+      <label for="fecha_fin">Hasta:</label>
+      <input type="date" id="fecha_fin" name="fecha_fin" required>
+
+      <button type="submit">Buscar</button>
+    </form>
+
+    <div class="volver">
+        <a href="/">🏠 Menú Principal</a>
+    </div>
+  </div>
+
+  {% if producciones and producciones|length > 0 %}
+  <script>
+    window.onload = () => {
+      let popup = "Producción encontrada:\n\n";
+      {% for p in producciones %}
+        let canastos = {{ p.cantidad_canastos }};
+        let packs = canastos * 18 / 4;
+        let cajas = Math.floor(packs / 15);
+        let packs_restantes = packs % 15;
+        popup += `• Fecha: {{ p.fecha.strftime('%d/%m/%Y') }}\n  Sabor: {{ p.sabor }}\n  Canastos: {{ p.cantidad_canastos }}\n  Cajas: ${cajas}\n  Packs: ${packs_restantes}\n\n`;
+      {% endfor %}
+      alert(popup);
+    };
+  </script>
+  {% endif %}
+</body>
+</html>
