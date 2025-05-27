@@ -770,7 +770,6 @@ def calendario():
             'sunday': 'domingo'
         }
 
-        # Generar 30 días de calendario, sin asignar producción los lunes
         for _ in range(30):
             dia_semana_en = fecha_actual.strftime('%A').lower()
             dia_semana_es = dias_traducidos.get(dia_semana_en, '')
@@ -785,7 +784,7 @@ def calendario():
             if dia_semana_es != 'lunes' and dia_semana_es in dias_habilitados and canastos_restantes > 0:
                 sabores_distribuidos = {}
                 restantes = min(canastos_restantes, cupo_diario)
-                ranking_sabores = ['caprese', 'queso_azul', 'espinaca', 'aceituna', 'calabaza', 'brocoli', 'cebolla']
+                ranking_sabores = ['caprese', 'queso_azul', 'espinaca', 'aceituna', 'calabaza', 'brocoli', 'cebolla', 'original']
 
                 for sabor in ranking_sabores:
                     cantidad = canastos_sabores.get(sabor, 0)
@@ -828,14 +827,21 @@ def calendario():
 
     # Si es GET
     hoy = datetime.today().strftime('%Y-%m-%d')
+    sabores_totales = [
+        'Caprese', 'Queso Azul', 'Aceituna', 'Espinaca', 'Brócoli',
+        'Calabaza', 'Cebolla', 'Original'
+    ]
+
     canastos = session.get('canastos', {})
     cards = []
-    for sabor, cantidad in canastos.items():
+
+    for sabor in sabores_totales:
+        cantidad = canastos.get(sabor.lower(), 0) or canastos.get(sabor, 0)
         if cantidad > 0:
             cards.append({
-                'sabor': sabor.capitalize(),
+                'sabor': sabor,
                 'cantidad': cantidad,
-                'fecha': hoy  # fallback
+                'fecha': hoy
             })
 
     return render_template('calendario.html', calendario=[], fecha_inicio=hoy, timedelta=timedelta, cards=cards)
