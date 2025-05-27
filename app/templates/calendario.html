@@ -94,21 +94,42 @@
       background-color: #ffecec !important;
     }
     @media print {
-      .top-bar,
-      .zona-especial {
-        display: none !important;
-      }
-      .dia {
-        display: none;
-      }
-      .dia:has(.card-item) {
-        display: block !important;
-        page-break-inside: avoid;
-      }
-      .calendario {
-        display: block;
-      }
-    }
+  body {
+    background: white;
+  }
+  .top-bar,
+  .zona-especial {
+    display: none !important;
+  }
+  .contenedor-principal {
+    padding: 10px;
+  }
+  .calendario {
+    display: grid !important;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 10px;
+  }
+  .dia {
+    display: none !important;
+    border: 1px solid #444 !important;
+    padding: 10px;
+    page-break-inside: avoid;
+    background-color: #fff !important;
+    box-shadow: none !important;
+    min-height: 150px;
+  }
+  .dia:has(.card-item) {
+    display: block !important;
+  }
+  .dia h4 {
+    font-size: 14px;
+    margin-bottom: 8px;
+  }
+  .card-item {
+    font-size: 12px;
+    padding: 4px;
+  }
+}
   </style>
 </head>
 <body>
