@@ -78,19 +78,31 @@
   padding-bottom: 6px;
   margin-bottom: 10px;
 }
-    .card-item {
-      background-color: #e6f4ea;
-      padding: 8px;
-      margin: 5px 0;
-      border-radius: 6px;
-      text-align: center;
-      font-weight: bold;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-      cursor: grab;
-    }
-    .card-cocina {
-      background-color: #ffa726 !important;
-    }
+.card-item {
+  background-color: #e6f4ea;
+  padding: 10px;
+  margin: 6px 0;
+  border-radius: 8px;
+  text-align: center;
+  font-weight: bold;
+  cursor: grab;
+
+  /* ESTILOS AGREGADOS: */
+  border: 1.5px solid #4caf50;
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.15);
+  transition: transform 0.2s ease;
+}
+
+.card-item:hover {
+  transform: scale(1.02);
+}
+
+/* Card especial de cocina */
+.card-cocina {
+  background-color: #ffe0b2 !important;
+  border: 1.5px solid #f57c00 !important;
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.15);
+}
     .lunes {
       background-color: #fff9e6 !important;
     }
@@ -155,7 +167,7 @@
 
       <h3>Cocina</h3>
       <div class="dropzone" id="cocina">
-        <div class="card-item card-cocina" data-sabor="Cortar Tomate" data-cantidad="1" data-tipo="cocina">Cortar Tomate</div>
+        <div class="card-item card-cocina" data-sabor="Preparar Tomate" data-cantidad="1" data-tipo="cocina">Preparar Tomate</div>
         <div class="card-item card-cocina" data-sabor="Bollitos de Muzzarella" data-cantidad="1" data-tipo="cocina">Bollitos de Muzzarella</div>
         <div class="card-item card-cocina" data-sabor="Cocinar Calabaza" data-cantidad="1" data-tipo="cocina">Cocinar Calabaza</div>
         <div class="card-item card-cocina" data-sabor="Cocinar Cebolla" data-cantidad="1" data-tipo="cocina">Cocinar Cebolla</div>
@@ -163,7 +175,12 @@
         <div class="card-item card-cocina" data-sabor="Cocinar Brócoli" data-cantidad="1" data-tipo="cocina">Cocinar Brócoli</div>
         <div class="card-item card-cocina" data-sabor="Lavar Aceitunas" data-cantidad="1" data-tipo="cocina">Lavar Aceitunas</div>
         <div class="card-item card-cocina" data-sabor="Preparar Espinaca" data-cantidad="1" data-tipo="cocina">Preparar Espinaca</div>
-      </div>
+        <div class="card-item card-cocina" data-sabor="Bollitos Roquefort" data-cantidad="1" data-tipo="cocina">Bollitos Roquefort</div>
+        <div class="card-item card-cocina" data-sabor="Pelar y Picar Cebolla" data-cantidad="1" data-tipo="cocina">Pelar y Picar Cebolla</div>
+        <div class="card-item card-cocina" data-sabor="Limpiar Brocoli" data-cantidad="1" data-tipo="cocina">Limpiar Brocoli</div>
+        <div class="card-item card-cocina" data-sabor="Limpiar y Picar Morron" data-cantidad="1" data-tipo="cocina">Limpiar y Picar Morron</div>
+
+    </div>
     </div>
 
     <div class="calendario">
@@ -282,6 +299,7 @@
         }
       });
     });
-  </script>
+ 
+ </script>
 </body>
 </html>
