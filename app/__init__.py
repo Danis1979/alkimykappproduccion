@@ -2001,3 +2001,80 @@ def produccion_diaria():
         producciones=producciones,
         sabores=SABORES_DISPONIBLES
     )
+@app.route('/produccion_resultado')
+def produccion_resultado():
+    from datetime import datetime
+    fecha_inicio = request.args.get('fecha_inicio')
+    fecha_fin = request.args.get('fecha_fin')
+
+    if not fecha_inicio or not fecha_fin:
+        flash("Faltan fechas para la búsqueda", "warning")
+        return redirect(url_for('produccion_diaria'))
+
+    f1 = datetime.strptime(fecha_inicio, '%Y-%m-%d').date()
+    f2 = datetime.strptime(fecha_fin, '%Y-%m-%d').date()
+
+    # Obtener producciones del rango
+    registros = ProduccionDiaria.query.filter(
+        db.func.date(ProduccionDiaria.fecha).between(f1, f2)
+    ).order_by(ProduccionDiaria.fecha).all()
+
+    # Agrupar por día
+    calendario = []
+    dias_agrupados = {}
+
+    dias_es = {
+        'Monday': 'Lunes',
+        'Tuesday': 'Martes',
+        'Wednesday': 'Miércoles',
+        'Thursday': 'Jueves',
+        'Friday': 'Viernes',
+        'Saturday': 'Sábado',
+        'Sunday': 'Domingo'
+    }
+
+    for r in registros:
+        fecha_str = r.fecha.strftime('%Y-%m-%d')
+        dia_semana_en = r.fecha.strftime('%A')  # Ejemplo: 'Monday'
+        dia_semana = dias_es.get(dia_semana_en, dia_semana_en)
+
+        if fecha_str not in dias_agrupados:
+            dias_agrupados[fecha_str] = {
+                'fecha': fecha_str,
+                'dia_semana': dia_semana,
+                'sabores': {}
+            }
+
+        if r.sabor not in dias_agrupados[fecha_str]['sabores']:
+            dias_agrupados[fecha_str]['sabores'][r.sabor] = 0
+
+        dias_agrupados[fecha_str]['sabores'][r.sabor] += r.cantidad_canastos
+
+    calendario = list(dias_agrupados.values())
+    calendario.sort(key=lambda x: x['fecha'])
+
+    return render_template(
+        'produccion_resultado.html',
+        calendario=calendario,
+        fecha_inicio=fecha_inicio,
+        fecha_fin=fecha_fin
+    )
+@app.route('/eliminar_produccion_dia', methods=['POST'])
+def eliminar_produccion_dia():
+    from datetime import datetime
+    fecha_str = request.form.get('fecha')
+    fecha_inicio = request.form.get('fecha_inicio')
+    fecha_fin = request.form.get('fecha_fin')
+
+    try:
+        fecha_obj = datetime.strptime(fecha_str, '%Y-%m-%d').date()
+        ProduccionDiaria.query.filter(
+            db.func.date(ProduccionDiaria.fecha) == fecha_obj
+        ).delete()
+        db.session.commit()
+        flash(f'Producción del {fecha_str} eliminada correctamente.', 'success')
+    except Exception as e:
+        db.session.rollback()
+        flash(f'Error al eliminar la producción: {str(e)}', 'danger')
+
+    return redirect(url_for('produccion_resultado', fecha_inicio=fecha_inicio, fecha_fin=fecha_fin))
