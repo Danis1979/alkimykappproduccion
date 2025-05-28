@@ -2014,13 +2014,10 @@ def produccion_resultado():
     f1 = datetime.strptime(fecha_inicio, '%Y-%m-%d').date()
     f2 = datetime.strptime(fecha_fin, '%Y-%m-%d').date()
 
-    # Obtener producciones del rango
     registros = ProduccionDiaria.query.filter(
         db.func.date(ProduccionDiaria.fecha).between(f1, f2)
     ).order_by(ProduccionDiaria.fecha).all()
 
-    # Agrupar por día
-    calendario = []
     dias_agrupados = {}
 
     dias_es = {
@@ -2035,7 +2032,7 @@ def produccion_resultado():
 
     for r in registros:
         fecha_str = r.fecha.strftime('%Y-%m-%d')
-        dia_semana_en = r.fecha.strftime('%A')  # Ejemplo: 'Monday'
+        dia_semana_en = r.fecha.strftime('%A')
         dia_semana = dias_es.get(dia_semana_en, dia_semana_en)
 
         if fecha_str not in dias_agrupados:
@@ -2046,9 +2043,22 @@ def produccion_resultado():
             }
 
         if r.sabor not in dias_agrupados[fecha_str]['sabores']:
-            dias_agrupados[fecha_str]['sabores'][r.sabor] = 0
+            dias_agrupados[fecha_str]['sabores'][r.sabor] = {
+                'canastos': 0,
+                'unidades': 0,
+                'cajas': 0,
+                'packs_sueltos': 0
+            }
 
-        dias_agrupados[fecha_str]['sabores'][r.sabor] += r.cantidad_canastos
+        dias_agrupados[fecha_str]['sabores'][r.sabor]['canastos'] += r.cantidad_canastos
+        total_unidades = dias_agrupados[fecha_str]['sabores'][r.sabor]['canastos'] * 18
+        cajas = total_unidades // 60
+        sobrantes = total_unidades % 60
+        packs_sueltos = sobrantes // 4
+
+        dias_agrupados[fecha_str]['sabores'][r.sabor]['unidades'] = total_unidades
+        dias_agrupados[fecha_str]['sabores'][r.sabor]['cajas'] = cajas
+        dias_agrupados[fecha_str]['sabores'][r.sabor]['packs_sueltos'] = packs_sueltos
 
     calendario = list(dias_agrupados.values())
     calendario.sort(key=lambda x: x['fecha'])
