@@ -116,6 +116,19 @@
       color: #c0392b;
     }
 
+    .canasto-info {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-weight: bold;
+      font-size: 16px;
+      color: #333;
+    }
+
+    .canasto-info img {
+      height: 28px;
+    }
+
     @media print {
       .top-bar, .eliminar-form button {
         display: none !important;
@@ -135,26 +148,36 @@
   <div class="calendario">
     {% set dias_esp = {'Monday': 'Lunes', 'Tuesday': 'Martes', 'Wednesday': 'Miércoles', 'Thursday': 'Jueves', 'Friday': 'Viernes', 'Saturday': 'Sábado', 'Sunday': 'Domingo'} %}
     {% for dia in calendario %}
-      <div class="dia">
+    <div class="dia">
+      <div style="display: flex; justify-content: space-between; align-items: center;">
+        <!-- Canasto a la izquierda -->
+        <div class="canasto-info">
+          <img src="{{ url_for('static', filename='img/icono_canasto.png') }}" alt="Canasto">
+          <span>{{ dia.total_canastos }}</span>
+        </div>
+
+        <!-- Botón eliminar a la derecha -->
         <form method="POST" action="{{ url_for('eliminar_produccion_dia') }}" class="eliminar-form" onsubmit="return confirm('¿Estás seguro que querés eliminar toda la producción de este día?');">
           <input type="hidden" name="fecha" value="{{ dia.fecha }}">
           <button type="submit" title="Eliminar día">🗑</button>
         </form>
-        <h4>{{ dia.fecha }}<br>{{ dia.dia_semana }}</h4>
+      </div>
 
-        {% for sabor, datos in dia.sabores.items() %}
-          <div class="flip-card" onclick="this.classList.toggle('flipped')">
-            <div class="flip-card-inner">
-              <div class="flip-card-front">
-                {{ sabor }} ({{ datos.canastos }})
-              </div>
-              <div class="flip-card-back">
-                {{ datos.cajas }} cajas – {{ datos.packs_sueltos }} packs
-              </div>
+      <h4>{{ dia.fecha }}<br>{{ dia.dia_semana }}</h4>
+
+      {% for sabor, datos in dia.sabores.items() %}
+        <div class="flip-card" onclick="this.classList.toggle('flipped')">
+          <div class="flip-card-inner">
+            <div class="flip-card-front">
+              {{ sabor }} ({{ datos.canastos }})
+            </div>
+            <div class="flip-card-back">
+              {{ datos.cajas }} cajas – {{ datos.packs_sueltos }} packs
             </div>
           </div>
-        {% endfor %}
-      </div>
+        </div>
+      {% endfor %}
+    </div>
     {% endfor %}
   </div>
 </body>

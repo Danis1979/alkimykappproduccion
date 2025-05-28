@@ -2060,8 +2060,11 @@ def produccion_resultado():
         dias_agrupados[fecha_str]['sabores'][r.sabor]['cajas'] = cajas
         dias_agrupados[fecha_str]['sabores'][r.sabor]['packs_sueltos'] = packs_sueltos
 
+    # ✅ Agregado para mostrar total de canastos del día
+    for dia in dias_agrupados.values():
+        dia['total_canastos'] = sum(sabor['canastos'] for sabor in dia['sabores'].values())
+
     calendario = list(dias_agrupados.values())
-    calendario.sort(key=lambda x: x['fecha'])
 
     return render_template(
         'produccion_resultado.html',
