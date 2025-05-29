@@ -1,261 +1,322 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Alkimyk Food</title>
-    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
-    <style>
-        body {
-            margin: 0;
-            padding: 0;
-            font-family: 'Roboto', sans-serif;
-            background-color: #f0f2f5;
-            color: #1e1e1e;
-            display: flex;
-            flex-direction: column;
-            min-height: 100vh;
-        }
-        .logo {
-            position: absolute;
-            top: 20px;
-            right: 40px;
-            width: 150px;
-        }
-        .container {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            padding: 40px;
-        }
-        .recuadro-principal {
-            background-color: white;
-            border-radius: 12px;
-            padding: 30px 50px;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
-            text-align: center;
-            border: 2px solid #000;
-        }
-        h1 {
-            margin-bottom: 30px;
-        }
-        .botones {
-            display: flex;
-            gap: 20px;
-            justify-content: center;
-        }
-        .btn-mac-style {
-            background: linear-gradient(to bottom, #f9f9f9, #e0e0e0);
-            border: 1px solid #ccc;
-            border-radius: 12px;
-            padding: 14px 28px;
-            font-size: 1.1em;
-            color: #333;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.08);
-            text-decoration: none;
-        }
-        .btn-mac-style:hover {
-            background: linear-gradient(to bottom, #ffffff, #d4d4d4);
-            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-            transform: translateY(-1px);
-        }
-        .btn-mac-style:active {
-            transform: scale(0.97);
-        }
-        .carousel {
-            width: 100%;
-            background-color: #f0f2f5;
-            overflow: visible;
-            padding: 20px 0;
-            position: relative;
-        }
-        .carousel-track {
-            display: flex;
-            animation: scroll 30s linear infinite;
-            align-items: center;
-            gap: 16px;
-            padding: 0 20px;
-        }
-        .carousel-track:hover {
-            animation-play-state: paused;
-        }
-        .carousel-track img {
-            height: 160px;
-            border-radius: 10px;
-            transition: transform 0.5s ease, box-shadow 0.5s ease;
-            cursor: pointer;
-            position: relative;
-            z-index: 1;
-        }
-        .carousel-track img:hover {
-            transform: scale(2);
-            z-index: 10;
-            box-shadow: 0 10px 20px rgba(0,0,0,0.2);
-        }
-        @keyframes scroll {
-            0% { transform: translateX(0); }
-            100% { transform: translateX(-50%); }
-        }
-        .footer {
-            text-align: center;
-            padding: 20px;
-            font-size: 0.9em;
-            color: #444;
-        }
-        @media (max-width: 600px) {
-            .container {
-                padding: 20px;
-            }
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Alkimyk Food</title>
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet" />
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: 'Roboto', sans-serif;
+      background-color: #f0f2f5;
+      color: #1e1e1e;
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+    }
 
-            .recuadro-principal {
-                padding: 20px;
-                margin: 0 10px;
-            }
+    .logo {
+      position: absolute;
+      top: 20px;
+      right: 40px;
+      width: 150px;
+    }
 
-            h1 {
-                font-size: 1.5em;
-            }
+    .container {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 40px;
+    }
 
-            .botones {
-                flex-direction: column;
-                gap: 12px;
-            }
+    .recuadro-principal {
+      background-color: white;
+      border-radius: 12px;
+      padding: 30px 50px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+      text-align: center;
+      border: 2px solid #000;
+    }
 
-            .btn-mac-style {
-                width: 100%;
-                text-align: center;
-            }
+    h1 {
+      margin-bottom: 30px;
+    }
 
-            .carousel-track img {
-                height: 120px;
-            }
+    .botones {
+      display: flex;
+      gap: 20px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
 
-            .logo {
-                width: 100px;
-                top: 10px;
-                right: 20px;
-            }
+    .btn-mac-style {
+      background: linear-gradient(to bottom, #f9f9f9, #e0e0e0);
+      border: 1px solid #ccc;
+      border-radius: 12px;
+      padding: 14px 28px;
+      font-size: 1.1em;
+      color: #333;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.08);
+      text-decoration: none;
+    }
 
-            .footer {
-                font-size: 0.8em;
-                padding: 10px;
-            }
-        }
-        .top-bar {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            flex-wrap: wrap;
-            padding: 10px 20px;
-            position: relative;
-            z-index: 10;
-        }
-        .logo-top {
-            width: 120px;
-            height: auto;
-        }
-        .top-buttons {
-            display: flex;
-            gap: 12px;
-            flex-wrap: wrap;
-        }
-        @media (max-width: 600px) {
-            .top-bar {
-                flex-direction: column;
-                align-items: center;
-            }
-            .logo-top {
-                margin-bottom: 10px;
-                width: 100px;
-            }
-            .top-buttons {
-                width: 100%;
-                flex-direction: column;
-                align-items: center;
-            }
-            .btn-mac-style {
-                width: 90%;
-                margin-bottom: 8px;
-            }
-        }
-    </style>
-</head>
-<body>
-    <div class="top-bar">
-        <img src="/static/logo.png" alt="Logo Alkimyk" class="logo-top">
-        <div class="top-buttons">
-            <a href="/configuracion" class="btn-mac-style">⚙️ Configuración</a>
-            <a href="/logout" class="btn-mac-style" title="Cerrar sesión">🔓 Log out</a>
-        </div>
-    </div>
-    <div class="container">
-        <div class="recuadro-principal">
-            <h1>Producción Alkimyk Food</h1>
-            <div class="botones">
-                <a href="/stock" class="btn-mac-style">📦 Calcular desde Cajas</a>
-                <a href="/canastos" class="btn-mac-style">📋 Calcular desde Canastos</a>
-                <a href="{{ url_for('produccion_diaria') }}" class="btn-mac-style">📆 Producción Diaria</a>
-            </div>
-        </div>
-    </div>
+    .btn-mac-style:hover {
+      background: linear-gradient(to bottom, #ffffff, #d4d4d4);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+      transform: translateY(-1px);
+    }
 
-    <div class="carousel">
-        <div class="carousel-track">
-            <img src="/static/IMG_5103.PNG" alt="Foto 1">
-            <img src="/static/IMG_5104.PNG" alt="Foto 2">
-            <img src="/static/IMG_5105.PNG" alt="Foto 3">
-            <img src="/static/IMG_5106.PNG" alt="Foto 4">
-            <img src="/static/IMG_5107.PNG" alt="Foto 5">
-            <img src="/static/IMG_5108.PNG" alt="Foto 6">
-            <img src="/static/IMG_5109.PNG" alt="Foto 7">
-            <img src="/static/IMG_5110.PNG" alt="Foto 8">
-        </div>
-    </div>
+    .btn-mac-style:active {
+      transform: scale(0.97);
+    }
 
-    <div class="footer">
-        © 2025 Alkimyk Food. Todos los derechos reservados.
-    </div>
-  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-  <script>
-    document.addEventListener('DOMContentLoaded', () => {
-      function mostrarEstacionalidad() {
-        const mesActual = new Date().getMonth(); // 0 = enero, 11 = diciembre
+    .carousel {
+      width: 100%;
+      background-color: #f0f2f5;
+      overflow: visible;
+      padding: 20px 0;
+      position: relative;
+    }
 
-        const verdurasEstacionales = {
-          0: ['espinaca', 'albahaca'],
-          1: ['espinaca', 'brocoli'],
-          2: ['brocoli', 'cebolla'],
-          3: ['cebolla', 'morrón'],
-          4: ['morrón', 'espinaca'],
-          5: ['tomate', 'calabaza'],
-          6: ['tomate', 'calabaza'],
-          7: ['tomate', 'calabaza'],
-          8: ['tomate', 'calabaza'],
-          9: ['albahaca', 'calabaza'],
-          10: ['espinaca', 'cebolla'],
-          11: ['espinaca', 'albahaca']
-        };
+    .carousel-track {
+      display: flex;
+      animation: scroll 30s linear infinite;
+      align-items: center;
+      gap: 16px;
+      padding: 0 20px;
+    }
 
-        const verdurasDelMes = verdurasEstacionales[mesActual] || [];
+    .carousel-track:hover {
+      animation-play-state: paused;
+    }
 
-        if (verdurasDelMes.length > 0) {
-          Swal.fire({
-            title: '🗓️ Estacionalidad del mes',
-            html: `Las verduras más económicas en este mes son:<br><strong>${verdurasDelMes.join(', ')}</strong>`,
-            icon: 'info',
-            confirmButtonText: 'Gracias',
-            width: 500
-          });
-        }
+    .carousel-track img {
+      height: 160px;
+      border-radius: 10px;
+      transition: transform 0.5s ease, box-shadow 0.5s ease;
+      cursor: pointer;
+      position: relative;
+      z-index: 1;
+    }
+
+    .carousel-track img:hover {
+      transform: scale(2);
+      z-index: 10;
+      box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+    }
+
+    @keyframes scroll {
+      0% { transform: translateX(0); }
+      100% { transform: translateX(-50%); }
+    }
+
+    .footer {
+      text-align: center;
+      padding: 20px;
+      font-size: 0.9em;
+      color: #444;
+    }
+
+    .top-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      padding: 10px 20px;
+      position: relative;
+      z-index: 10;
+    }
+
+    .logo-top {
+      width: 120px;
+      height: auto;
+    }
+
+    .top-buttons {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    @media (max-width: 600px) {
+      .container {
+        padding: 20px;
       }
 
-      mostrarEstacionalidad();
+      .recuadro-principal {
+        padding: 20px;
+        margin: 0 10px;
+      }
+
+      h1 {
+        font-size: 1.5em;
+      }
+
+      .botones {
+        flex-direction: column;
+        gap: 12px;
+      }
+
+      .btn-mac-style {
+        width: 100%;
+        text-align: center;
+      }
+
+      .carousel-track img {
+        height: 120px;
+      }
+
+      .logo {
+        width: 100px;
+        top: 10px;
+        right: 20px;
+      }
+
+      .footer {
+        font-size: 0.8em;
+        padding: 10px;
+      }
+
+      .top-bar {
+        flex-direction: column;
+        align-items: center;
+      }
+
+      .logo-top {
+        margin-bottom: 10px;
+        width: 100px;
+      }
+
+      .top-buttons {
+        width: 100%;
+        flex-direction: column;
+        align-items: center;
+      }
+
+      .btn-mac-style {
+        width: 90%;
+        margin-bottom: 8px;
+      }
+    }
+
+    /* ✅ Banner de estacionalidad lateral con pestaña */
+    .banner-estacional-wrapper {
+      position: fixed;
+      top: 50%;
+      right: -220px;
+      transform: translateY(-50%);
+      transition: right 0.4s ease;
+      z-index: 1000;
+    }
+
+    .banner-estacional-wrapper:hover {
+      right: 0;
+    }
+
+    .banner-estacional {
+      background: #fff8dc;
+      color: #333;
+      padding: 15px 20px;
+      border-radius: 10px 0 0 10px;
+      box-shadow: -2px 2px 10px rgba(0,0,0,0.2);
+      font-size: 0.95em;
+      width: 220px;
+      position: relative;
+    }
+
+    .banner-estacional-tab {
+      position: absolute;
+      left: -130px;
+      top: 50%;
+      transform: translateY(-50%) rotate(-90deg);
+      background: #e8e0b5;
+      color: #333;
+      padding: 5px 10px;
+      border-radius: 6px 6px 0 0;
+      font-size: 0.9em;
+      box-shadow: -2px 2px 5px rgba(0,0,0,0.1);
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="top-bar">
+    <img src="/static/logo.png" alt="Logo Alkimyk" class="logo-top">
+    <div class="top-buttons">
+      <a href="/configuracion" class="btn-mac-style">⚙️ Configuración</a>
+      <a href="/logout" class="btn-mac-style" title="Cerrar sesión">🔓 Log out</a>
+    </div>
+  </div>
+
+  <div class="container">
+    <div class="recuadro-principal">
+      <h1>Producción Alkimyk Food</h1>
+      <div class="botones">
+        <a href="/stock" class="btn-mac-style">📦 Calcular desde Cajas</a>
+        <a href="/canastos" class="btn-mac-style">📋 Calcular desde Canastos</a>
+        <a href="{{ url_for('produccion_diaria') }}" class="btn-mac-style">📆 Producción Diaria</a>
+      </div>
+    </div>
+  </div>
+
+  <div class="carousel">
+    <div class="carousel-track">
+      <img src="/static/IMG_5103.PNG" alt="Foto 1">
+      <img src="/static/IMG_5104.PNG" alt="Foto 2">
+      <img src="/static/IMG_5105.PNG" alt="Foto 3">
+      <img src="/static/IMG_5106.PNG" alt="Foto 4">
+      <img src="/static/IMG_5107.PNG" alt="Foto 5">
+      <img src="/static/IMG_5108.PNG" alt="Foto 6">
+      <img src="/static/IMG_5109.PNG" alt="Foto 7">
+      <img src="/static/IMG_5110.PNG" alt="Foto 8">
+    </div>
+  </div>
+
+  <!-- ✅ Banner estacionalidad con pestaña -->
+  <div class="banner-estacional-wrapper">
+    <div class="banner-estacional">
+      <div class="banner-estacional-tab">🌿 Estacionalidad</div>
+      <strong>🗓️ Estacionalidad del mes:</strong> <span id="verduras-estacionales"></span>
+    </div>
+  </div>
+
+  <div class="footer">
+    © 2025 Alkimyk Food. Todos los derechos reservados.
+  </div>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const mesActual = new Date().getMonth();
+      const verdurasEstacionales = {
+        0: ['espinaca', 'albahaca'],
+        1: ['espinaca', 'brocoli'],
+        2: ['brocoli', 'cebolla'],
+        3: ['cebolla', 'morrón'],
+        4: ['morrón', 'espinaca'],
+        5: ['tomate', 'calabaza'],
+        6: ['tomate', 'calabaza'],
+        7: ['tomate', 'calabaza'],
+        8: ['tomate', 'calabaza'],
+        9: ['albahaca', 'calabaza'],
+        10: ['espinaca', 'cebolla'],
+        11: ['espinaca', 'albahaca']
+      };
+
+      const verdurasDelMes = verdurasEstacionales[mesActual] || [];
+      const banner = document.getElementById('verduras-estacionales');
+      if (banner && verdurasDelMes.length > 0) {
+        banner.innerText = verdurasDelMes.join(', ');
+      }
     });
   </script>
+
 </body>
 </html>
