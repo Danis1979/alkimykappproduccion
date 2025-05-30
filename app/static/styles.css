@@ -56,6 +56,7 @@ body {
 .boton-principal:hover {
     background-color: #0056b3;
 }
+
 .canasto-info {
     display: flex;
     align-items: center;
@@ -63,24 +64,24 @@ body {
     font-size: 20px;
     font-weight: bold;
     margin-left: 0;
-  }
-  
-  .canasto-info img {
+}
+
+.canasto-info img {
     width: 64px !important;
     height: auto !important;
     max-width: none !important;
     max-height: none !important;
-  }
-  .banner-estacional-wrapper {
+}
+
+.banner-estacional-wrapper {
     position: fixed;
     top: 50%;
-    right: -200px; /* inicialmente oculto */
+    right: -200px;
     transform: translateY(-50%);
     z-index: 1000;
     transition: right 0.4s ease;
 }
 
-/* Al hacer hover sobre wrapper entero */
 .banner-estacional-wrapper:hover {
     right: 0;
 }
@@ -97,7 +98,6 @@ body {
     position: relative;
 }
 
-/* Etiqueta lateral */
 .banner-estacional-tab {
     position: absolute;
     left: -130px;
@@ -110,4 +110,42 @@ body {
     font-size: 0.9em;
     box-shadow: -2px 2px 5px rgba(0,0,0,0.1);
     cursor: pointer;
+}
+
+/* Responsive ajustes para móviles */
+@media screen and (max-width: 768px) {
+    .formulario-general {
+        padding: 20px;
+        margin: 20px 10px;
+    }
+
+    .boton-principal {
+        width: 100%;
+        font-size: 15px;
+    }
+
+    .canasto-info {
+        flex-direction: column;
+        text-align: center;
+        gap: 4px;
+    }
+
+    .canasto-info img {
+        width: 48px !important;
+    }
+
+    .banner-estacional-wrapper {
+        right: -150px;
+    }
+
+    .banner-estacional-tab {
+        left: -110px;
+        font-size: 0.8em;
+    }
+
+    .banner-estacional {
+        width: 180px;
+        font-size: 0.85em;
+        padding: 10px 15px;
+    }
 }
