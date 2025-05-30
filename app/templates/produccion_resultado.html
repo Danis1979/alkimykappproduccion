@@ -37,7 +37,7 @@
 
     .calendario {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
       gap: 20px;
       padding: 20px;
     }
@@ -45,7 +45,7 @@
     .dia {
       background-color: white;
       border-radius: 10px;
-      padding: 10px;
+      padding: 14px;
       border: 2px dashed #ccc;
       position: relative;
       opacity: 0;
@@ -66,12 +66,13 @@
       text-align: center;
       margin-bottom: 10px;
       color: #000;
+      font-size: 1.1rem;
     }
 
     .flip-card {
       background-color: transparent;
       width: 100%;
-      height: 70px;
+      height: 80px;
       perspective: 1000px;
       margin-bottom: 10px;
     }
@@ -102,6 +103,7 @@
       justify-content: center;
       box-shadow: 0 1px 3px rgba(0,0,0,0.1);
       border: 1px solid #bbb;
+      font-size: 1rem;
     }
 
     .flip-card-front {
@@ -133,19 +135,53 @@
       gap: 8px;
       font-size: 20px;
       font-weight: bold;
-      margin-left: 0;
     }
 
     .canasto-info img {
-      width: 64px !important;
-      height: auto !important;
-      max-width: none !important;
-      max-height: none !important;
+      width: 48px;
+      height: auto;
     }
 
     @media print {
       .top-bar, .eliminar-form button {
         display: none !important;
+      }
+    }
+
+    @media (max-width: 768px) {
+      .top-bar {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+
+      .top-bar a, .top-bar button {
+        width: 100%;
+        text-align: center;
+      }
+
+      .dia {
+        padding: 12px;
+      }
+
+      .dia h4 {
+        font-size: 1rem;
+      }
+
+      .flip-card {
+        height: 90px;
+      }
+
+      .flip-card-front, .flip-card-back {
+        font-size: 0.95rem;
+        padding: 8px;
+      }
+
+      .canasto-info {
+        font-size: 18px;
+      }
+
+      .canasto-info img {
+        width: 40px;
       }
     }
   </style>
@@ -164,13 +200,11 @@
     {% for dia in calendario %}
     <div class="dia">
       <div style="display: flex; justify-content: space-between; align-items: center;">
-        <!-- Canasto a la izquierda -->
         <div class="canasto-info">
           <img src="{{ url_for('static', filename='icono_canasto.png') }}" alt="Canasto">
           <span>{{ dia.total_canastos }}</span>
         </div>
 
-        <!-- Botón eliminar a la derecha -->
         <form method="POST" action="{{ url_for('eliminar_produccion_dia') }}" class="eliminar-form" onsubmit="return confirm('¿Estás seguro que querés eliminar toda la producción de este día?');">
           <input type="hidden" name="fecha" value="{{ dia.fecha }}">
           <button type="submit" title="Eliminar día">🗑</button>
