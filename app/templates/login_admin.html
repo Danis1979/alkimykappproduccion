@@ -3,21 +3,29 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login Administrador</title>
+    <title>Ingreso al Sistema</title>
     <style>
         body {
             font-family: 'Segoe UI', sans-serif;
-            background: linear-gradient(to bottom, #ffffff, #f0f0f0);
+            background-color: #000; /* fallback background */
+            background-image: url('{{ url_for('static', filename='universo.jpg') }}');
+            background-repeat: no-repeat;
+            background-position: center center;
+            background-attachment: fixed;
+            background-size: cover;
             margin: 0;
             padding: 0;
+            opacity: 0;
+            animation: fadeInBackground 2s ease-in-out forwards;
         }
         .contenedor-login {
-            background-color: #fff;
+            background-color: #fff7f0;
             max-width: 400px;
             margin: 20px auto;
             padding: 30px 40px;
             border-radius: 12px;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            border: 2px solid #ffae42;
+            box-shadow: 0 6px 20px rgba(255, 165, 0, 0.2);
             text-align: center;
         }
         h2 {
@@ -117,16 +125,40 @@
         }
     }
     </style>
+
+    <style>
+    @keyframes fadeInBackground {
+        from {
+            opacity: 0;
+        }
+        to {
+            opacity: 1;
+        }
+    }
+
+    @keyframes slideUpCard {
+        from {
+            opacity: 0;
+            transform: translateY(40px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .contenedor-login {
+        animation: slideUpCard 1.2s ease forwards;
+        opacity: 0;
+    }
+    </style>
 </head>
 <body>
     <div class="top-bar">
         <img src="{{ url_for('static', filename='logo.png') }}" alt="Logo Alkimyk" class="logo-top">
-        <div class="top-buttons">
-            <a href="/" class="btn-mac-style">🏠 Menú Principal</a>
-        </div>
     </div>
     <div class="contenedor-login">
-        <h2>Ingreso Administrador</h2>
+        <h2>Ingreso al Sistema</h2>
         {% with messages = get_flashed_messages(with_categories=true) %}
           {% if messages %}
             {% for category, message in messages %}
@@ -144,9 +176,6 @@
                 <input type="password" name="password" required class="input-formulario">
             </div>
             <button type="submit" class="btn-mac-style">🔐 Ingresar</button>
-        </form>
-        <form method="GET" action="/" onsubmit="return true;">
-            <button type="submit" class="btn-mac-style">🚪 Entrar sin loguearse</button>
         </form>
     </div>
 </body>
